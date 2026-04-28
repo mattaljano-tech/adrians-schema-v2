@@ -48,20 +48,31 @@ const speakText = (text) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'sv-SE';
-    utterance.rate = 0.75; // Långsammare och tydligare
+    utterance.rate = 0.75; 
     window.speechSynthesis.speak(utterance);
   }
 };
 
-// --- KOMPONENT: PEDAGOGISK TÅRTBITSKLOCKA ---
-const ConceptClock = ({ title, desc, hourDeg, minDeg, path }) => {
+// --- KOMPONENT: PEDAGOGISK TÅRTBITSKLOCKA (UPPDATERAD LAYOUT) ---
+const ConceptClock = ({ title, desc, hourDeg, minDeg, path, colorTheme }) => {
+  
+  // Färgteman
+  const themes = {
+    green: { bg: 'bg-emerald-100', border: 'border-emerald-200', title: 'text-emerald-900', desc: 'text-emerald-700', fill: 'rgba(16, 185, 129, 0.25)' },
+    orange: { bg: 'bg-orange-100', border: 'border-orange-200', title: 'text-orange-900', desc: 'text-orange-800', fill: 'rgba(249, 115, 22, 0.2)' },
+    indigo: { bg: 'bg-indigo-100', border: 'border-indigo-200', title: 'text-indigo-900', desc: 'text-indigo-700', fill: 'rgba(99, 102, 241, 0.2)' },
+    yellow: { bg: 'bg-amber-100', border: 'border-amber-200', title: 'text-amber-900', desc: 'text-amber-700', fill: 'rgba(245, 158, 11, 0.3)' },
+  };
+
+  const t = themes[colorTheme] || themes.indigo;
+
   return (
-    <div className="bg-blue-50 p-4 rounded-3xl border-2 border-blue-100 flex flex-col items-center justify-start shadow-sm text-center">
-      <svg viewBox="0 0 100 100" className="w-20 h-20 mb-3 bg-white rounded-full border-[6px] border-slate-800 shadow-md">
+    <div className={`${t.bg} p-4 rounded-3xl border-2 ${t.border} flex items-center gap-4 shadow-sm`}>
+      <svg viewBox="0 0 100 100" className="w-20 h-20 shrink-0 bg-white rounded-full border-[6px] border-slate-800 shadow-md">
         
-        {/* Tårtbiten (Ljusblå fyllning) */}
-        {path && <path d={path} fill="rgba(59, 130, 246, 0.25)" />}
-        {title === "Hel" && <circle cx="50" cy="50" r="45" fill="rgba(59, 130, 246, 0.1)" />}
+        {/* Tårtbiten */}
+        {path && <path d={path} fill={t.fill} />}
+        {title === "Hel" && <circle cx="50" cy="50" r="45" fill={t.fill} />}
         
         {/* Små streck för 12, 3, 6, 9 */}
         <line x1="50" y1="5" x2="50" y2="10" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
@@ -69,12 +80,12 @@ const ConceptClock = ({ title, desc, hourDeg, minDeg, path }) => {
         <line x1="50" y1="95" x2="50" y2="90" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         <line x1="5" y1="50" x2="10" y2="50" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         
-        {/* Timvisare (Röd, lite tjockare och kortare) */}
+        {/* Timvisare (Röd) */}
         <g transform={`rotate(${hourDeg} 50 50)`}>
           <line x1="50" y1="50" x2="50" y2="28" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
         </g>
         
-        {/* Minutvisare (Blå, smalare och längre) */}
+        {/* Minutvisare (Blå) */}
         <g transform={`rotate(${minDeg} 50 50)`}>
           <line x1="50" y1="50" x2="50" y2="12" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
         </g>
@@ -82,8 +93,12 @@ const ConceptClock = ({ title, desc, hourDeg, minDeg, path }) => {
         {/* Pricken i mitten */}
         <circle cx="50" cy="50" r="3" fill="#1e293b" />
       </svg>
-      <span className="font-black text-blue-900 uppercase text-xs sm:text-sm mb-1">{title}</span>
-      <span className="text-[10px] sm:text-xs text-blue-600 font-bold leading-tight">{desc}</span>
+      
+      {/* Texten ligger nu till höger = Mycket mer plats! */}
+      <div className="flex flex-col text-left">
+        <span className={`font-black ${t.title} uppercase text-base mb-1`}>{title}</span>
+        <span className={`text-[11px] sm:text-xs ${t.desc} font-bold leading-snug`}>{desc}</span>
+      </div>
     </div>
   );
 };
@@ -228,7 +243,7 @@ const LearnTab = () => {
         </div>
       </div>
 
-      {/* NYTT: KLOCKANS TÅRTBITAR */}
+      {/* NYA BREDDARE TÅRTBITAR MED FÄRGER */}
       <div className="bg-white p-6 rounded-[2.5rem] border-4 border-slate-200 shadow-sm relative">
         <h4 className="text-xl font-black text-slate-800 uppercase mb-2 flex items-center gap-3">
           <span className="text-3xl">⏱️</span> Tårtbitarna
@@ -237,13 +252,15 @@ const LearnTab = () => {
           Den <span className="text-blue-500 font-black">långa blåa</span> minutvisaren fyller klockan som tårtbitar!
         </p>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* 1 kolumn på mobiler (för att texten ska få plats), 2 kolumner på surfplattor/datorer */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ConceptClock 
             title="Hel" 
             desc="Ingen tårtbit. Visaren pekar rakt UPP." 
             hourDeg={0} 
             minDeg={0} 
             path="" 
+            colorTheme="green"
           />
           <ConceptClock 
             title="Kvart över" 
@@ -251,6 +268,7 @@ const LearnTab = () => {
             hourDeg={7.5} 
             minDeg={90} 
             path="M50,50 L50,5 A45,45 0 0,1 95,50 Z" 
+            colorTheme="orange"
           />
           <ConceptClock 
             title="Halv" 
@@ -258,6 +276,7 @@ const LearnTab = () => {
             hourDeg={15} 
             minDeg={180} 
             path="M50,50 L50,5 A45,45 0 0,1 50,95 Z" 
+            colorTheme="indigo"
           />
           <ConceptClock 
             title="Kvart i" 
@@ -265,6 +284,7 @@ const LearnTab = () => {
             hourDeg={22.5} 
             minDeg={270} 
             path="M50,50 L5,50 A45,45 0 0,1 50,5 Z" 
+            colorTheme="yellow"
           />
         </div>
       </div>
