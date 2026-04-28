@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; // <-- NYTT: Lade till collection
 import { db } from './firebase'; 
 import EarnTab from './components/EarnTab'; 
-import ShopTab from './components/ShopTab'; // <-- HÄR ÄR BUTIKEN INLAGD
+import ShopTab from './components/ShopTab';
+import SchemaTab from './components/SchemaTab'; // <-- NYTT: Importerar Schemat
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -12,22 +13,26 @@ const triggerVibrate = () => {
 };
 
 const App = () => {
-  const [view, setView] = useState('earn'); 
+  const [view, setView] = useState('schema'); // <-- NYTT: Startar på schema nu
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // --- FIREBASE STATES ---
   const [bankBalance, setBankBalance] = useState(0);
   const [claimedQuests, setClaimedQuests] = useState({});
+  const [activities, setActivities] = useState([]); // <-- NYTT: Håller koll på schemat
+  const [adminName, setAdminName] = useState(''); // <-- NYTT: Förebildens namn
+  const [dailyMessage, setDailyMessage] = useState(''); // <-- NYTT: Dagens meddelande
+
   const appId = 'gaming-schema-app-light'; 
 
-  // 1. Klockan
+  // 1. Klockan (Uppdaterar varje sekund)
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Lyssna på Adrians bankkonto i Firebase (Realtid!)
+  // 2. Lyssna på Banken OCH meddelanden
   useEffect(() => {
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     const unsubBank = onSnapshot(bankDoc, (d) => {
@@ -35,15 +40,30 @@ const App = () => {
         const data = d.data();
         setBankBalance(data.balance || 0);
         setClaimedQuests(data.claimedQuests || {});
+        setAdminName(data.adminName || 'Din kompis'); // <-- NYTT
+        setDailyMessage(data.dailyMessage || ''); // <-- NYTT
       } else {
-        setDoc(bankDoc, { balance: 0, claimedQuests: {} }).catch(console.error);
+        setDoc(bankDoc, { balance: 0, claimedQuests: {}, adminName: 'Förälder', dailyMessage: '' }).catch(console.error);
       }
     });
 
     return () => unsubBank();
   }, []);
 
-  // 3. Funktion för att tjäna pengar (Uppdrag)
+  // 3. Lyssna på Schemat (Aktiviteter) <-- NYTT
+  useEffect(() => {
+    const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
+    const unsubSchema = onSnapshot(colPath, (snapshot) => {
+      const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Sortera så att det som händer först ligger överst
+      items.sort((a, b) => a.startTime - b.startTime);
+      setActivities(items);
+    });
+
+    return () => unsubSchema();
+  }, []);
+
+  // Funktion för att tjäna pengar (Uppdrag)
   const handleClaim = async (amount, questId, title) => {
     triggerVibrate();
     showToast(`Bra jobbat! +${amount} kr`);
@@ -59,7 +79,7 @@ const App = () => {
     }
   };
 
-  // 4. Funktion för att köpa saker (Butik) <-- HÄR ÄR DEN NYA FUNKTIONEN
+  // Funktion för att köpa saker (Butik)
   const handleBuy = async (item) => {
     if (bankBalance >= item.cost) {
       triggerVibrate();
@@ -139,9 +159,10 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 pb-32">
+    <div className="min-h-screen bg-slate-100 text-slate-900 pb-32 font-sans selection:bg-blue-500">
       <FeedbackToast />
       
+      {/* HEADER */}
       <header className="pt-10 pb-6 px-6 text-center">
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
           Adrian
@@ -151,6 +172,7 @@ const App = () => {
         </div>
       </header>
 
+      {/* HUVUDINNEHÅLL */}
       <main className="max-w-md mx-auto px-4">
         <AnimatePresence mode="wait">
           
@@ -162,10 +184,13 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
-                <span className="text-4xl mb-4 block">📅</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Schema kommer snart...</p>
-              </div>
+              {/* <-- HÄR ÄR NYA SCHEMAT INKOPPLAT --> */}
+              <SchemaTab 
+                activities={activities}
+                currentTime={currentTime}
+                dailyMessage={dailyMessage}
+                adminName={adminName}
+              />
             </motion.section>
           )}
 
@@ -208,7 +233,6 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              {/* <-- HÄR LIGGER BUTIKEN --> */}
               <ShopTab 
                 bankBalance={bankBalance} 
                 handleBuy={handleBuy} 
