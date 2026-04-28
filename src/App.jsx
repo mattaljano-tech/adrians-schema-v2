@@ -37,7 +37,7 @@ const getSwedishTimeWords = (date) => {
   if (minutes === 50) return `tio i ${hourNames[nextH]}`;
   if (minutes === 55) return `fem i ${hourNames[nextH]}`;
 
-  return ""; // Förenklad fallback
+  return "";
 };
 
 // --- KOMPONENT: ANALOG KLOCKA (För skärmsläckaren) ---
@@ -45,7 +45,7 @@ const AnalogClock = ({ date, size = 150 }) => {
   const mDeg = date.getMinutes() * 6 + date.getSeconds() * 0.1;
   const hDeg = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
   return (
-    <div style={{ width: size, height: size }} className="relative bg-slate-800 rounded-full border-[8px] border-slate-700 shadow-2xl flex-shrink-0">
+    <div style={{ width: size, height: size }} className="relative bg-[#1E293B] rounded-full border border-slate-700 shadow-2xl flex-shrink-0">
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
         <div key={num} className="absolute inset-0 p-2 text-center pointer-events-none" style={{ transform: `rotate(${num * 30}deg)` }}>
           <span className="inline-block text-[14px] font-black text-slate-500" style={{ transform: `rotate(-${num * 30}deg)` }}>{num}</span>
@@ -63,7 +63,7 @@ const App = () => {
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // --- NYA STATES FÖR LARM & VILA ---
+  // Larm & Vila
   const [isIdle, setIsIdle] = useState(false);
   const [notifsEnabled, setNotifsEnabled] = useState(false);
   const [prepAlert, setPrepAlert] = useState(null);
@@ -91,13 +91,13 @@ const App = () => {
 
   const appId = 'test-schema-v2';
 
-  // --- 1. KLOCKAN ---
+  // 1. KLOCKAN
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // --- 2. WAKE LOCK (Håll skärmen vaken) ---
+  // 2. WAKE LOCK
   useEffect(() => {
     let wakeLock = null;
     const requestWakeLock = async () => {
@@ -111,18 +111,17 @@ const App = () => {
     return () => { wakeLock?.release(); document.removeEventListener('visibilitychange', handleVis); };
   }, []);
 
-  // --- 3. SKÄRMSLÄCKARE (Idle timer) ---
+  // 3. SKÄRMSLÄCKARE (Idle timer)
   useEffect(() => {
     let timeoutId;
     const handleActivity = () => {
       setIsIdle(false);
       clearTimeout(timeoutId);
-      // Starta 10-minuters timer
       timeoutId = setTimeout(() => {
-        if (window.isTimerActive) return; // Stäng inte ner om han promenerar/läser!
+        if (window.isTimerActive) return; 
         setIsIdle(true);
-        setView('schema'); // Hoppa tillbaka till schemat när han väcker appen sen
-      }, 600000);
+        setView('schema'); 
+      }, 600000); // 10 min
     };
 
     window.addEventListener('touchstart', handleActivity);
@@ -138,21 +137,18 @@ const App = () => {
     };
   }, []);
 
-  // --- 4. LARM & NOTISER ---
+  // 4. LARM & NOTISER
   useEffect(() => {
     if (!notifsEnabled) return;
     const nowMs = currentTime.getTime();
 
     activities.forEach(a => {
-      // Förberedelse-larm (om du lagt in prepTime i framtiden)
       const prepStart = a.startTime - ((a.prepTime || 0) * 60000);
       if (a.prepTime > 0 && Math.abs(nowMs - prepStart) < 2000 && !firedNotifs.current.has(a.id + '-prep')) {
         audioRef.current?.play().catch(() => {});
         firedNotifs.current.add(a.id + '-prep');
         setPrepAlert(`Dags att förbereda sig för: ${a.title}!`);
       }
-      
-      // Start-larm (När uppdraget faktiskt börjar)
       if (Math.abs(nowMs - a.startTime) < 2000 && !firedNotifs.current.has(a.id + '-start')) {
         audioRef.current?.play().catch(() => {});
         firedNotifs.current.add(a.id + '-start');
@@ -211,29 +207,29 @@ const App = () => {
     }
   };
 
-  // För skärmsläckaren: Hitta nästa uppdrag
   const now = currentTime.getTime();
   const future = activities.filter(a => a.startTime > now);
   const nextActivity = future.length > 0 ? future[0] : null;
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 pb-32 font-sans selection:bg-blue-500">
+    // Den mjuka isblå/grå bakgrunden som gör att de vita korten "poppar"
+    <div className="min-h-screen bg-[#f1f5f9] text-slate-900 pb-32 font-sans selection:bg-blue-500">
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
 
-      {/* --- STORT LARM FÖR FÖRBEREDELSE --- */}
+      {/* --- STORT LARM FÖR FÖRBEREDELSE (Mjukare design) --- */}
       <AnimatePresence>
         {prepAlert && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }} 
+            initial={{ opacity: 0, scale: 0.9 }} 
             animate={{ opacity: 1, scale: 1 }} 
-            exit={{ opacity: 0, scale: 1.1 }}
-            className="fixed inset-0 z-[99999] bg-red-600/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center"
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="fixed inset-0 z-[99999] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center"
           >
-            <div className="text-[8rem] animate-bounce mb-4">🚨</div>
-            <h1 className="text-4xl sm:text-6xl font-black uppercase text-white tracking-widest drop-shadow-xl mb-8">{prepAlert}</h1>
+            <div className="text-[7rem] animate-pulse mb-6 drop-shadow-lg">🚨</div>
+            <h1 className="text-3xl sm:text-5xl font-black uppercase text-[#1E293B] tracking-tight mb-8 leading-tight">{prepAlert}</h1>
             <button 
               onClick={() => { setPrepAlert(null); triggerVibrate(); }}
-              className="bg-white text-red-600 px-12 py-5 rounded-full font-black uppercase text-xl shadow-2xl border-4 border-red-300 hover:scale-105 active:scale-95 transition-transform"
+              className="bg-red-500 text-white px-10 py-4 rounded-full font-black uppercase text-sm sm:text-base shadow-[0_8px_30px_rgba(239,68,68,0.4)] hover:bg-red-600 transition-colors"
             >
               Jag fattar! (Stäng)
             </button>
@@ -241,41 +237,41 @@ const App = () => {
         )}
       </AnimatePresence>
 
-      {/* --- SKÄRMSLÄCKARE --- */}
+      {/* --- SKÄRMSLÄCKARE (Elegans) --- */}
       <AnimatePresence>
         {isIdle && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            onClick={() => setIsIdle(false)} // Vakna vid klick
-            className="fixed inset-0 bg-slate-900 z-[9998] flex flex-col items-center justify-center text-white cursor-pointer"
+            transition={{ duration: 0.8 }}
+            onClick={() => setIsIdle(false)} 
+            className="fixed inset-0 bg-slate-900 z-[9998] flex flex-col items-center justify-center text-white cursor-pointer backdrop-blur-sm"
           >
-            <div className="text-slate-400 uppercase tracking-[0.3em] font-black mb-12 text-xl">
+            <div className="text-slate-400 uppercase tracking-[0.3em] font-black mb-12 text-sm sm:text-base">
               {["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"][currentTime.getDay()]} {currentTime.getDate()} {["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"][currentTime.getMonth()]}
             </div>
             
-            <AnalogClock date={currentTime} size={220} />
+            <AnalogClock date={currentTime} size={200} />
             
-            <div className="text-[7rem] sm:text-[10rem] font-black tracking-tighter mt-8 leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] text-slate-100">
+            <div className="text-[6rem] sm:text-[9rem] font-black tracking-tighter mt-10 leading-none text-white font-clock tabular-nums">
               {String(currentTime.getHours()).padStart(2, '0')}:{String(currentTime.getMinutes()).padStart(2, '0')}
             </div>
-            <div className="text-3xl font-black uppercase tracking-widest mt-2 text-blue-400 text-center px-4">
+            <div className="text-xl font-black uppercase tracking-widest mt-4 text-blue-400 text-center px-4">
               {getSwedishTimeWords(currentTime)}
             </div>
             
             {nextActivity && (
-              <div className="mt-16 bg-slate-800 p-6 rounded-[2rem] border-2 border-slate-700 flex flex-col items-center max-w-[90%] text-center shadow-2xl">
-                <span className="text-slate-400 uppercase font-black text-xs tracking-widest mb-2">Nästa uppdrag</span>
-                <span className="text-2xl font-black text-white">{nextActivity.title}</span>
-                <span className="bg-blue-600 text-white px-5 py-2 rounded-full font-black uppercase tracking-wider text-sm mt-4">
-                  Börjar kl {new Date(nextActivity.startTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
+              <div className="mt-16 bg-white/10 p-6 rounded-[2rem] border border-white/20 flex flex-col items-center max-w-[85%] text-center backdrop-blur-md">
+                <span className="text-slate-300 uppercase font-bold text-[10px] tracking-widest mb-1">Nästa på schemat</span>
+                <span className="text-xl font-black text-white uppercase tracking-wide">{nextActivity.title}</span>
+                <span className="text-blue-300 font-bold text-sm mt-2 font-clock">
+                  {new Date(nextActivity.startTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
                 </span>
               </div>
             )}
             
-            <div className="absolute bottom-10 text-slate-500 uppercase font-black tracking-widest animate-pulse text-xs">
+            <div className="absolute bottom-10 text-slate-500 uppercase font-bold tracking-widest animate-pulse text-[10px]">
               Tryck var som helst för att väcka
             </div>
           </motion.div>
@@ -286,18 +282,18 @@ const App = () => {
       <AnimatePresence>
         {activeToast && (
           <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className="fixed top-6 left-0 right-0 z-[9997] flex justify-center px-4 pointer-events-none">
-            <div className="bg-emerald-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 border-2 border-white pointer-events-auto">
-              <span className="text-xl drop-shadow-sm">✅</span>
-              <span className="font-black uppercase tracking-widest text-xs">{activeToast}</span>
+            <div className="bg-[#10b981] text-white px-6 py-3 rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center gap-3 border border-emerald-400 pointer-events-auto">
+              <span className="text-lg drop-shadow-sm">✅</span>
+              <span className="font-black uppercase tracking-widest text-[10px]">{activeToast}</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* HEADER */}
-      <header className="pt-10 pb-6 px-6 flex flex-col items-center">
-        <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm text-center">Adrian</h1>
-        <div onClick={handleSecretUnlock} className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80 cursor-pointer select-none">
+      {/* --- HEADER (Exakt som din skärmdump) --- */}
+      <header className="pt-12 pb-6 px-6 flex flex-col items-center">
+        <h1 className="text-4xl sm:text-5xl font-black text-[#1E293B] uppercase tracking-tight leading-none mb-1">Adrian</h1>
+        <div onClick={handleSecretUnlock} className="text-xl sm:text-2xl font-black text-[#3b82f6] font-clock tabular-nums tracking-widest cursor-pointer select-none">
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
 
@@ -305,16 +301,16 @@ const App = () => {
           <button 
             onClick={() => {
               setNotifsEnabled(true);
-              audioRef.current?.play().catch(e => console.log(e)); // Aktivera ljud i webbläsaren
+              audioRef.current?.play().catch(e => console.log(e));
             }}
-            className="mt-6 bg-blue-100 text-blue-700 border-2 border-blue-300 px-6 py-2 rounded-full font-black uppercase text-xs tracking-widest animate-bounce shadow-sm"
+            className="mt-6 bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] px-6 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center gap-2 transition-transform active:scale-95"
           >
-            🔔 Slå på Larm & Ljud
+            <span className="text-sm">🔔</span> Slå på larm & ljud
           </button>
         )}
       </header>
 
-      {/* HUVUDINNEHÅLL */}
+      {/* --- HUVUDINNEHÅLL --- */}
       <main className="max-w-md mx-auto px-4">
         <AnimatePresence mode="wait">
           {view === 'schema' && (
@@ -351,23 +347,48 @@ const App = () => {
         </AnimatePresence>
       </main>
 
-      {/* NAVBAR */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-slate-200 p-2 pb-6 z-50 rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-        <div className="max-w-md mx-auto flex justify-between relative px-2">
+      {/* --- NAVBAR (Premium Style) --- */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 pt-3 pb-safe z-50">
+        <div className="max-w-md mx-auto flex justify-between px-2 pb-5 pt-1">
           {[
-            { id: 'schema', label: 'Schema', icon: '🏠', color: 'text-blue-600' },
-            { id: 'learn', label: 'Lär mig', icon: '🧠', color: 'text-purple-600' },
-            { id: 'earn', label: 'Uppdrag', icon: '🎯', color: 'text-emerald-600' },
-            { id: 'shop', label: 'Butik', icon: '🛒', color: 'text-amber-500' }
-          ].map((tab) => (
-            <button key={tab.id} onClick={() => { setView(tab.id); triggerVibrate(); }} className={`relative flex-1 py-4 flex flex-col items-center gap-1 transition-all z-10 ${view === tab.id ? 'scale-105' : 'opacity-60 hover:opacity-100'}`} style={{ WebkitTapHighlightColor: 'transparent' }}>
-              {view === tab.id && <motion.div layoutId="activeNavPill" className="absolute inset-0 bg-slate-100 rounded-[1.5rem] -z-10 border-2 border-slate-200" transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
-              <span className="text-2xl drop-shadow-sm">{tab.icon}</span>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${view === tab.id ? tab.color : 'text-slate-500'}`}>{tab.label}</span>
-            </button>
-          ))}
+            { id: 'schema', label: 'Schema', icon: '🏠' },
+            { id: 'learn', label: 'Lär mig', icon: '🧠' },
+            { id: 'earn', label: 'Uppdrag', icon: '🎯' },
+            { id: 'shop', label: 'Butik', icon: '🛒' }
+          ].map((tab) => {
+            const isActive = view === tab.id;
+            return (
+              <button 
+                key={tab.id} 
+                onClick={() => { setView(tab.id); triggerVibrate(); }} 
+                className="relative flex-1 flex flex-col items-center justify-center transition-all z-10 py-2" 
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeNavPill" 
+                    className="absolute inset-0 bg-[#eff6ff] border border-[#dbeafe] rounded-2xl -z-10 shadow-[inset_0_2px_4px_rgba(255,255,255,1)]" 
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }} 
+                  />
+                )}
+                
+                <span className={`text-[22px] transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-sm grayscale-0' : 'grayscale-[40%] opacity-70'}`}>
+                  {tab.icon}
+                </span>
+                
+                <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 transition-colors ${isActive ? 'text-[#2563eb]' : 'text-slate-400'}`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </nav>
+
+      {/* Safarea fix för iPhone */}
+      <style>{`
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
+      `}</style>
     </div>
   );
 };
