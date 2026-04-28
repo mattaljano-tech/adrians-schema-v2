@@ -1,216 +1,178 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Clock, CheckCircle2 } from 'lucide-react'; // Importera ikoner från Lucide
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { collection, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { Lock, Unlock, Plus, Trash2, CreditCard, MessageSquare, Save, CalendarPlus } from 'lucide-react';
 
-const SchemaTab = ({ activities, currentTime, dailyMessage, adminName }) => {
-  const now = currentTime.getTime();
+const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [password, setPassword] = useState('');
   
-  // Sortera ut det som händer idag och framåt
-  const activeAndFuture = activities.filter(a => a.endTime > now && (a.startTime - now) < 24 * 60 * 60 * 1000);
-  
-  // Hitta vad som händer exakt just nu
-  const current = activeAndFuture.find(a => a.startTime <= now && a.endTime > now);
-  // Hitta vad som händer sen
-  const future = activeAndFuture.filter(a => a.startTime > now);
+  const SECRET_PASSWORD = "sevil";
+  const appId = 'gaming-schema-app-light';
 
-  // Hjälpfunktion för nedräkning
-  const getRem = (targetTime) => {
-    const diff = targetTime - now;
-    if (diff <= 0) return { h: 0, m: 0, s: 0 };
-    return { 
-      h: Math.floor(diff / 3600000), 
-      m: Math.floor((diff / 60000) % 60), 
-      s: Math.floor((diff / 1000) % 60) 
-    };
-  };
+  // Formulär states
+  const [newTitle, setNewTitle] = useState('');
+  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newTime, setNewTime] = useState('15:00');
+  const [newDuration, setNewDuration] = useState('60');
+  const [localMessage, setLocalMessage] = useState(dailyMessage || '');
+  const [localName, setLocalName] = useState(adminName || '');
 
-  const pad = (n) => String(n).padStart(2, '0');
-
-  // Hjälpfunktion för att visa hur lång tid något tar
-  const formatDuration = (mins) => {
-    if (mins < 60) return `${mins} min`;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return m === 0 ? `${h} tim` : `${h} h ${m} m`;
-  };
-
-  // --- NYTT: SMART IKON-GISSARE ---
-  // Bildstöd är A och O vid språkstörning och IF
-  const getIconForTitle = (title) => {
-    const t = title.toLowerCase();
-    if (t.includes('frukost') || t.includes('mat') || t.includes('middag') || t.includes('lunch')) return '🍽️';
-    if (t.includes('dusch') || t.includes('bada') || t.includes('tvätta')) return '🚿';
-    if (t.includes('skola') || t.includes('läxa')) return '🎒';
-    if (t.includes('spel') || t.includes('playstation') || t.includes('roblox') || t.includes('teardown')) return '🎮';
-    if (t.includes('sova') || t.includes('säng') || t.includes('natt') || t.includes('vila')) return '🛌';
-    if (t.includes('läs') || t.includes('bok')) return '📖';
-    if (t.includes('tv') || t.includes('film') || t.includes('youtube')) return '📺';
-    if (t.includes('träning') || t.includes('gym') || t.includes('sport')) return '🏃‍♂️';
-    if (t.includes('medicin') || t.includes('medicinering') || t.includes('tablett')) return '💊';
-    return '📌'; // Standard-ikon om ingen matchar
-  };
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="space-y-6 pb-20"
-    >
-      
-      {/* DAGENS MEDDELANDE */}
-      <AnimatePresence>
-        {dailyMessage && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-yellow-50 border-4 border-yellow-200 rounded-[2.5rem] p-5 sm:p-6 shadow-sm relative overflow-hidden"
-          >
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="bg-yellow-400 text-yellow-800 p-3 rounded-2xl shadow-md shrink-0">
-                <MessageSquare size={28} />
-              </div>
-              <div className="flex-1">
-                <p className="text-yellow-600 font-black uppercase text-[10px] sm:text-xs tracking-widest mb-0.5">{adminName || 'En hälsning'} säger:</p>
-                <p className="text-base sm:text-lg font-bold text-slate-800 leading-tight">{dailyMessage}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* VAD HÄNDER JUST NU? */}
-      <AnimatePresence mode="wait">
-        {current ? (
-          <motion.div 
-            key="current-task"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[3rem] p-6 sm:p-8 border-4 border-blue-200 shadow-xl flex flex-col items-center relative overflow-hidden"
-          >
-            {/* Dekorativ "Glow" i bakgrunden */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-100 rounded-full blur-3xl pointer-events-none -z-10"></div>
-
-            <div className="bg-blue-500 text-white px-6 py-2 rounded-full font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-md mb-6 flex items-center gap-2">
-              <Clock size={16} /> Just nu
-            </div>
-            
-            <span className="text-6xl mb-4 drop-shadow-md">{getIconForTitle(current.title)}</span>
-            
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-8 uppercase text-center leading-tight tracking-tighter">
-              {current.title}
-            </h2>
-            
-            <div className="w-full bg-slate-50 p-6 rounded-[2rem] border-2 border-slate-200 shadow-inner flex flex-col items-center">
-              <div className="text-slate-400 font-black uppercase text-[10px] sm:text-xs mb-3 text-center tracking-widest">
-                Tid kvar
-              </div>
-              
-              {/* Klockan */}
-              <div className="flex items-baseline justify-center gap-2 font-black text-5xl sm:text-6xl text-slate-800 tabular-nums">
-                {getRem(current.endTime).h > 0 && (
-                  <><span>{pad(getRem(current.endTime).h)}</span><span className="text-slate-300 text-4xl">:</span></>
-                )}
-                <span>{pad(getRem(current.endTime).m)}</span>
-                <span className="text-slate-300 text-4xl">:</span>
-                <span className="text-blue-500">{pad(getRem(current.endTime).s)}</span>
-              </div>
-
-              {/* Progress Bar (Visuell hjälp för att se tid passera) */}
-              <div className="w-full mt-6">
-                <div className="h-4 bg-slate-200 rounded-full overflow-hidden border-2 border-slate-300 shadow-inner">
-                  <motion.div 
-                    className="h-full bg-blue-500 rounded-full"
-                    initial={{ width: "100%" }}
-                    animate={{ 
-                      width: `${((current.endTime - now) / (current.duration * 60000)) * 100}%` 
-                    }}
-                    transition={{ ease: "linear", duration: 1 }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 bg-white px-4 py-2 rounded-xl text-slate-500 font-black text-[10px] sm:text-xs uppercase tracking-widest border-2 border-slate-200 shadow-sm">
-                Klar kl {new Date(current.endTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div 
-            key="free-time"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white p-8 sm:p-10 rounded-[3rem] border-4 border-slate-200 shadow-xl flex flex-col items-center text-center"
-          >
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 shadow-inner border-2 border-emerald-200">
-              <span className="text-4xl">🎮</span>
-            </div>
-            <h2 className="text-3xl font-black text-slate-800 uppercase mb-3 tracking-tighter">Fritid!</h2>
-            <p className="text-slate-500 font-bold text-sm sm:text-base leading-relaxed">
-              Inget inplanerat just nu. Passa på att ta det lugnt, eller gör ett uppdrag för att tjäna pengar!
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* VAD HÄNDER SEN? (Kommande uppdrag) */}
-      {future.length > 0 && (
-        <div className="space-y-4 pt-6">
-          <h3 className="text-slate-400 font-black uppercase tracking-widest px-4 text-xs sm:text-sm flex items-center gap-2">
-            <span className="flex-1 h-1 bg-slate-200 rounded-full"></span>
-            Det som händer sen...
-            <span className="flex-1 h-1 bg-slate-200 rounded-full"></span>
-          </h3>
-          
-          <div className="space-y-4 pl-2 border-l-4 border-slate-200 ml-6">
-            {future.map((a, index) => {
-              const isNext = index === 0 && !current; // "Nästa"-aktiviteten om man har fritid
-              
-              return (
-                <div 
-                  key={a.id} 
-                  className={`p-5 sm:p-6 rounded-[2rem] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 relative transition-all border-4 ${isNext ? 'bg-orange-50 border-orange-200 shadow-md ml-[-24px] z-10' : 'bg-white border-slate-100 shadow-sm ml-[-12px]'}`}
-                >
-                  
-                  {/* Visuell punkt på tidslinjen */}
-                  <div className={`absolute top-1/2 -left-[14px] sm:-left-[18px] w-6 h-6 rounded-full border-4 border-white -translate-y-1/2 ${isNext ? 'bg-orange-400 w-8 h-8 -left-[20px]' : 'bg-slate-300'}`}></div>
-
-                  {/* Tid & Längd */}
-                  <div className="flex flex-col items-start min-w-[70px]">
-                    <span className={`text-xl sm:text-2xl font-black tracking-tighter ${isNext ? 'text-orange-600' : 'text-slate-600'}`}>
-                      {new Date(a.startTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
-                    </span>
-                    <span className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${isNext ? 'text-orange-400' : 'text-slate-400'}`}>
-                      {formatDuration(a.duration)}
-                    </span>
-                  </div>
-                  
-                  {/* Ikon + Titel */}
-                  <div className="flex-1 flex items-center gap-3">
-                    <span className="text-2xl sm:text-3xl drop-shadow-sm">{getIconForTitle(a.title)}</span>
-                    <span className={`text-lg sm:text-xl font-black uppercase tracking-tight leading-tight ${isNext ? 'text-orange-800' : 'text-slate-700'}`}>
-                      {a.title}
-                    </span>
-                  </div>
-
-                  {/* Om det är Nästa (isNext): Visa nedräkning */}
-                  {isNext && (
-                    <div className="bg-white rounded-2xl p-4 border-2 border-orange-100 flex flex-col items-center justify-center gap-1 shadow-sm shrink-0 min-w-[120px]">
-                      <span className="font-black uppercase text-orange-400 text-[10px] tracking-widest">Börjar om</span>
-                      <div className="font-black text-xl text-orange-600 tabular-nums">
-                        {getRem(a.startTime).h > 0 ? `${pad(getRem(a.startTime).h)}:` : ''}{pad(getRem(a.startTime).m)}:{pad(getRem(a.startTime).s)}
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-              );
-            })}
+  // --- LÅSSKÄRMEN (Med mjuk styling) ---
+  if (!isUnlocked) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center pt-20 px-4">
+        <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-xl text-center w-full max-w-sm">
+          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-slate-200 shadow-inner">
+            <Lock size={40} className="text-slate-400" />
           </div>
+          <h2 className="text-2xl font-black uppercase text-slate-800 mb-2">Föräldraläge</h2>
+          <p className="text-sm font-bold text-slate-500 mb-6">Lås upp för att ändra schemat</p>
+          
+          <input 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (password.toLowerCase() === SECRET_PASSWORD) setIsUnlocked(true);
+                else { alert("Fel lösenord!"); setPassword(''); }
+              }
+            }}
+            placeholder="Lösenord..."
+            className="w-full bg-slate-50 p-4 rounded-2xl text-center text-xl font-bold outline-none border-2 border-slate-200 focus:border-blue-400 transition-colors mb-4"
+          />
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (password.toLowerCase() === SECRET_PASSWORD) setIsUnlocked(true);
+              else { alert("Fel lösenord!"); setPassword(''); }
+            }}
+            className="w-full bg-blue-500 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-[0_6px_0_rgb(29,78,216)] hover:bg-blue-400 active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2"
+          >
+            <Unlock size={20} /> Lås upp
+          </motion.button>
         </div>
-      )}
+      </motion.div>
+    );
+  }
+
+  // --- FUNKTIONER ---
+  const handleAddActivity = async (e) => {
+    e.preventDefault();
+    if (!newTitle || !newTime || !newDate) return;
+
+    const [y, m, d] = newDate.split('-').map(Number);
+    const [h, min] = newTime.split(':').map(Number);
+    const startMs = new Date(y, m - 1, d, h, min).getTime();
+
+    try {
+      const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
+      await addDoc(colPath, {
+        title: newTitle,
+        startTime: startMs,
+        endTime: startMs + (Number(newDuration) * 60 * 1000),
+        duration: Number(newDuration),
+        createdAt: Date.now()
+      });
+      alert("Tillagd i schemat!");
+      setNewTitle('');
+    } catch (err) { console.error(err); alert("Något gick fel."); }
+  };
+
+  const handleDeleteActivity = async (id) => {
+    if (window.confirm("Vill du ta bort denna?")) {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedule_items', id));
+    }
+  };
+
+  const handleUpdateBank = async (amount) => {
+    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    await updateDoc(bankDoc, { balance: bankBalance + amount });
+  };
+
+  const handleSaveMessage = async () => {
+    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    await updateDoc(bankDoc, { adminName: localName, dailyMessage: localMessage });
+    alert("Meddelande sparat!");
+  };
+
+  // --- ADMIN-PANELEN ---
+  return (
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 pt-4">
+      
+      {/* 1. DAGENS MEDDELANDE */}
+      <div className="bg-white p-6 rounded-[2.5rem] border-4 border-blue-100 shadow-xl relative overflow-hidden">
+        <div className="flex items-center gap-4 mb-4 relative z-10">
+          <div className="bg-blue-500 text-white p-3 rounded-2xl shadow-md"><MessageSquare size={24} /></div>
+          <h3 className="text-xl font-black text-slate-800 uppercase leading-none">Dagens Pepp</h3>
+        </div>
+        <div className="space-y-3 relative z-10">
+          <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-400 border-2 border-slate-200 transition-colors" />
+          <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något snällt..." className="w-full bg-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-400 border-2 border-slate-200 transition-colors min-h-[100px] resize-none" />
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleSaveMessage} className="w-full py-4 rounded-2xl bg-blue-500 text-white font-black uppercase text-xs tracking-widest shadow-[0_6px_0_rgb(29,78,216)] hover:bg-blue-400 active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2">
+            <Save size={16} /> Spara Meddelande
+          </motion.button>
+        </div>
+      </div>
+
+      {/* 2. BANKEN */}
+      <div className="bg-white p-6 rounded-[2.5rem] border-4 border-emerald-100 shadow-xl">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-emerald-500 text-white p-3 rounded-2xl shadow-md"><CreditCard size={24} /></div>
+          <h3 className="text-xl font-black text-slate-800 uppercase leading-none">Justera Saldo</h3>
+        </div>
+        <div className="text-4xl font-black text-center text-slate-700 mb-4">{bankBalance} kr</div>
+        <div className="grid grid-cols-2 gap-3">
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-red-100 text-red-600 border-2 border-red-200 py-3 rounded-2xl font-black text-lg">- 50</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-emerald-100 text-emerald-600 border-2 border-emerald-200 py-3 rounded-2xl font-black text-lg">+ 50</motion.button>
+        </div>
+      </div>
+
+      {/* 3. LÄGG TILL I SCHEMA */}
+      <div className="bg-white p-6 rounded-[2.5rem] border-4 border-amber-100 shadow-xl">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-amber-400 text-amber-900 p-3 rounded-2xl shadow-md"><CalendarPlus size={24} /></div>
+          <h3 className="text-xl font-black text-slate-800 uppercase leading-none">Nytt i schemat</h3>
+        </div>
+        <form onSubmit={handleAddActivity} className="space-y-3">
+          <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha, Läxa..." className="w-full bg-slate-50 border-2 border-slate-200 p-4 rounded-2xl font-bold outline-none focus:border-amber-400" required />
+          <div className="grid grid-cols-2 gap-3">
+            <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="bg-slate-50 border-2 border-slate-200 p-4 rounded-2xl font-bold outline-none focus:border-amber-400" required />
+            <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="bg-slate-50 border-2 border-slate-200 p-4 rounded-2xl font-bold outline-none focus:border-amber-400" required />
+          </div>
+          <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 p-4 rounded-2xl font-bold outline-none focus:border-amber-400">
+            <option value="15">15 Minuter</option>
+            <option value="30">30 Minuter</option>
+            <option value="45">45 Minuter</option>
+            <option value="60">1 Timme</option>
+            <option value="120">2 Timmar</option>
+          </select>
+          <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full bg-amber-400 text-amber-900 font-black uppercase tracking-widest py-4 rounded-2xl shadow-[0_6px_0_rgb(217,119,6)] hover:bg-amber-300 active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2">
+            <Plus size={20} /> Spara i schemat
+          </motion.button>
+        </form>
+
+        <div className="mt-8 space-y-3">
+          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest border-b-2 border-slate-100 pb-2">Planerade aktiviteter</h4>
+          {activities.length === 0 && <p className="text-xs font-bold text-slate-400 text-center py-4">Schemat är tomt.</p>}
+          {activities.map(a => (
+            <div key={a.id} className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+              <div>
+                <p className="font-black text-sm uppercase text-slate-700">{a.title}</p>
+                <p className="text-xs font-bold text-slate-500 mt-1">{new Date(a.startTime).toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'})}</p>
+              </div>
+              <button onClick={() => handleDeleteActivity(a.id)} className="bg-red-100 text-red-500 p-3 rounded-xl hover:bg-red-200 transition-colors shadow-sm">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </motion.div>
   );
 };
 
-export default SchemaTab;
+export default AdminTab;
