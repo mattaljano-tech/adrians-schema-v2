@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const SchemaTab = ({ activities, currentTime, dailyMessage, adminName }) => {
+const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigateToEarn }) => {
   const now = currentTime.getTime();
   
   // Sortera ut det som händer idag och framåt
@@ -9,8 +9,12 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName }) => {
   
   // Hitta vad som händer exakt just nu
   const current = activeAndFuture.find(a => a.startTime <= now && a.endTime > now);
+  
   // Hitta vad som händer sen
   const future = activeAndFuture.filter(a => a.startTime > now);
+  
+  // Hitta nästa grej (för att kunna räkna ner fritiden)
+  const nextActivity = future.length > 0 ? future[0] : null;
 
   // Hjälpfunktion för nedräkning
   const getRem = (targetTime) => {
@@ -40,18 +44,19 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName }) => {
       exit={{ opacity: 0, x: 10 }}
       className="space-y-8 pb-12"
     >
-      {/* DAGENS MEDDELANDE (Visas bara om det finns ett) */}
+      {/* DAGENS MEDDELANDE */}
       {dailyMessage && (
-        <div className="bg-blue-50 border-4 border-blue-200 rounded-[2rem] p-6 flex flex-col items-center gap-3 shadow-sm relative overflow-hidden text-center">
-          <div className="text-4xl">💬</div>
-          <div>
+        <div className="bg-blue-50 border-4 border-blue-200 rounded-[2.5rem] p-6 flex flex-col items-center gap-3 shadow-sm relative overflow-hidden text-center">
+          <div className="text-5xl absolute -left-4 -top-4 opacity-20">💬</div>
+          <div className="text-4xl relative z-10">💬</div>
+          <div className="relative z-10">
             <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest mb-1">{adminName || 'En hälsning'} säger:</p>
-            <p className="text-lg font-bold text-slate-800">{dailyMessage}</p>
+            <p className="text-xl font-bold text-slate-800">{dailyMessage}</p>
           </div>
         </div>
       )}
 
-      {/* VAD HÄNDER JUST NU? */}
+      {/* VAD HÄNDER JUST NU? (ELLER FRITID) */}
       {current ? (
         <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-4 border-blue-200 shadow-md flex flex-col items-center relative z-20 w-full overflow-hidden">
           <div className="bg-blue-600 text-white px-6 py-2 rounded-full font-black uppercase text-xs tracking-widest shadow-sm mb-4">
@@ -77,10 +82,37 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName }) => {
           </div>
         </div>
       ) : (
-        <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm flex flex-col items-center text-center">
-          <span className="text-5xl mb-4">🎯</span>
-          <h2 className="text-2xl font-black text-slate-800 uppercase mb-2">Fritid!</h2>
-          <p className="text-slate-500 font-bold text-sm">Du har inget inplanerat just nu. Passa på att göra ett uppdrag för att tjäna pengar!</p>
+        /* --- HÄR ÄR DEN NYA FRITIDS-RUTAN --- */
+        <div className="bg-white p-8 rounded-[3rem] border-4 border-slate-200 shadow-xl flex flex-col items-center text-center relative overflow-hidden">
+          <div className="flex gap-6 mb-8 relative z-10">
+            <div className="w-16 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center transform -rotate-6 shadow-lg text-3xl">🎯</div>
+            <div className="w-14 h-14 bg-yellow-400 rounded-xl flex items-center justify-center transform rotate-12 shadow-lg text-3xl">💰</div>
+          </div>
+          
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-800 uppercase mb-4">Fritid!</h2>
+          <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mb-6">Perfekt läge att välja ett uppdrag och tjäna pengar!</p>
+
+          {/* Räkna ner till nästa uppdrag i schemat (om det finns något) */}
+          {nextActivity && (
+            <div className="bg-slate-50 p-6 rounded-[2rem] border-2 border-slate-100 shadow-inner w-full flex flex-col items-center mt-2 mb-6">
+              <span className="text-slate-400 font-black uppercase text-[10px] mb-2 tracking-widest">Tid kvar till nästa sak i schemat</span>
+              <div className="flex items-baseline gap-1 font-black text-4xl sm:text-5xl text-slate-700">
+                {getRem(nextActivity.startTime).h > 0 && <><span className="leading-none">{pad(getRem(nextActivity.startTime).h)}</span><span className="text-slate-300 text-2xl">:</span></>}
+                <span className="leading-none">{pad(getRem(nextActivity.startTime).m)}</span>
+                <span className="text-slate-300 text-2xl">:</span>
+                <span className="leading-none">{pad(getRem(nextActivity.startTime).s)}</span>
+              </div>
+            </div>
+          )}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onNavigateToEarn}
+            className="w-full sm:w-auto bg-emerald-500 text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-sm sm:text-base shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all"
+          >
+            Gå till Uppdrag
+          </motion.button>
         </div>
       )}
 

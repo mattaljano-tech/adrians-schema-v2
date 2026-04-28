@@ -197,7 +197,16 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }} 
               transition={{ duration: 0.2 }}
             >
-              <SchemaTab activities={activities} currentTime={currentTime} dailyMessage={dailyMessage} adminName={adminName} />
+              <SchemaTab 
+  activities={activities} 
+  currentTime={currentTime} 
+  dailyMessage={dailyMessage} 
+  adminName={adminName} 
+  onNavigateToEarn={() => {
+    setView('earn');
+    triggerVibrate();
+  }}
+/>
             </motion.section>
           )}
 
