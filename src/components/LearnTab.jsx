@@ -58,17 +58,21 @@ const ConceptClock = ({ title, desc, hourDeg, minDeg, path, colorTheme }) => {
   
   // Färgteman
   const themes = {
-    green: { bg: 'bg-emerald-100', border: 'border-emerald-200', title: 'text-emerald-900', desc: 'text-emerald-700', fill: 'rgba(16, 185, 129, 0.25)' },
-    orange: { bg: 'bg-orange-100', border: 'border-orange-200', title: 'text-orange-900', desc: 'text-orange-800', fill: 'rgba(249, 115, 22, 0.2)' },
-    indigo: { bg: 'bg-indigo-100', border: 'border-indigo-200', title: 'text-indigo-900', desc: 'text-indigo-700', fill: 'rgba(99, 102, 241, 0.2)' },
-    yellow: { bg: 'bg-amber-100', border: 'border-amber-200', title: 'text-amber-900', desc: 'text-amber-700', fill: 'rgba(245, 158, 11, 0.3)' },
+    green: { bg: 'bg-emerald-100', border: 'border-emerald-200', title: 'text-emerald-900', desc: 'text-emerald-800', fill: 'rgba(16, 185, 129, 0.25)' },
+    orange: { bg: 'bg-orange-100', border: 'border-orange-200', title: 'text-orange-900', desc: 'text-orange-900', fill: 'rgba(249, 115, 22, 0.2)' },
+    indigo: { bg: 'bg-indigo-100', border: 'border-indigo-200', title: 'text-indigo-900', desc: 'text-indigo-800', fill: 'rgba(99, 102, 241, 0.2)' },
+    yellow: { bg: 'bg-amber-100', border: 'border-amber-200', title: 'text-amber-900', desc: 'text-amber-800', fill: 'rgba(245, 158, 11, 0.3)' },
   };
 
   const t = themes[colorTheme] || themes.indigo;
 
   return (
-    <div className={`${t.bg} p-4 rounded-3xl border-2 ${t.border} flex items-center gap-4 shadow-sm`}>
-      <svg viewBox="0 0 100 100" className="w-20 h-20 shrink-0 bg-white rounded-full border-[6px] border-slate-800 shadow-md">
+    <div className={`${t.bg} p-4 rounded-3xl border-2 ${t.border} flex flex-col items-center text-center shadow-sm`}>
+      
+      {/* Titel OVANFÖR */}
+      <span className={`font-black ${t.title} uppercase text-xs sm:text-sm mb-3`}>{title}</span>
+      
+      <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-white rounded-full border-[6px] border-slate-800 shadow-md mb-3">
         
         {/* Tårtbiten */}
         {path && <path d={path} fill={t.fill} />}
@@ -94,11 +98,8 @@ const ConceptClock = ({ title, desc, hourDeg, minDeg, path, colorTheme }) => {
         <circle cx="50" cy="50" r="3" fill="#1e293b" />
       </svg>
       
-      {/* Texten ligger nu till höger = Mycket mer plats! */}
-      <div className="flex flex-col text-left">
-        <span className={`font-black ${t.title} uppercase text-base mb-1`}>{title}</span>
-        <span className={`text-[11px] sm:text-xs ${t.desc} font-bold leading-snug`}>{desc}</span>
-      </div>
+      {/* Beskrivning UNDER */}
+      <span className={`text-[10px] sm:text-xs ${t.desc} font-bold leading-snug`}>{desc}</span>
     </div>
   );
 };
@@ -243,7 +244,7 @@ const LearnTab = () => {
         </div>
       </div>
 
-      {/* NYA BREDDARE TÅRTBITAR MED FÄRGER */}
+      {/* TÅRTBITARNA */}
       <div className="bg-white p-6 rounded-[2.5rem] border-4 border-slate-200 shadow-sm relative">
         <h4 className="text-xl font-black text-slate-800 uppercase mb-2 flex items-center gap-3">
           <span className="text-3xl">⏱️</span> Tårtbitarna
@@ -252,8 +253,8 @@ const LearnTab = () => {
           Den <span className="text-blue-500 font-black">långa blåa</span> minutvisaren fyller klockan som tårtbitar!
         </p>
 
-        {/* 1 kolumn på mobiler (för att texten ska få plats), 2 kolumner på surfplattor/datorer */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Nya rutnätet: 2 i bredd på mobil, 4 i bredd på lite större skärmar */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <ConceptClock 
             title="Hel" 
             desc="Ingen tårtbit. Visaren pekar rakt UPP." 
