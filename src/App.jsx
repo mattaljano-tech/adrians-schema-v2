@@ -5,7 +5,8 @@ import { db } from './firebase';
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
 import SchemaTab from './components/SchemaTab'; 
-import AdminTab from './components/AdminTab'; // Importerar admin-läget
+import LearnTab from './components/LearnTab'; // <-- HÄR är den viktiga som saknades!
+import AdminTab from './components/AdminTab'; 
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -18,17 +19,16 @@ const App = () => {
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // --- NYTT: Hemligt klicklås ---
+  // --- Hemligt klicklås ---
   const [clickCount, setClickCount] = useState(0);
 
   const handleSecretUnlock = () => {
     setClickCount((prev) => prev + 1);
-    if (clickCount >= 2) { // Om du trycker 3 gånger snabbt...
+    if (clickCount >= 2) { // 3 snabba tryck låser upp
       setView('admin');
-      setClickCount(0); // Nollställ
+      setClickCount(0); 
       triggerVibrate();
     }
-    // Nollställ räknaren om du inte trycker tillräckligt snabbt (1,5 sekunder)
     setTimeout(() => setClickCount(0), 1500);
   };
 
@@ -41,13 +41,13 @@ const App = () => {
 
   const appId = 'gaming-schema-app-light'; 
 
-  // 1. Klockan
+  // Klockan
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Lyssna på Banken OCH meddelanden
+  // Lyssna på Banken OCH meddelanden
   useEffect(() => {
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     const unsubBank = onSnapshot(bankDoc, (d) => {
@@ -64,7 +64,7 @@ const App = () => {
     return () => unsubBank();
   }, []);
 
-  // 3. Lyssna på Schemat (Aktiviteter)
+  // Lyssna på Schemat
   useEffect(() => {
     const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
     const unsubSchema = onSnapshot(colPath, (snapshot) => {
@@ -74,6 +74,12 @@ const App = () => {
     });
     return () => unsubSchema();
   }, []);
+
+  // Funktion för bekräftelser
+  const showToast = (message) => {
+    setActiveToast(message);
+    setTimeout(() => setActiveToast(null), 3000);
+  };
 
   // Funktion för att tjäna pengar
   const handleClaim = async (amount, questId, title) => {
@@ -106,11 +112,6 @@ const App = () => {
         console.error("Kunde inte genomföra köpet", err);
       }
     }
-  };
-
-  const showToast = (message) => {
-    setActiveToast(message);
-    setTimeout(() => setActiveToast(null), 3000);
   };
 
   const FeedbackToast = () => (
@@ -171,12 +172,11 @@ const App = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-32 font-sans selection:bg-blue-500">
       <FeedbackToast />
       
-      {/* HEADER */}
       <header className="pt-10 pb-6 px-6 text-center">
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
           Adrian
         </h1>
-        {/* TRE SNABBA TRYCK HÄR */}
+        {/* LÅSET: Tryck 3 gånger snabbt på klockan! */}
         <div 
           onClick={handleSecretUnlock}
           className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80 cursor-pointer select-none"
@@ -185,89 +185,36 @@ const App = () => {
         </div>
       </header>
 
-      {/* HUVUDINNEHÅLL */}
       <main className="max-w-md mx-auto px-4">
         <AnimatePresence mode="wait">
           
           {view === 'schema' && (
-            <motion.section 
-              key="schema"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <SchemaTab 
-                activities={activities}
-                currentTime={currentTime}
-                dailyMessage={dailyMessage}
-                adminName={adminName}
-              />
+            <motion.section key="schema" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+              <SchemaTab activities={activities} currentTime={currentTime} dailyMessage={dailyMessage} adminName={adminName} />
             </motion.section>
           )}
 
           {view === 'learn' && (
-            <motion.section 
-              key="learn"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* Har du lagt LearnTab i en egen fil kan vi importera den här senare. 
-                  Just nu har vi tillfällig text tills vi drar in filen. */}
-              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
-                <span className="text-4xl mb-4 block">🧠</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer snart...</p>
-              </div>
+            <motion.section key="learn" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+              <LearnTab />
             </motion.section>
           )}
 
           {view === 'earn' && (
-            <motion.section 
-              key="earn"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <EarnTab 
-                bankBalance={bankBalance} 
-                handleClaim={handleClaim} 
-                claimedQuests={claimedQuests} 
-              />
+            <motion.section key="earn" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+              <EarnTab bankBalance={bankBalance} handleClaim={handleClaim} claimedQuests={claimedQuests} />
             </motion.section>
           )}
 
           {view === 'shop' && (
-            <motion.section 
-              key="shop"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ShopTab 
-                bankBalance={bankBalance} 
-                handleBuy={handleBuy} 
-              />
+            <motion.section key="shop" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+              <ShopTab bankBalance={bankBalance} handleBuy={handleBuy} />
             </motion.section>
           )}
 
           {view === 'admin' && (
-            <motion.section 
-              key="admin"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              <AdminTab 
-                activities={activities}
-                bankBalance={bankBalance}
-                dailyMessage={dailyMessage}
-                adminName={adminName}
-              />
+            <motion.section key="admin" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
+              <AdminTab activities={activities} bankBalance={bankBalance} dailyMessage={dailyMessage} adminName={adminName} />
             </motion.section>
           )}
 
