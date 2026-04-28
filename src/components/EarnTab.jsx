@@ -21,7 +21,6 @@ const FlyingCoin = ({ coin }) => {
 };
 
 const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
-  // --- STATES FÖR TIMERS & FUNKTIONER ---
   const [walkTime, setWalkTime] = useState(0);
   const [isWalking, setIsWalking] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -98,21 +97,17 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
   // --- FUNKTIONER FÖR LÄSNING ---
   useEffect(() => {
-    if (readTime === 900) setShowReadPrompt(true); // 15 min
-    if (readTime === 1020 && showReadPrompt) { // 17 min
+    if (readTime === 900) setShowReadPrompt(true); 
+    if (readTime === 1020 && showReadPrompt) { 
       setIsReading(false);
       setShowReadPrompt(false);
     }
-    // Dela ut 10kr per 10:e minut (600 sekunder)
     if (readTime > 0 && readTime % 600 === 0 && isReading) {
       triggerReward(10, null, null, "Läsning 10 minuter");
     }
   }, [readTime, isReading, showReadPrompt]);
 
-  const handleReadAction = () => {
-    setIsReading(!isReading);
-  };
-  
+  const handleReadAction = () => setIsReading(!isReading);
   const readableTens = Math.floor(readTime / 600);
   const readReward = readableTens * 10;
 
@@ -170,7 +165,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
   const walkEarned = Math.floor(walkTime / 60);
 
-  // Uppdatera timers varje sekund
   useEffect(() => {
     window.isTimerActive = isWalking || isReading;
     let interval = null;
@@ -178,7 +172,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       interval = setInterval(() => {
         const now = Date.now();
         if (isWalking) {
-          if (now - lastMovementTime.current < 180000) { // 3 min utan rörelse = paus
+          if (now - lastMovementTime.current < 180000) { 
             setWalkTime(t => t + 1);
             setIsMoving(true);
           } else {
@@ -199,7 +193,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // --- LOKAL FUNKTION FÖR BELÖNINGAR OCH ANIMATIONER ---
   const triggerReward = (amount, e, questId = null, title = "Uppdrag") => {
     let startX = window.innerWidth / 2;
     let startY = window.innerHeight / 2;
@@ -223,7 +216,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
     }
 
     setFlyingCoins(prev => [...prev, { id, amount, startX, startY, tx, ty }]);
-
     handleClaim(amount, questId, title); 
     
     if (amount >= 10) { 
@@ -242,13 +234,13 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       {flyingCoins.map(c => <FlyingCoin key={c.id} coin={c} />)}
 
       {/* --- RUBRIK --- */}
-      <div className="flex items-center justify-center gap-3 pt-4 mb-2">
+      <div className="flex items-center justify-center gap-2 pt-4 mb-2">
         <span className="text-xl">🎯</span>
-        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fasta Uppdrag</h3>
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[11px] sm:text-xs">Fasta Uppdrag</h3>
       </div>
       
-      {/* --- UPPDRAGS-GRID (Premium Style) --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+      {/* --- UPPDRAGS-GRID (Fast Layout) --- */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-10">
         {fastQuests.map(q => {
           const tasks = getTasks(q.list);
           const totalReward = q.type === 'checklist' ? tasks.reduce((sum, t) => sum + t.reward, 0) : q.reward;
@@ -259,7 +251,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
           return (
             <div key={q.id} className="flex flex-col">
               <div 
-                className={`bg-white rounded-[1.5rem] p-4 flex items-center justify-between border transition-all duration-200 ${completelyDone ? 'border-slate-100 opacity-50' : 'border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] cursor-pointer hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] active:scale-[0.98]'}`}
+                className={`bg-white rounded-[1.25rem] sm:rounded-[1.5rem] p-3 flex items-center justify-between border transition-all duration-200 ${completelyDone ? 'border-slate-100 opacity-50' : 'border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] cursor-pointer hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] active:scale-[0.98]'}`}
                 onClick={(e) => {
                   if (completelyDone) return;
                   if (q.type === 'simple') {
@@ -269,23 +261,23 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                   else setExpandedChore(expandedChore === q.id ? null : q.id);
                 }}
               >
-                {/* Vänster: Ikon och Text */}
-                <div className="flex items-center gap-4">
-                  <span className={`text-4xl sm:text-5xl drop-shadow-sm ${completelyDone ? 'grayscale' : ''}`}>{q.icon}</span>
-                  <span className={`font-black uppercase leading-[1.1] text-xs sm:text-sm max-w-[110px] ${completelyDone ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
+                {/* Vänster: Ikon och Text med 'min-w-0' för att tvinga radbrytning istället för att krocka */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1 sm:pr-2">
+                  <span className={`text-2xl sm:text-4xl flex-shrink-0 drop-shadow-sm ${completelyDone ? 'grayscale' : ''}`}>{q.icon}</span>
+                  <span className={`font-black uppercase leading-[1.15] text-[9px] sm:text-xs break-words ${completelyDone ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
                     {q.title}
                   </span>
                 </div>
                 
-                {/* Höger: Pris och "Visa"-knapp */}
-                <div className="flex flex-col items-end gap-1.5 min-w-[70px]">
-                  <div className={`${completelyDone ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm'} font-black px-3 py-1.5 rounded-full text-[10px] sm:text-xs tracking-wide whitespace-nowrap`}>
+                {/* Höger: Pris och "Visa"-knapp med 'flex-shrink-0' så den aldrig kläms ihop */}
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  <div className={`${completelyDone ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm'} font-black px-2 py-1 rounded-full text-[9px] sm:text-[10px] tracking-wide whitespace-nowrap`}>
                     {q.type === 'checklist' ? `Max +${totalReward} kr` : `+${q.reward} kr`}
                   </div>
                   
                   {q.type === 'checklist' && !completelyDone && (
-                    <div className="bg-[#f1f5f9] text-[#64748b] font-black px-3 py-1 rounded-full border border-[#e2e8f0] text-[8px] sm:text-[9px] uppercase tracking-widest mt-1">
-                      {expandedChore === q.id ? 'Dölj' : 'Visa'}
+                    <div className="bg-[#f1f5f9] text-[#64748b] font-black px-2.5 py-0.5 rounded-full border border-[#e2e8f0] text-[7px] sm:text-[8px] uppercase tracking-widest">
+                      {expandedChore === q.id ? 'DÖLJ' : 'VISA'}
                     </div>
                   )}
                 </div>
@@ -300,12 +292,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-white/60 border border-slate-100 rounded-[1.5rem] p-2 space-y-1">
+                    <div className="bg-white/60 border border-slate-100 rounded-2xl p-2 space-y-1">
                       {tasks.map(task => {
                         const taskDone = isClaimedToday(task.id);
                         return (
-                          <div key={task.id} className={`flex justify-between items-center p-3 rounded-2xl transition-colors ${taskDone ? 'bg-slate-50 opacity-60' : 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]'}`}>
-                            <span className={`font-bold uppercase text-[10px] sm:text-xs pr-2 ${taskDone ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>{task.text}</span>
+                          <div key={task.id} className={`flex justify-between items-center p-2.5 rounded-xl transition-colors ${taskDone ? 'bg-slate-50 opacity-60' : 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]'}`}>
+                            <span className={`font-bold uppercase text-[9px] sm:text-[10px] pr-2 ${taskDone ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>{task.text}</span>
                             <motion.button 
                               whileHover={!taskDone ? { scale: 1.05 } : {}}
                               whileTap={!taskDone ? { scale: 0.95 } : {}}
@@ -314,7 +306,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                                 e.stopPropagation();
                                 triggerReward(task.reward, e, task.id, task.text);
                               }}
-                              className={`px-3 py-1.5 rounded-full font-black text-[9px] sm:text-[10px] uppercase whitespace-nowrap flex-shrink-0 ${taskDone ? 'bg-slate-200 text-slate-500' : 'bg-[#10b981] text-white shadow-sm'}`}
+                              className={`px-2.5 py-1 rounded-full font-black text-[8px] sm:text-[9px] uppercase whitespace-nowrap flex-shrink-0 ${taskDone ? 'bg-slate-200 text-slate-500' : 'bg-[#10b981] text-white shadow-sm'}`}
                             >
                               {taskDone ? 'Klar' : `+${task.reward} kr`}
                             </motion.button>
@@ -334,9 +326,8 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fokus & Rörelse</h3>
       </div>
 
-      {/* --- TIMERS: LÄSA (Premium Soft UI) --- */}
+      {/* --- TIMERS: LÄSA --- */}
       <div className={`rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border relative overflow-hidden transition-colors duration-500 ${isReading ? 'bg-[#fff7ed] border-[#fde68a]' : 'bg-white border-slate-100'}`}>
-        {/* SVG Bakgrund */}
         <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-20" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
           <rect width="800" height="400" fill="transparent" />
           <circle cx="210" cy="90" r="15" fill="#fef08a" />
@@ -396,7 +387,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         </div>
       </div>
 
-      {/* --- TIMERS: GÅ (GPS) (Premium Soft UI) --- */}
+      {/* --- TIMERS: GÅ (GPS) --- */}
       <div className={`rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border relative overflow-hidden transition-colors duration-500 ${isWalking ? 'bg-[#ecfdf5] border-[#a7f3d0]' : 'bg-white border-slate-100'}`}>
         <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-20" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
           <circle cx="650" cy="100" r="50" fill="#fde047" />
@@ -443,7 +434,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         </div>
       </div>
 
-      {/* --- MINDFULNESS SPELARE (Premium Soft UI) --- */}
+      {/* --- MINDFULNESS SPELARE --- */}
       <div className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden transition-colors duration-500">
         <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-10" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
           <circle cx="700" cy="80" r="40" fill="#fef3c7" />
