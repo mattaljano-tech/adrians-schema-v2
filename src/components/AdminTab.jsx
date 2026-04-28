@@ -7,34 +7,28 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   
-  // Det hemliga lösenordet
   const SECRET_PASSWORD = "sevil";
   const appId = 'test-schema-v2';
 
-  // Formulär-states för nya uppdrag i schemat
+  // Formulär-states för enstaka uppdrag
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newTime, setNewTime] = useState('15:00');
   const [newDuration, setNewDuration] = useState('60');
 
-  // Formulär för meddelande
   const [localMessage, setLocalMessage] = useState(dailyMessage || '');
   const [localName, setLocalName] = useState(adminName || 'Din kompis');
 
-  // --- SNABB-UPPDRAG (Klicka för att fylla i formuläret) ---
+  // Snabbval för ENSTAKA uppdrag
   const quickTasks = [
-    { title: 'Skola', duration: '360', icon: '🏫' }, // 6 timmar
-    { title: 'Ladda skoldag', duration: '15', icon: '🎒' },
-    { title: 'Middag', duration: '30', icon: '🍽️' },
-    { title: 'Duscha', duration: '15', icon: '🚿' },
-    { title: 'Skärmtid', duration: '60', icon: '📱' },
-    { title: 'Speltid', duration: '60', icon: '🎮' },
-    { title: 'Göra läxor', duration: '30', icon: '📚' },
-    { title: 'Göra i ordning för kvällen', duration: '30', icon: '🪥' },
-    { title: 'Läggdags', duration: '540', icon: '😴' }, // 9 timmar
+    { title: 'Duscha', duration: '15', icon: '🚿', time: '19:00' },
+    { title: 'Skärmtid', duration: '60', icon: '📱', time: '16:00' },
+    { title: 'Speltid', duration: '60', icon: '🎮', time: '18:00' },
+    { title: 'Göra läxor', duration: '30', icon: '📚', time: '15:30' },
+    { title: 'Göra i ordning', duration: '30', icon: '🪥', time: '19:30' },
+    { title: 'Läggdags', duration: '540', icon: '😴', time: '20:00' },
   ];
 
-  // --- LÅSSKÄRMEN ---
   if (!isUnlocked) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center pt-20">
@@ -66,7 +60,53 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
     );
   }
 
-  // --- FUNKTIONER ---
+  // --- FUNKTION: LADDA HEL SKOLDAG (BULK) ---
+  const handleLoadSchoolDay = async (isTomorrow) => {
+    const dayStr = isTomorrow ? 'imorgon' : 'idag';
+    if (!window.confirm(`Vill du ladda in en komplett skoldag för ${dayStr}?`)) return;
+
+    const baseDate = new Date();
+    if (isTomorrow) {
+      baseDate.setDate(baseDate.getDate() + 1);
+    }
+    
+    const y = baseDate.getFullYear();
+    const m = baseDate.getMonth();
+    const d = baseDate.getDate();
+
+    // Din exakta lista på händelser
+    const dailyRoutine = [
+      { title: 'Frukost', h: 7, min: 0, duration: 30 },
+      { title: 'Skola', h: 8, min: 0, duration: 450 }, // 450 min = 7.5 h (slutar 15:30)
+      { title: 'Middag', h: 18, min: 0, duration: 30 },
+      { title: 'Lära sig klockan', h: 19, min: 0, duration: 15 },
+      { title: 'Läsa', h: 19, min: 15, duration: 30 }
+    ];
+
+    try {
+      const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
+      
+      // Skapa alla uppdrag samtidigt
+      const promises = dailyRoutine.map(item => {
+        const startMs = new Date(y, m, d, item.h, item.min).getTime();
+        return addDoc(colPath, {
+          title: item.title,
+          startTime: startMs,
+          endTime: startMs + (item.duration * 60 * 1000),
+          duration: item.duration,
+          createdAt: Date.now()
+        });
+      });
+
+      await Promise.all(promises);
+      alert(`Skoldagen för ${dayStr} är inlagd!`);
+    } catch (err) {
+      console.error(err);
+      alert("Kunde inte ladda skoldagen.");
+    }
+  };
+
+  // --- ENSTAKA UPPDRAG ---
   const handleAddActivity = async (e) => {
     e.preventDefault();
     if (!newTitle || !newTime || !newDate) return;
@@ -85,7 +125,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         createdAt: Date.now()
       });
       alert("Tillagd i schemat!");
-      setNewTitle('');
+      setNewTitle(''); 
     } catch (err) {
       console.error(err);
       alert("Något gick fel.");
@@ -109,13 +149,12 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
     alert("Meddelande sparat!");
   };
 
-  // Fyller i formuläret snabbt när du klickar på en snabbknapp
   const handleQuickPick = (task) => {
     setNewTitle(task.title);
     setNewDuration(task.duration);
+    setNewTime(task.time);
   };
 
-  // --- ADMIN-PANELEN ---
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-12">
       <div className="bg-slate-800 text-white p-6 rounded-3xl text-center shadow-lg">
@@ -123,7 +162,6 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         <button onClick={() => setIsUnlocked(false)} className="text-xs bg-slate-700 px-4 py-2 rounded-full font-bold">Lås appen igen</button>
       </div>
 
-      {/* 1. BANKEN */}
       <div className="bg-white p-6 rounded-[2rem] border-4 border-slate-200 shadow-sm">
         <h3 className="font-black uppercase text-slate-700 mb-4">💳 Justera Saldo</h3>
         <div className="text-3xl font-black text-center mb-4">{bankBalance} kr</div>
@@ -135,26 +173,37 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         </div>
       </div>
 
-      {/* 2. LÄGG TILL I SCHEMA */}
+      {/* NY BULK-LADDARE FÖR HELA DAGEN */}
+      <div className="bg-blue-50 p-6 rounded-[2rem] border-4 border-blue-200 shadow-sm text-center">
+        <h3 className="font-black uppercase text-blue-900 mb-2">🎒 Ladda Komplett Skoldag</h3>
+        <p className="text-xs text-blue-700 font-bold mb-4">Lägger in Frukost, Skola, Middag, Klockan & Läsning på ett klick!</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button onClick={() => handleLoadSchoolDay(false)} className="bg-white border-2 border-blue-300 text-blue-700 font-black uppercase p-3 rounded-xl shadow-sm active:scale-95 transition-transform text-xs">
+            1. För IDAG
+          </button>
+          <button onClick={() => handleLoadSchoolDay(true)} className="bg-blue-600 border-2 border-blue-800 text-white font-black uppercase p-3 rounded-xl shadow-sm active:scale-95 transition-transform text-xs">
+            2. För IMORGON
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white p-6 rounded-[2rem] border-4 border-slate-200 shadow-sm">
-        <h3 className="font-black uppercase text-slate-700 mb-2">📅 Nytt Uppdrag i Schemat</h3>
+        <h3 className="font-black uppercase text-slate-700 mb-2">📅 Lägg till enstaka uppdrag</h3>
         
-        {/* SNABBKANPPAR */}
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Snabbval</p>
         <div className="flex overflow-x-auto gap-2 pb-4 mb-2 -mx-2 px-2 snap-x">
           {quickTasks.map((task, i) => (
             <button 
               key={i} 
               onClick={() => handleQuickPick(task)}
-              className="shrink-0 bg-blue-50 border-2 border-blue-100 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-100 active:scale-95 transition-all snap-start"
+              className="shrink-0 bg-slate-50 border-2 border-slate-200 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-100 active:scale-95 transition-all snap-start text-slate-700"
             >
               <span className="text-xl">{task.icon}</span>
-              <span className="font-bold text-blue-800 text-sm whitespace-nowrap">{task.title}</span>
+              <span className="font-bold text-sm whitespace-nowrap">{task.title}</span>
             </button>
           ))}
         </div>
 
-        {/* FORMULÄR */}
         <form onSubmit={handleAddActivity} className="space-y-3">
           <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha, Läxa..." className="w-full bg-slate-50 border-2 border-slate-200 p-3 rounded-xl font-bold outline-none focus:border-blue-500" required />
           <div className="grid grid-cols-2 gap-3">
@@ -168,10 +217,10 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
             <option value="60">1 Timme</option>
             <option value="120">2 Timmar</option>
             <option value="180">3 Timmar</option>
-            <option value="360">6 Timmar (Skoldag)</option>
+            <option value="450">7.5 Timmar (Skoldag)</option>
             <option value="540">9 Timmar (Sova)</option>
           </select>
-          <button type="submit" className="w-full bg-blue-600 text-white font-black uppercase p-4 rounded-xl shadow-md active:scale-95 transition-transform">Spara i schemat</button>
+          <button type="submit" className="w-full bg-slate-800 text-white font-black uppercase p-4 rounded-xl shadow-md active:scale-95 transition-transform">Spara i schemat</button>
         </form>
 
         <div className="mt-6 space-y-2 max-h-48 overflow-y-auto pr-2">
@@ -188,7 +237,6 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         </div>
       </div>
 
-      {/* 3. DAGENS MEDDELANDE */}
       <div className="bg-white p-6 rounded-[2rem] border-4 border-slate-200 shadow-sm">
         <h3 className="font-black uppercase text-slate-700 mb-4">💬 Dagens Meddelande</h3>
         <div className="space-y-3">
