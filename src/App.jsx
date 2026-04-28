@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; // <-- NYTT: Lade till collection
+import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; 
 import { db } from './firebase'; 
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
-import SchemaTab from './components/SchemaTab'; // <-- NYTT: Importerar Schemat
-import LearnTab from './components/LearnTab';
+import SchemaTab from './components/SchemaTab'; 
+import AdminTab from './components/AdminTab'; // Importerar admin-läget
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -14,20 +14,34 @@ const triggerVibrate = () => {
 };
 
 const App = () => {
-  const [view, setView] = useState('schema'); // <-- NYTT: Startar på schema nu
+  const [view, setView] = useState('schema'); 
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // --- NYTT: Hemligt klicklås ---
+  const [clickCount, setClickCount] = useState(0);
+
+  const handleSecretUnlock = () => {
+    setClickCount((prev) => prev + 1);
+    if (clickCount >= 2) { // Om du trycker 3 gånger snabbt...
+      setView('admin');
+      setClickCount(0); // Nollställ
+      triggerVibrate();
+    }
+    // Nollställ räknaren om du inte trycker tillräckligt snabbt (1,5 sekunder)
+    setTimeout(() => setClickCount(0), 1500);
+  };
 
   // --- FIREBASE STATES ---
   const [bankBalance, setBankBalance] = useState(0);
   const [claimedQuests, setClaimedQuests] = useState({});
-  const [activities, setActivities] = useState([]); // <-- NYTT: Håller koll på schemat
-  const [adminName, setAdminName] = useState(''); // <-- NYTT: Förebildens namn
-  const [dailyMessage, setDailyMessage] = useState(''); // <-- NYTT: Dagens meddelande
+  const [activities, setActivities] = useState([]); 
+  const [adminName, setAdminName] = useState(''); 
+  const [dailyMessage, setDailyMessage] = useState(''); 
 
   const appId = 'gaming-schema-app-light'; 
 
-  // 1. Klockan (Uppdaterar varje sekund)
+  // 1. Klockan
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -41,30 +55,27 @@ const App = () => {
         const data = d.data();
         setBankBalance(data.balance || 0);
         setClaimedQuests(data.claimedQuests || {});
-        setAdminName(data.adminName || 'Din kompis'); // <-- NYTT
-        setDailyMessage(data.dailyMessage || ''); // <-- NYTT
+        setAdminName(data.adminName || 'Din kompis'); 
+        setDailyMessage(data.dailyMessage || ''); 
       } else {
         setDoc(bankDoc, { balance: 0, claimedQuests: {}, adminName: 'Förälder', dailyMessage: '' }).catch(console.error);
       }
     });
-
     return () => unsubBank();
   }, []);
 
-  // 3. Lyssna på Schemat (Aktiviteter) <-- NYTT
+  // 3. Lyssna på Schemat (Aktiviteter)
   useEffect(() => {
     const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
     const unsubSchema = onSnapshot(colPath, (snapshot) => {
       const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Sortera så att det som händer först ligger överst
       items.sort((a, b) => a.startTime - b.startTime);
       setActivities(items);
     });
-
     return () => unsubSchema();
   }, []);
 
-  // Funktion för att tjäna pengar (Uppdrag)
+  // Funktion för att tjäna pengar
   const handleClaim = async (amount, questId, title) => {
     triggerVibrate();
     showToast(`Bra jobbat! +${amount} kr`);
@@ -80,7 +91,7 @@ const App = () => {
     }
   };
 
-  // Funktion för att köpa saker (Butik)
+  // Funktion för att köpa saker
   const handleBuy = async (item) => {
     if (bankBalance >= item.cost) {
       triggerVibrate();
@@ -97,13 +108,11 @@ const App = () => {
     }
   };
 
-  // En funktion för att visa snygga bekräftelser
   const showToast = (message) => {
     setActiveToast(message);
     setTimeout(() => setActiveToast(null), 3000);
   };
 
-  // --- KOMPONENT: LUGN FEEDBACK (Toast) ---
   const FeedbackToast = () => (
     <AnimatePresence>
       {activeToast && (
@@ -122,7 +131,6 @@ const App = () => {
     </AnimatePresence>
   );
 
-  // --- KOMPONENT: REN NAVIGERING ---
   const Navbar = () => {
     const tabs = [
       { id: 'schema', label: 'Schema', icon: '🏠', color: 'text-blue-600' },
@@ -168,7 +176,11 @@ const App = () => {
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
           Adrian
         </h1>
-        <div className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80">
+        {/* TRE SNABBA TRYCK HÄR */}
+        <div 
+          onClick={handleSecretUnlock}
+          className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80 cursor-pointer select-none"
+        >
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </header>
@@ -185,7 +197,6 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              {/* <-- HÄR ÄR NYA SCHEMAT INKOPPLAT --> */}
               <SchemaTab 
                 activities={activities}
                 currentTime={currentTime}
@@ -203,7 +214,12 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              <LearnTab />
+              {/* Har du lagt LearnTab i en egen fil kan vi importera den här senare. 
+                  Just nu har vi tillfällig text tills vi drar in filen. */}
+              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
+                <span className="text-4xl mb-4 block">🧠</span>
+                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer snart...</p>
+              </div>
             </motion.section>
           )}
 
@@ -234,6 +250,23 @@ const App = () => {
               <ShopTab 
                 bankBalance={bankBalance} 
                 handleBuy={handleBuy} 
+              />
+            </motion.section>
+          )}
+
+          {view === 'admin' && (
+            <motion.section 
+              key="admin"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AdminTab 
+                activities={activities}
+                bankBalance={bankBalance}
+                dailyMessage={dailyMessage}
+                adminName={adminName}
               />
             </motion.section>
           )}
