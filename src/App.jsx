@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// --- HÄR KAN VI LÄGGA IN FIREBASE SENARE ---
-// import { initializeApp } from "firebase/app";
-// ...
+import { doc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase'; 
+import EarnTab from './components/EarnTab'; 
+import ShopTab from './components/ShopTab'; // <-- HÄR ÄR BUTIKEN INLAGD
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -12,21 +12,74 @@ const triggerVibrate = () => {
 };
 
 const App = () => {
-  const [view, setView] = useState('schema');
+  const [view, setView] = useState('earn'); 
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Klockan i headern
+  // --- FIREBASE STATES ---
+  const [bankBalance, setBankBalance] = useState(0);
+  const [claimedQuests, setClaimedQuests] = useState({});
+  const appId = 'gaming-schema-app-light'; 
+
+  // 1. Klockan
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // 2. Lyssna på Adrians bankkonto i Firebase (Realtid!)
+  useEffect(() => {
+    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    const unsubBank = onSnapshot(bankDoc, (d) => {
+      if (d.exists()) {
+        const data = d.data();
+        setBankBalance(data.balance || 0);
+        setClaimedQuests(data.claimedQuests || {});
+      } else {
+        setDoc(bankDoc, { balance: 0, claimedQuests: {} }).catch(console.error);
+      }
+    });
+
+    return () => unsubBank();
+  }, []);
+
+  // 3. Funktion för att tjäna pengar (Uppdrag)
+  const handleClaim = async (amount, questId, title) => {
+    triggerVibrate();
+    showToast(`Bra jobbat! +${amount} kr`);
+
+    try {
+      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+      await updateDoc(bankDoc, {
+        balance: bankBalance + amount,
+        [`claimedQuests.${questId}`]: Date.now() 
+      });
+    } catch (err) {
+      console.error("Kunde inte uppdatera banken", err);
+    }
+  };
+
+  // 4. Funktion för att köpa saker (Butik) <-- HÄR ÄR DEN NYA FUNKTIONEN
+  const handleBuy = async (item) => {
+    if (bankBalance >= item.cost) {
+      triggerVibrate();
+      showToast(`Köpt: ${item.title}! 🎉`);
+
+      try {
+        const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+        await updateDoc(bankDoc, {
+          balance: bankBalance - item.cost
+        });
+      } catch (err) {
+        console.error("Kunde inte genomföra köpet", err);
+      }
+    }
+  };
+
   // En funktion för att visa snygga bekräftelser
   const showToast = (message) => {
     setActiveToast(message);
-    triggerVibrate();
-    setTimeout(() => setActiveToast(null), 3000); // Försvinner av sig själv efter 3 sekunder
+    setTimeout(() => setActiveToast(null), 3000);
   };
 
   // --- KOMPONENT: LUGN FEEDBACK (Toast) ---
@@ -51,10 +104,10 @@ const App = () => {
   // --- KOMPONENT: REN NAVIGERING ---
   const Navbar = () => {
     const tabs = [
-      { id: 'schema', label: 'Schema', icon: '🏠' },
-      { id: 'learn', label: 'Lär mig', icon: '🧠' },
-      { id: 'earn', label: 'Uppdrag', icon: '🎯' },
-      { id: 'shop', label: 'Butik', icon: '🛒' }
+      { id: 'schema', label: 'Schema', icon: '🏠', color: 'text-blue-600' },
+      { id: 'learn', label: 'Lär mig', icon: '🧠', color: 'text-purple-600' },
+      { id: 'earn', label: 'Uppdrag', icon: '🎯', color: 'text-emerald-600' },
+      { id: 'shop', label: 'Butik', icon: '🛒', color: 'text-amber-500' }
     ];
 
     return (
@@ -70,12 +123,12 @@ const App = () => {
               {view === tab.id && (
                 <motion.div 
                   layoutId="activeNavPill"
-                  className="absolute inset-0 bg-blue-50 rounded-[1.5rem] -z-10 border-2 border-blue-100"
+                  className="absolute inset-0 bg-slate-100 rounded-[1.5rem] -z-10 border-2 border-slate-200"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               <span className="text-2xl drop-shadow-sm">{tab.icon}</span>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${view === tab.id ? 'text-blue-600' : 'text-slate-500'}`}>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${view === tab.id ? tab.color : 'text-slate-500'}`}>
                 {tab.label}
               </span>
             </button>
@@ -89,7 +142,6 @@ const App = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-32">
       <FeedbackToast />
       
-      {/* HEADER */}
       <header className="pt-10 pb-6 px-6 text-center">
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
           Adrian
@@ -99,7 +151,6 @@ const App = () => {
         </div>
       </header>
 
-      {/* HUVUDINNEHÅLL */}
       <main className="max-w-md mx-auto px-4">
         <AnimatePresence mode="wait">
           
@@ -110,17 +161,10 @@ const App = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
             >
               <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
                 <span className="text-4xl mb-4 block">📅</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Schema kommer här...</p>
-                <button 
-                  onClick={() => showToast("Bra tryckt!")}
-                  className="mt-6 bg-blue-100 text-blue-600 px-6 py-3 rounded-xl font-black uppercase text-xs"
-                >
-                  Testa grön ruta
-                </button>
+                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Schema kommer snart...</p>
               </div>
             </motion.section>
           )}
@@ -135,7 +179,7 @@ const App = () => {
             >
               <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
                 <span className="text-4xl mb-4 block">🧠</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer här...</p>
+                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer snart...</p>
               </div>
             </motion.section>
           )}
@@ -148,10 +192,11 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
-                <span className="text-4xl mb-4 block">🎯</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Uppdrag kommer här...</p>
-              </div>
+              <EarnTab 
+                bankBalance={bankBalance} 
+                handleClaim={handleClaim} 
+                claimedQuests={claimedQuests} 
+              />
             </motion.section>
           )}
 
@@ -163,10 +208,11 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
-                <span className="text-4xl mb-4 block">🛒</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Butik kommer här...</p>
-              </div>
+              {/* <-- HÄR LIGGER BUTIKEN --> */}
+              <ShopTab 
+                bankBalance={bankBalance} 
+                handleBuy={handleBuy} 
+              />
             </motion.section>
           )}
 
