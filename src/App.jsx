@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; 
+import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; // <-- NYTT: Lade till collection
 import { db } from './firebase'; 
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
-import SchemaTab from './components/SchemaTab'; 
-import LearnTab from './components/LearnTab'; // <-- HÄR är den viktiga som saknades!
-import AdminTab from './components/AdminTab'; 
+import SchemaTab from './components/SchemaTab'; // <-- NYTT: Importerar Schemat
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -15,39 +13,26 @@ const triggerVibrate = () => {
 };
 
 const App = () => {
-  const [view, setView] = useState('schema'); 
+  const [view, setView] = useState('schema'); // <-- NYTT: Startar på schema nu
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // --- Hemligt klicklås ---
-  const [clickCount, setClickCount] = useState(0);
-
-  const handleSecretUnlock = () => {
-    setClickCount((prev) => prev + 1);
-    if (clickCount >= 2) { // 3 snabba tryck låser upp
-      setView('admin');
-      setClickCount(0); 
-      triggerVibrate();
-    }
-    setTimeout(() => setClickCount(0), 1500);
-  };
 
   // --- FIREBASE STATES ---
   const [bankBalance, setBankBalance] = useState(0);
   const [claimedQuests, setClaimedQuests] = useState({});
-  const [activities, setActivities] = useState([]); 
-  const [adminName, setAdminName] = useState(''); 
-  const [dailyMessage, setDailyMessage] = useState(''); 
+  const [activities, setActivities] = useState([]); // <-- NYTT: Håller koll på schemat
+  const [adminName, setAdminName] = useState(''); // <-- NYTT: Förebildens namn
+  const [dailyMessage, setDailyMessage] = useState(''); // <-- NYTT: Dagens meddelande
 
   const appId = 'gaming-schema-app-light'; 
 
-  // Klockan
+  // 1. Klockan (Uppdaterar varje sekund)
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Lyssna på Banken OCH meddelanden
+  // 2. Lyssna på Banken OCH meddelanden
   useEffect(() => {
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     const unsubBank = onSnapshot(bankDoc, (d) => {
@@ -55,33 +40,30 @@ const App = () => {
         const data = d.data();
         setBankBalance(data.balance || 0);
         setClaimedQuests(data.claimedQuests || {});
-        setAdminName(data.adminName || 'Din kompis'); 
-        setDailyMessage(data.dailyMessage || ''); 
+        setAdminName(data.adminName || 'Din kompis'); // <-- NYTT
+        setDailyMessage(data.dailyMessage || ''); // <-- NYTT
       } else {
         setDoc(bankDoc, { balance: 0, claimedQuests: {}, adminName: 'Förälder', dailyMessage: '' }).catch(console.error);
       }
     });
+
     return () => unsubBank();
   }, []);
 
-  // Lyssna på Schemat
+  // 3. Lyssna på Schemat (Aktiviteter) <-- NYTT
   useEffect(() => {
     const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
     const unsubSchema = onSnapshot(colPath, (snapshot) => {
       const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Sortera så att det som händer först ligger överst
       items.sort((a, b) => a.startTime - b.startTime);
       setActivities(items);
     });
+
     return () => unsubSchema();
   }, []);
 
-  // Funktion för bekräftelser
-  const showToast = (message) => {
-    setActiveToast(message);
-    setTimeout(() => setActiveToast(null), 3000);
-  };
-
-  // Funktion för att tjäna pengar
+  // Funktion för att tjäna pengar (Uppdrag)
   const handleClaim = async (amount, questId, title) => {
     triggerVibrate();
     showToast(`Bra jobbat! +${amount} kr`);
@@ -97,7 +79,7 @@ const App = () => {
     }
   };
 
-  // Funktion för att köpa saker
+  // Funktion för att köpa saker (Butik)
   const handleBuy = async (item) => {
     if (bankBalance >= item.cost) {
       triggerVibrate();
@@ -114,6 +96,13 @@ const App = () => {
     }
   };
 
+  // En funktion för att visa snygga bekräftelser
+  const showToast = (message) => {
+    setActiveToast(message);
+    setTimeout(() => setActiveToast(null), 3000);
+  };
+
+  // --- KOMPONENT: LUGN FEEDBACK (Toast) ---
   const FeedbackToast = () => (
     <AnimatePresence>
       {activeToast && (
@@ -132,6 +121,7 @@ const App = () => {
     </AnimatePresence>
   );
 
+  // --- KOMPONENT: REN NAVIGERING ---
   const Navbar = () => {
     const tabs = [
       { id: 'schema', label: 'Schema', icon: '🏠', color: 'text-blue-600' },
@@ -172,49 +162,81 @@ const App = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-32 font-sans selection:bg-blue-500">
       <FeedbackToast />
       
+      {/* HEADER */}
       <header className="pt-10 pb-6 px-6 text-center">
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
           Adrian
         </h1>
-        {/* LÅSET: Tryck 3 gånger snabbt på klockan! */}
-        <div 
-          onClick={handleSecretUnlock}
-          className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80 cursor-pointer select-none"
-        >
+        <div className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80">
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </header>
 
+      {/* HUVUDINNEHÅLL */}
       <main className="max-w-md mx-auto px-4">
         <AnimatePresence mode="wait">
           
           {view === 'schema' && (
-            <motion.section key="schema" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-              <SchemaTab activities={activities} currentTime={currentTime} dailyMessage={dailyMessage} adminName={adminName} />
+            <motion.section 
+              key="schema"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* <-- HÄR ÄR NYA SCHEMAT INKOPPLAT --> */}
+              <SchemaTab 
+                activities={activities}
+                currentTime={currentTime}
+                dailyMessage={dailyMessage}
+                adminName={adminName}
+              />
             </motion.section>
           )}
 
           {view === 'learn' && (
-            <motion.section key="learn" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-              <LearnTab />
+            <motion.section 
+              key="learn"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
+                <span className="text-4xl mb-4 block">🧠</span>
+                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer snart...</p>
+              </div>
             </motion.section>
           )}
 
           {view === 'earn' && (
-            <motion.section key="earn" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-              <EarnTab bankBalance={bankBalance} handleClaim={handleClaim} claimedQuests={claimedQuests} />
+            <motion.section 
+              key="earn"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <EarnTab 
+                bankBalance={bankBalance} 
+                handleClaim={handleClaim} 
+                claimedQuests={claimedQuests} 
+              />
             </motion.section>
           )}
 
           {view === 'shop' && (
-            <motion.section key="shop" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-              <ShopTab bankBalance={bankBalance} handleBuy={handleBuy} />
-            </motion.section>
-          )}
-
-          {view === 'admin' && (
-            <motion.section key="admin" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-              <AdminTab activities={activities} bankBalance={bankBalance} dailyMessage={dailyMessage} adminName={adminName} />
+            <motion.section 
+              key="shop"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ShopTab 
+                bankBalance={bankBalance} 
+                handleBuy={handleBuy} 
+              />
             </motion.section>
           )}
 
