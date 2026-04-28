@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
-// --- HJÄLPFUNKTIONER FÖR TID OCH TAL ---
+// --- HELP FUNCTIONS FOR TIME AND TALK (Unchanged) ---
 const getSwedishTimeWords = (date) => {
   const hours = date.getHours();
   const minutes = date.getMinutes();
@@ -38,7 +38,7 @@ const getSwedishTimeWords = (date) => {
   } else if (minutes > 35 && minutes < 45) {
     if (minutes < 40) return `${getMinStr(minutes - 30)} över halv ${hourNames[nextH]}`;
     return `${getMinStr(60 - minutes)} i ${hourNames[nextH]}`;
-  } else if (minutes > 45) {
+  } else if (minutes > 30 && minutes < 45) {
     return `${getMinStr(60 - minutes)} i ${hourNames[nextH]}`;
   }
 };
@@ -53,10 +53,10 @@ const speakText = (text) => {
   }
 };
 
-// --- KOMPONENT: PEDAGOGISK TÅRTBITSKLOCKA (UPPDATERAD LAYOUT) ---
+// --- COMPONENT: PEDAGOGICAL PIE CLOCK (Updated Layout) ---
 const ConceptClock = ({ title, desc, hourDeg, minDeg, path, colorTheme }) => {
   
-  // Färgteman
+  // Color Themes
   const themes = {
     green: { bg: 'bg-emerald-100', border: 'border-emerald-200', title: 'text-emerald-900', desc: 'text-emerald-800', fill: 'rgba(16, 185, 129, 0.25)' },
     orange: { bg: 'bg-orange-100', border: 'border-orange-200', title: 'text-orange-900', desc: 'text-orange-900', fill: 'rgba(249, 115, 22, 0.2)' },
@@ -69,42 +69,42 @@ const ConceptClock = ({ title, desc, hourDeg, minDeg, path, colorTheme }) => {
   return (
     <div className={`${t.bg} p-4 rounded-3xl border-2 ${t.border} flex flex-col items-center text-center shadow-sm`}>
       
-      {/* Titel OVANFÖR */}
+      {/* Title ABOVE */}
       <span className={`font-black ${t.title} uppercase text-xs sm:text-sm mb-3`}>{title}</span>
       
       <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-white rounded-full border-[6px] border-slate-800 shadow-md mb-3">
         
-        {/* Tårtbiten */}
+        {/* The Pie Slice */}
         {path && <path d={path} fill={t.fill} />}
         {title === "Hel" && <circle cx="50" cy="50" r="45" fill={t.fill} />}
         
-        {/* Små streck för 12, 3, 6, 9 */}
+        {/* Small ticks for 12, 3, 6, 9 */}
         <line x1="50" y1="5" x2="50" y2="10" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         <line x1="95" y1="50" x2="90" y2="50" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         <line x1="50" y1="95" x2="50" y2="90" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         <line x1="5" y1="50" x2="10" y2="50" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
         
-        {/* Timvisare (Röd) */}
+        {/* Hour Hand (Red) */}
         <g transform={`rotate(${hourDeg} 50 50)`}>
           <line x1="50" y1="50" x2="50" y2="28" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
         </g>
         
-        {/* Minutvisare (Blå) */}
+        {/* Minute Hand (Blue) */}
         <g transform={`rotate(${minDeg} 50 50)`}>
           <line x1="50" y1="50" x2="50" y2="12" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
         </g>
         
-        {/* Pricken i mitten */}
+        {/* The dot in the middle */}
         <circle cx="50" cy="50" r="3" fill="#1e293b" />
       </svg>
       
-      {/* Beskrivning UNDER */}
+      {/* Description BELOW */}
       <span className={`text-[10px] sm:text-xs ${t.desc} font-bold leading-snug`}>{desc}</span>
     </div>
   );
 };
 
-// --- DEN INTERAKTIVA KLOCKAN ---
+// --- THE INTERACTIVE CLOCK (Unchanged) ---
 const InteractiveClock = ({ time, setTime, onDoubleClick }) => {
   const svgRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -195,6 +195,7 @@ const InteractiveClock = ({ time, setTime, onDoubleClick }) => {
   );
 };
 
+// --- LEARNTAB (With Updated 2x2 Grid) ---
 const LearnTab = () => {
   const [simTimeMs, setSimTimeMs] = useState(() => {
     const d = new Date();
@@ -219,7 +220,7 @@ const LearnTab = () => {
       exit={{ opacity: 0, x: 10 }}
       className="space-y-8 pb-12"
     >
-      {/* INTERAKTIVA KLOCKAN */}
+      {/* INTERACTIVE CLOCK (Unchanged) */}
       <div className="bg-white p-6 rounded-[2.5rem] border-4 border-blue-200 shadow-sm flex flex-col items-center text-center">
         <div className="bg-blue-50 text-blue-800 px-6 py-2 rounded-full font-black uppercase text-xs border-2 border-blue-200 mb-6 flex items-center gap-2">
           👆 Snurra visarna
@@ -244,7 +245,7 @@ const LearnTab = () => {
         </div>
       </div>
 
-      {/* TÅRTBITARNA */}
+      {/* THE PIE SLICES (With Updated 2x2 Grid) */}
       <div className="bg-white p-6 rounded-[2.5rem] border-4 border-slate-200 shadow-sm relative">
         <h4 className="text-xl font-black text-slate-800 uppercase mb-2 flex items-center gap-3">
           <span className="text-3xl">⏱️</span> Tårtbitarna
@@ -253,8 +254,8 @@ const LearnTab = () => {
           Den <span className="text-blue-500 font-black">långa blåa</span> minutvisaren fyller klockan som tårtbitar!
         </p>
 
-        {/* Nya rutnätet: 2 i bredd på mobil, 4 i bredd på lite större skärmar */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* --- CHANGE HERE: Forced 2 columns (2x2 grid) --- */}
+        <div className="grid grid-cols-2 gap-4">
           <ConceptClock 
             title="Hel" 
             desc="Ingen tårtbit. Visaren pekar rakt UPP." 
@@ -290,7 +291,7 @@ const LearnTab = () => {
         </div>
       </div>
 
-      {/* VECKANS FÄRGER */}
+      {/* THE WEEK'S COLORS (Unchanged) */}
       <div className="bg-white p-6 rounded-[2.5rem] border-4 border-slate-200 shadow-sm relative">
         <h4 className="text-xl font-black text-slate-800 uppercase mb-6 flex items-center gap-3">
           <span className="text-3xl">📅</span> Veckans Färger
