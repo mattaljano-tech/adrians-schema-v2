@@ -5,6 +5,7 @@ import { db } from './firebase';
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
 import SchemaTab from './components/SchemaTab'; // <-- NYTT: Importerar Schemat
+import LearnTab from './components/LearnTab';
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -202,10 +203,7 @@ const App = () => {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-200 shadow-sm text-center">
-                <span className="text-4xl mb-4 block">🧠</span>
-                <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Lär dig klockan kommer snart...</p>
-              </div>
+              <LearnTab />
             </motion.section>
           )}
 
