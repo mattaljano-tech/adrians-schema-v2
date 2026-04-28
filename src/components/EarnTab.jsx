@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- FLYING COIN ANIMATION ---
 const FlyingCoin = ({ coin }) => {
   const [pos, setPos] = useState({ left: coin.startX, top: coin.startY, scale: 1, opacity: 1 });
   
@@ -20,9 +21,31 @@ const FlyingCoin = ({ coin }) => {
 };
 
 const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
-  const [expandedChore, setExpandedChore] = useState(null);
+  // --- STATES FÖR TIMERS & FUNKTIONER ---
+  const [walkTime, setWalkTime] = useState(0);
+  const [isWalking, setIsWalking] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
+  const watchId = useRef(null);
+  const lastPosition = useRef(null);
+  const lastMovementTime = useRef(Date.now());
+  
   const [flyingCoins, setFlyingCoins] = useState([]);
+  const [expandedChore, setExpandedChore] = useState(null);
+
+  const [readTime, setReadTime] = useState(0);
+  const [isReading, setIsReading] = useState(false);
+  const [showReadPrompt, setShowReadPrompt] = useState(false);
+
   const levelUpAudioRef = useRef(null);
+  const mindfulnessAudioRef = useRef(null);
+  
+  const [isMindfulnessPlaying, setIsMindfulnessPlaying] = useState(false);
+  const mindfulnessSongs = [
+    { id: 'm1', title: 'Avslappning i Rymden', url: 'Avslappning i rymden.mp3' },
+    { id: 'm2', title: 'Lugna Skogen', url: 'Lugna Skogen.mp3' },
+    { id: 'm3', title: 'Gaming Chill Lofi', url: 'https://din-länk-till-låt-3.mp3' }
+  ];
+  const [selectedSong, setSelectedSong] = useState(mindfulnessSongs[0].url);
 
   // --- UPPDRAG & CHECKLISTOR ---
   const cleanTasks = [
@@ -73,6 +96,110 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
     return claimDateStr === todayStr;
   };
 
+  // --- FUNKTIONER FÖR LÄSNING ---
+  useEffect(() => {
+    if (readTime === 900) setShowReadPrompt(true); // 15 min
+    if (readTime === 1020 && showReadPrompt) { // 17 min
+      setIsReading(false);
+      setShowReadPrompt(false);
+    }
+    // Dela ut 10kr per 10:e minut (600 sekunder)
+    if (readTime > 0 && readTime % 600 === 0 && isReading) {
+      triggerReward(10, null, null, "Läsning 10 minuter");
+    }
+  }, [readTime, isReading, showReadPrompt]);
+
+  const handleReadAction = () => {
+    setIsReading(!isReading);
+  };
+  
+  const readableTens = Math.floor(readTime / 600);
+  const readReward = readableTens * 10;
+
+  // --- FUNKTIONER FÖR PROMENAD (GPS) ---
+  const haversineDistance = (coords1, coords2) => {
+    const toRad = (x) => x * Math.PI / 180;
+    const R = 6371e3;
+    const dLat = toRad(coords2.latitude - coords1.latitude);
+    const dLon = toRad(coords2.longitude - coords1.longitude);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(toRad(coords1.latitude)) * Math.cos(toRad(coords2.latitude)) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+
+  const handleWalkAction = (e) => {
+    if (!isWalking) {
+      if ('geolocation' in navigator) {
+        lastMovementTime.current = Date.now();
+        setIsMoving(true);
+        watchId.current = navigator.geolocation.watchPosition(
+          (pos) => {
+            const now = Date.now();
+            if (lastPosition.current) {
+              const dist = haversineDistance(lastPosition.current, pos.coords);
+              if (dist > 5) {
+                lastMovementTime.current = now;
+                lastPosition.current = pos.coords;
+              }
+            } else {
+              lastPosition.current = pos.coords;
+              lastMovementTime.current = now;
+            }
+          },
+          (err) => console.warn("GPS fel:", err),
+          { enableHighAccuracy: true, maximumAge: 10000 }
+        );
+      } else {
+        alert("GPS stöds inte på denna enhet.");
+      }
+      setIsWalking(true);
+    } else {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+      const walkEarned = Math.floor(walkTime / 60);
+      if (walkEarned > 0) triggerReward(walkEarned, e, null, "Promenad");
+      setIsWalking(false);
+      setIsMoving(false);
+      setWalkTime(0);
+      lastPosition.current = null;
+    }
+  };
+
+  const walkEarned = Math.floor(walkTime / 60);
+
+  // Uppdatera timers varje sekund
+  useEffect(() => {
+    window.isTimerActive = isWalking || isReading;
+    let interval = null;
+    if (isWalking || isReading) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        if (isWalking) {
+          if (now - lastMovementTime.current < 180000) { // 3 min utan rörelse = paus
+            setWalkTime(t => t + 1);
+            setIsMoving(true);
+          } else {
+            setIsMoving(false); 
+          }
+        }
+        if (isReading) {
+          setReadTime(t => t + 1);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isWalking, isReading]);
+
+  const formatTimer = (totalSeconds) => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // --- LOKAL FUNKTION FÖR BELÖNINGAR OCH ANIMATIONER ---
   const triggerReward = (amount, e, questId = null, title = "Uppdrag") => {
     let startX = window.innerWidth / 2;
     let startY = window.innerHeight / 2;
@@ -96,6 +223,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
     }
 
     setFlyingCoins(prev => [...prev, { id, amount, startX, startY, tx, ty }]);
+
     handleClaim(amount, questId, title); 
     
     if (amount >= 10) { 
@@ -116,10 +244,10 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       {/* --- RUBRIK --- */}
       <div className="flex items-center justify-center gap-3 pt-4 mb-2">
         <span className="text-xl">🎯</span>
-        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-xs">Fasta Uppdrag</h3>
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fasta Uppdrag</h3>
       </div>
       
-      {/* --- UPPDRAGS-GRID (Exakt enligt din skärmdump) --- */}
+      {/* --- UPPDRAGS-GRID (Premium Style) --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
         {fastQuests.map(q => {
           const tasks = getTasks(q.list);
@@ -131,7 +259,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
           return (
             <div key={q.id} className="flex flex-col">
               <div 
-                className={`bg-white rounded-3xl p-4 flex items-center justify-between border transition-all duration-200 ${completelyDone ? 'border-slate-100 opacity-50' : 'border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] cursor-pointer hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] active:scale-[0.98]'}`}
+                className={`bg-white rounded-[1.5rem] p-4 flex items-center justify-between border transition-all duration-200 ${completelyDone ? 'border-slate-100 opacity-50' : 'border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] cursor-pointer hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] active:scale-[0.98]'}`}
                 onClick={(e) => {
                   if (completelyDone) return;
                   if (q.type === 'simple') {
@@ -202,6 +330,179 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         })}
       </div>
 
+      <div className="flex items-center justify-center gap-3 pt-6 mb-4">
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fokus & Rörelse</h3>
+      </div>
+
+      {/* --- TIMERS: LÄSA (Premium Soft UI) --- */}
+      <div className={`rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border relative overflow-hidden transition-colors duration-500 ${isReading ? 'bg-[#fff7ed] border-[#fde68a]' : 'bg-white border-slate-100'}`}>
+        {/* SVG Bakgrund */}
+        <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-20" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+          <rect width="800" height="400" fill="transparent" />
+          <circle cx="210" cy="90" r="15" fill="#fef08a" />
+          <ellipse cx="400" cy="360" rx="200" ry="20" fill="#0f766e" />
+          <rect x="200" y="100" width="50" height="40" fill="#fbbf24" />
+          <polygon points="180,140 270,140 240,100 210,100" fill="#fcd34d" />
+        </svg>
+
+        <div className="absolute inset-0 bg-white/80 z-10 backdrop-blur-[2px]"></div>
+
+        <div className="relative z-20">
+          <div className="flex items-center gap-4 mb-6">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm ${isReading ? 'bg-orange-100 animate-pulse' : 'bg-slate-50'}`}>📖</div>
+            <div>
+              <h4 className="text-lg font-black text-[#1E293B] uppercase tracking-wide">Läs en bok</h4>
+              <p className="text-slate-500 font-bold text-[10px] sm:text-xs">Läs hur länge du vill. Tjäna 10 kr för varje 10 minuter.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center mb-6">
+            <span className={`text-6xl sm:text-[5.5rem] leading-none font-black tracking-widest font-clock ${isReading ? 'text-orange-500' : 'text-slate-700'}`}>{formatTimer(readTime)}</span>
+            <div className={`mt-4 text-center px-4 py-2 rounded-full border shadow-sm ${readReward > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+              {readReward > 0 
+                ? <span className="text-[#059669] font-black uppercase text-xs animate-bounce">Du har tjänat {readReward} kr!</span>
+                : <span className="text-slate-400 font-bold uppercase text-[10px]">Läs i 10 min för att tjäna 10 kr</span>
+              }
+            </div>
+          </div>
+
+          {showReadPrompt && (
+            <div className="mb-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm text-center animate-bounce">
+              <h4 className="text-sm font-black text-yellow-800 uppercase mb-1">Läser du fortfarande? 👀</h4>
+              <p className="text-yellow-600 font-bold text-[10px] mb-3">Svara inom 2 minuter annars stängs timern av!</p>
+              <button onClick={() => setShowReadPrompt(false)} className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-black uppercase text-xs shadow-sm hover:bg-yellow-300">
+                Ja, jag läser!
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <motion.button 
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+              onClick={handleReadAction} 
+              className={`flex-1 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-sm transition-colors border ${isReading ? 'bg-orange-500 text-white border-orange-600' : 'bg-[#3b82f6] text-white border-[#2563eb]'}`}
+            >
+              {readTime === 0 ? '▶ Starta Timer' : isReading ? '⏸ Pausa' : '▶ Fortsätt läsa'}
+            </motion.button>
+            {readTime > 0 && !isReading && (
+              <motion.button 
+                onClick={() => setReadTime(0)} 
+                className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-black uppercase text-xs tracking-widest border border-slate-200 hover:bg-slate-200"
+              >
+                ⏹ Avsluta & Nollställ
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* --- TIMERS: GÅ (GPS) (Premium Soft UI) --- */}
+      <div className={`rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border relative overflow-hidden transition-colors duration-500 ${isWalking ? 'bg-[#ecfdf5] border-[#a7f3d0]' : 'bg-white border-slate-100'}`}>
+        <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-20" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+          <circle cx="650" cy="100" r="50" fill="#fde047" />
+          <circle cx="80" cy="300" r="70" fill="#166534" />
+          <circle cx="140" cy="280" r="80" fill="#15803d" />
+        </svg>
+
+        <div className="absolute inset-0 bg-white/80 z-10 backdrop-blur-[2px]"></div>
+
+        <div className="relative z-20">
+          <div className="flex items-center gap-4 mb-6">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm ${isWalking ? 'bg-green-100 animate-bounce' : 'bg-slate-50'}`}>🚶‍♂️</div>
+            <div>
+              <h4 className="text-lg font-black text-[#1E293B] uppercase tracking-wide">Ta en promenad</h4>
+              <p className="text-slate-500 font-bold text-[10px] sm:text-xs">Gå ut och rör på dig. Tjäna 1 kr per minut.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center mb-6">
+            <span className={`text-6xl sm:text-[5.5rem] leading-none font-black tracking-widest font-clock ${isWalking ? 'text-emerald-500' : 'text-slate-700'}`}>{formatTimer(walkTime)}</span>
+            <div className="mt-4 text-center bg-slate-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+              <span className="text-slate-400 font-bold uppercase text-[10px] mr-2">Du har tjänat:</span>
+              <span className="text-[#059669] font-black text-sm">+{walkEarned} kr</span>
+            </div>
+            {isWalking && !isMoving && (
+              <div className="mt-3 text-orange-500 font-bold text-[10px] uppercase animate-pulse text-center bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200">
+                Pausad: Ingen rörelse på 3 minuter
+              </div>
+            )}
+            {isWalking && isMoving && (
+              <div className="mt-3 text-[#059669] font-bold text-[10px] uppercase animate-pulse text-center bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
+                GPS-spårning aktiv 📍
+              </div>
+            )}
+          </div>
+
+          <motion.button 
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+            onClick={handleWalkAction} 
+            className={`w-full py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-md transition-colors border ${isWalking ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-[#3b82f6] text-white border-[#2563eb]'}`}
+          >
+            {!isWalking ? '▶ Börja gå!' : `⏹ Avsluta & Hämta ${walkEarned} kr`}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* --- MINDFULNESS SPELARE (Premium Soft UI) --- */}
+      <div className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden transition-colors duration-500">
+        <svg className="absolute inset-0 w-full h-full object-cover z-0 opacity-10" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+          <circle cx="700" cy="80" r="40" fill="#fef3c7" />
+          <path d="M0,320 C150,250 350,380 500,310 C650,240 800,340 800,320 L800,400 L0,400 Z" fill="#6366f1" />
+        </svg>
+
+        <div className="absolute inset-0 bg-white/80 z-10 backdrop-blur-[2px]"></div>
+
+        <div className="relative z-20">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm bg-indigo-50 text-indigo-500">🎧</div>
+            <div>
+              <h4 className="text-lg font-black text-[#1E293B] uppercase tracking-wide flex items-center gap-2">
+                Mindfulness
+                <span className="bg-[#dcfce7] text-[#059669] text-[10px] px-2 py-0.5 rounded-full border border-green-200">+5 kr</span>
+              </h4>
+              <p className="text-slate-500 font-bold text-[10px] mt-1">Lyssna klart på hela låten för att få belöningen.</p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner mb-4">
+            <label className="block text-[9px] font-black uppercase text-slate-400 mb-2 tracking-widest">Välj låt:</label>
+            <select 
+              value={selectedSong} 
+              onChange={(e) => setSelectedSong(e.target.value)}
+              className="w-full p-2 bg-white border border-slate-200 rounded-lg font-bold text-xs text-slate-700 outline-none shadow-sm focus:border-indigo-400"
+            >
+              {mindfulnessSongs.map(song => (
+                <option key={song.id} value={song.url}>{song.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-xl shadow-inner border border-slate-100">
+            <audio 
+              ref={mindfulnessAudioRef}
+              src={selectedSong} 
+              onEnded={(e) => {
+                setIsMindfulnessPlaying(false);
+                triggerReward(5, e, null, "Lyssna på Mindfulness");
+              }}
+              onPlay={() => setIsMindfulnessPlaying(true)}
+              onPause={() => setIsMindfulnessPlaying(false)}
+            ></audio>
+            
+            <motion.button 
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (isMindfulnessPlaying) mindfulnessAudioRef.current.pause();
+                else mindfulnessAudioRef.current.play();
+              }}
+              className={`w-full py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-sm transition-colors border flex justify-center items-center gap-2 ${isMindfulnessPlaying ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-indigo-500 text-white border-indigo-600'}`}
+            >
+              {isMindfulnessPlaying ? '⏸ Pausa Låten' : '▶ Starta Låten'}
+            </motion.button>
+          </div>
+        </div>
+      </div>
+      
     </motion.div>
   );
 };
