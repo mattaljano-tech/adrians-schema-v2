@@ -233,10 +233,47 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       <audio ref={levelUpAudioRef} src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto" />
       {flyingCoins.map(c => <FlyingCoin key={c.id} coin={c} />)}
 
+      {/* --- VIRTUELL BANK (Premium Fintech Style) --- */}
+      <div id="adrians-bank-balance" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2rem] p-6 sm:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.15)] relative overflow-hidden mt-4 border border-slate-700/50">
+        
+        {/* Dekorativ bakgrundseffekt */}
+        <div className="absolute -right-6 -top-10 opacity-10 text-[130px] pointer-events-none select-none blur-[1px] rotate-12">💳</div>
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-500/10 to-transparent pointer-events-none"></div>
+
+        <div className="relative z-10 flex justify-between items-start mb-5">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm">
+              Adrians Bank
+            </h2>
+            {bankStreak > 0 && (
+              <div className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-max shadow-sm backdrop-blur-sm flex items-center gap-1.5">
+                <span className="text-sm">🔥</span> {bankStreak} Dagars Streak!
+              </div>
+            )}
+          </div>
+          
+          {/* Guld-chip (Ger kreditkorts-känsla) */}
+          <div className="w-10 h-8 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-md border border-yellow-200/50 shadow-inner flex flex-col justify-evenly p-1.5 opacity-90">
+            <div className="w-full h-[1px] bg-yellow-700/40"></div>
+            <div className="w-full h-[1px] bg-yellow-700/40"></div>
+            <div className="w-full h-[1px] bg-yellow-700/40"></div>
+          </div>
+        </div>
+
+        <div className="relative z-10 pt-2">
+          <p className="text-slate-500 font-bold uppercase tracking-[0.15em] text-[9px] sm:text-[10px] mb-1">
+            Tillgängligt Saldo
+          </p>
+          <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md">
+            {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
+          </div>
+        </div>
+      </div>
+
       {/* --- RUBRIK --- */}
-      <div className="flex items-center justify-center gap-2 pt-4 mb-2">
-        <span className="text-xl">🎯</span>
-        <h3 className="text-slate-400 font-black uppercase tracking-[0.15em] text-xs">Fasta Uppdrag</h3>
+      <div className="flex items-center justify-center gap-2 pt-2 mb-2">
+        <span className="text-lg">🎯</span>
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fasta Uppdrag</h3>
       </div>
       
       {/* --- UPPDRAGS-LISTA (EN KOLUMN - PREMIUM) --- */}
@@ -288,7 +325,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 {/* Höger: Prislapp och "Visa"-knapp/Pil */}
                 <div className="flex flex-col items-end justify-center gap-2 flex-shrink-0 pl-2">
                   <div className={`${completelyDone ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm'} font-black px-4 py-2 rounded-full text-xs sm:text-sm tracking-wide`}>
-                    {q.type === 'checklist' ? `Upp till +${totalReward} kr` : `+${q.reward} kr`}
+                    {q.type === 'checklist' ? `Max +${totalReward} kr` : `+${q.reward} kr`}
                   </div>
                   
                   {q.type === 'checklist' && !completelyDone && (
@@ -302,7 +339,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 </div>
               </div>
 
-              {/* CHECKLISTAN (Utökad meny, indragen för snygg hierarki) */}
+              {/* CHECKLISTAN */}
               <AnimatePresence>
                 {q.type === 'checklist' && expandedChore === q.id && (
                   <motion.div 
@@ -342,7 +379,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       </div>
 
       <div className="flex items-center justify-center gap-3 pt-6 mb-4">
-        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-xs">Fokus & Rörelse</h3>
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fokus & Rörelse</h3>
       </div>
 
       {/* --- TIMERS: LÄSA --- */}
