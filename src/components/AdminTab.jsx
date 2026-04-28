@@ -9,7 +9,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   
   // Det hemliga lösenordet
   const SECRET_PASSWORD = "sevil";
-  const appId = 'gaming-schema-app-light';
+  const appId = 'test-schema-v2';
 
   // Formulär-states för nya uppdrag i schemat
   const [newTitle, setNewTitle] = useState('');

@@ -26,7 +26,7 @@ const App = () => {
   const [adminName, setAdminName] = useState(''); // <-- NYTT: Förebildens namn
   const [dailyMessage, setDailyMessage] = useState(''); // <-- NYTT: Dagens meddelande
 
-  const appId = 'gaming-schema-app-light'; 
+  const appId = 'test-schema-v2';
 
   // 1. Klockan (Uppdaterar varje sekund)
   useEffect(() => {
