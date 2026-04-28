@@ -6,6 +6,7 @@ import EarnTab from './components/EarnTab';
 import ShopTab from './components/ShopTab';
 import SchemaTab from './components/SchemaTab'; // <-- NYTT: Importerar Schemat
 import LearnTab from './components/LearnTab';
+import AdminTab from './components/AdminTab';
 
 const triggerVibrate = () => {
   if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -163,15 +164,17 @@ const App = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-32 font-sans selection:bg-blue-500">
       <FeedbackToast />
       
-      {/* HEADER */}
       <header className="pt-10 pb-6 px-6 text-center">
-        <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
-          Adrian
-        </h1>
-        <div className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80">
-          {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-        </div>
-      </header>
+     <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
+       Adrian
+     </h1>
+     <div 
+       onDoubleClick={() => setView('admin')} 
+       className="text-xl font-black text-blue-500 mt-2 tracking-widest opacity-80 cursor-pointer"
+     >
+       {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+     </div>
+   </header>
 
       {/* HUVUDINNEHÅLL */}
       <main className="max-w-md mx-auto px-4">
@@ -237,7 +240,22 @@ const App = () => {
               />
             </motion.section>
           )}
-
+          {view === 'admin' && (
+         <motion.section 
+           key="admin"
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           exit={{ opacity: 0, scale: 0.95 }}
+           transition={{ duration: 0.2 }}
+         >
+           <AdminTab 
+             activities={activities}
+             bankBalance={bankBalance}
+             dailyMessage={dailyMessage}
+             adminName={adminName}
+           />
+         </motion.section>
+       )}
         </AnimatePresence>
       </main>
 
