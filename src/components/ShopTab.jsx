@@ -34,26 +34,47 @@ const ShopTab = ({ bankBalance, handleBuy }) => {
       transition={{ duration: 0.3 }} 
       className="space-y-8 pb-12"
     >
-      {/* --- SALDO-VISARE --- */}
-      <div className="flex flex-col items-center justify-center pt-6 mb-2">
-        <span className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] mb-1">Ditt Saldo</span>
-        <div className="text-5xl font-black text-[#1E293B] font-clock tabular-nums tracking-tight flex items-baseline gap-2">
-          {bankBalance} <span className="text-xl text-slate-400 font-sans tracking-wide">kr</span>
+      {/* --- SALDO-VISARE (Ny Premium & Triggande Design) --- */}
+      <div className="relative pt-6 mb-10 flex justify-center px-4">
+        {/* Magisk bakgrunds-glow som pulserar */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 bg-gradient-to-r from-emerald-400 to-blue-400 blur-[40px] opacity-30 rounded-full pointer-events-none animate-pulse"></div>
+        
+        <div className="bg-white rounded-[2.5rem] px-8 py-8 shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col items-center relative z-10 w-full max-w-[320px] transform hover:scale-105 transition-transform duration-300">
+          <span className="text-slate-400 font-black uppercase tracking-[0.25em] text-[10px] sm:text-xs mb-4 flex items-center gap-2">
+             Din Plånbok
+          </span>
+          
+          <div className="flex items-center gap-3 sm:gap-5">
+            <PremiumEmoji emoji="💰" className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-xl animate-[bounce_3s_infinite]" />
+            <div className="text-[5rem] sm:text-[6rem] leading-none font-black text-[#1E293B] font-clock tabular-nums tracking-tight flex items-baseline gap-2">
+              {bankBalance} <span className="text-2xl sm:text-3xl text-emerald-500 font-sans tracking-wide">kr</span>
+            </div>
+          </div>
+          
+          {bankBalance > 0 ? (
+             <div className="mt-6 bg-[#dcfce7] text-[#059669] px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest border border-green-200 shadow-sm flex items-center gap-2">
+                Redo att shoppa! <span className="text-sm">🛒</span>
+             </div>
+          ) : (
+             <div className="mt-6 bg-slate-100 text-slate-500 px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest border border-slate-200 flex items-center gap-2">
+                Gör uppdrag för pengar <span className="text-sm">💪</span>
+             </div>
+          )}
         </div>
       </div>
 
       {/* --- DET STORA MÅLET (Hero Card) --- */}
-      <div className="px-1">
+      <div className="px-2 sm:px-4">
         <div className="flex items-center gap-2 mb-4">
-          <PremiumEmoji emoji="🏆" className="w-5 h-5" />
-          <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Stora sparmålet</h3>
+          <PremiumEmoji emoji="🏆" className="w-6 h-6" />
+          <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[11px] sm:text-xs">Stora sparmålet</h3>
         </div>
         
         <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
           
           <div className="relative z-10 flex items-center gap-5 mb-8">
-            <div className="w-20 h-20 bg-[#f8fafc] rounded-[1.5rem] flex items-center justify-center shadow-sm border border-slate-50">
+            <div className="w-20 h-20 bg-[#f8fafc] rounded-[1.5rem] flex items-center justify-center shadow-sm border border-slate-50 flex-shrink-0">
               <PremiumEmoji emoji={bigGoal.icon} className="w-12 h-12" />
             </div>
             <div>
@@ -103,10 +124,10 @@ const ShopTab = ({ bankBalance, handleBuy }) => {
       </div>
 
       {/* --- SNABBA BELÖNINGAR (Premium Lista) --- */}
-      <div className="px-1 pt-4">
+      <div className="px-2 sm:px-4 pt-4">
         <div className="flex items-center gap-2 mb-4">
-          <PremiumEmoji emoji="🎁" className="w-5 h-5" />
-          <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Snabba belöningar</h3>
+          <PremiumEmoji emoji="🎁" className="w-6 h-6" />
+          <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[11px] sm:text-xs">Snabba belöningar</h3>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -117,7 +138,7 @@ const ShopTab = ({ bankBalance, handleBuy }) => {
               <div 
                 key={item.id} 
                 className={`bg-white rounded-[1.5rem] p-3 sm:p-4 flex items-center justify-between border transition-all duration-200 ${
-                  !canAfford ? 'opacity-60 border-slate-100 shadow-sm' : 'border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                  !canAfford ? 'opacity-60 border-slate-100 shadow-sm' : 'border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)]'
                 }`}
               >
                 <div className="flex items-center gap-4 flex-1">
@@ -142,7 +163,7 @@ const ShopTab = ({ bankBalance, handleBuy }) => {
                     disabled={!canAfford}
                     className={`px-6 py-2.5 rounded-full font-black uppercase text-[10px] sm:text-xs tracking-widest transition-all border ${
                       canAfford 
-                      ? 'bg-[#10b981] text-white border-emerald-500 shadow-sm' 
+                      ? 'bg-[#10b981] text-white border-emerald-500 shadow-[0_4px_15px_rgba(16,185,129,0.3)]' 
                       : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
                     }`}
                   >
