@@ -65,7 +65,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const audioRef = useRef(null);
   const mindfulnessSongs = [
     { id: 'm1', title: 'Rymden', url: 'Avslappning i rymden.mp3', reward: 5 },
-    { id: 'm2', title: 'Skogen', url: 'Lugna Skogen.mp3', reward: 5 },
+    { id: 'm2', title: 'Skogen', url: 'Lugna skogen.mp3', reward: 5 },
     { id: 'm3', title: 'Lofi', url: 'https://din-länk-till-låt-3.mp3', reward: 5 }
   ];
   const [selectedSongId, setSelectedSongId] = useState(mindfulnessSongs[0].id);

@@ -13,7 +13,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
   />
 );
 
-const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime }) => {
+const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime, showToast }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
@@ -138,10 +138,10 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
       });
 
       await Promise.all(promises);
-      alert(`Skoldagen för ${dayStr} är inlagd!`);
+      showToast(`Skoldagen för ${dayStr} är inlagd!`);
     } catch (err) {
       console.error(err);
-      alert("Kunde inte ladda skoldagen.");
+      showToast("Kunde inte ladda skoldagen.");
     }
   };
 
@@ -187,10 +187,10 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
       setNewDuration('60');
       setIsLiveEvent(false);
       setSaveAsFavorite(false);
-      alert(editingId ? "Uppdraget har ändrats!" : "Tillagd i schemat!");
+      showToast(editingId ? "Uppdraget har ändrats!" : "Tillagd i schemat!");
     } catch (err) {
       console.error(err);
-      alert("Något gick fel vid sparning.");
+      showToast("Något gick fel vid sparning.");
     }
   };
 
@@ -247,13 +247,13 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   const setStreakZero = async () => {
       const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
       await updateDoc(bankDoc, { streak: 0 });
-      alert("Streaken är nu nollställd!");
+      showToast("Streaken är nu nollställd!");
   };
 
   const resetDailyQuests = async () => {
       const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
       await updateDoc(bankDoc, { claimedQuests: {} });
-      alert("Dagens uppdrag är nu upplåsta igen!");
+      showToast("Dagens uppdrag är nu upplåsta igen!");
   };
 
   const handleSaveMessageAndSettings = async () => {
@@ -263,7 +263,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         dailyMessage: localMessage,
         bedtime: localBedtime
     });
-    alert("Meddelande och inställningar sparade!");
+    showToast("Meddelande och inställningar sparade!");
   };
 
   return (

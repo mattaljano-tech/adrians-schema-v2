@@ -111,7 +111,7 @@ const App = () => {
     }
   }, []);
 
-  
+
   // --- 1. KLOCKAN ---
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -378,7 +378,9 @@ const App = () => {
                 activities={activities} 
                 currentTime={currentTime} 
                 dailyMessage={dailyMessage} 
-                adminName={adminName} 
+                adminName={adminName}
+                bedtime={bedtime}
+                showToast={showToast}
                 onNavigateToEarn={() => { setView('earn'); triggerVibrate(); }}
               />
             </motion.section>
