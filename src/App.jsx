@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; 
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { db } from './firebase'; 
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
@@ -91,7 +92,16 @@ const App = () => {
 
   const appId = 'test-schema-v2';
 
-  // 1. KLOCKAN
+  // --- 0. TYST INLOGGNING (SÄKERHET) ---
+  useEffect(() => {
+    const auth = getAuth();
+    signInAnonymously(auth).catch((error) => {
+      console.error("Kunde inte logga in tyst i bakgrunden:", error);
+    });
+  }, []);
+
+  // --- 1. KLOCKAN ---
+  
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
