@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-// --- VISUELL TIME TIMER ---
-// Detta är guldstandard för autism och IF. En röd skiva som minskar.
+// --- VISUELL TIME TIMER (FIXAD!) ---
 const VisualTimer = ({ totalMs, remainingMs }) => {
   const percentage = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
-  const radius = 40;
+  
+  // Rätt matte för SVG Pie Chart: 
+  // Om r=25 och strokeWidth=50, fyller linjen exakt från mitten (0) ut till kanten (50) av en 100x100 ruta.
+  const radius = 25; 
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center">
+    // Yttre behållare som garanterar att den är rund med en lyxig ram
+    <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center rounded-full bg-white border-[4px] border-slate-100 shadow-[inset_0_4px_10px_rgba(0,0,0,0.05)] overflow-hidden">
       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-        {/* Bakgrundscirkel (tavlan) */}
-        <circle cx="50" cy="50" r={radius} fill="white" stroke="#f1f5f9" strokeWidth="2" />
+        
+        {/* Vit bakgrund (tavlan) */}
+        <circle cx="50" cy="50" r="50" fill="white" />
         
         {/* Den röda tids-ytan som minskar */}
         <circle
@@ -21,15 +25,15 @@ const VisualTimer = ({ totalMs, remainingMs }) => {
           cy="50"
           r={radius}
           fill="none"
-          stroke="#ef4444" /* Röd färg, klassisk Time Timer */
-          strokeWidth="40" /* Samma som radien så den fyller hela */
+          stroke="#ef4444" /* Röd färg (Time Timer standard) */
+          strokeWidth="50" /* Måste vara dubbla radien för att nå centrum */
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-linear"
         />
         
-        {/* Mitten-prick för att den ska se ut som en riktig klocka */}
-        <circle cx="50" cy="50" r="3" fill="#1e293b" />
+        {/* Mitten-prick för att se ut som en klocka */}
+        <circle cx="50" cy="50" r="4" fill="#1e293b" />
       </svg>
     </div>
   );
@@ -96,7 +100,6 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
           <div className="text-3xl select-none">💬</div>
           <div>
             <p className="text-slate-500 font-bold text-xs mb-1">{adminName || 'Hälsning'} säger:</p>
-            {/* Sentence case och font-bold är mycket lättare att läsa än uppercase */}
             <p className="text-lg font-bold text-slate-800 leading-snug">{dailyMessage}</p>
           </div>
         </div>
@@ -120,7 +123,7 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
               remainingMs={getRemMs(current.endTime)} 
             />
             
-            <p className="text-slate-600 font-bold text-lg mt-4">
+            <p className="text-slate-600 font-bold text-lg mt-5">
               {getRemMins(current.endTime)} minuter kvar
             </p>
             <p className="text-slate-400 font-medium text-xs mt-1">
@@ -151,10 +154,10 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
 
           {nextRealActivity && (
             <div className="mt-8 pt-6 border-t border-slate-100 w-full">
-              <p className="text-slate-500 font-bold text-xs mb-2">Tid kvar till nästa sak:</p>
-              <div className="flex justify-center items-center gap-4">
+              <p className="text-slate-500 font-bold text-xs mb-4">Tid kvar till nästa sak:</p>
+              <div className="flex justify-center items-center gap-5">
                 <VisualTimer 
-                  totalMs={(nextRealActivity.startTime - (current?.endTime || now)) || (60 * 60000)} // Uppskattad "total" gap-tid för visualisering
+                  totalMs={(nextRealActivity.startTime - now) || (60 * 60000)}
                   remainingMs={getRemMs(nextRealActivity.startTime)} 
                 />
                 <div className="text-left">
