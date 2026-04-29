@@ -161,52 +161,20 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   );
 };
 
-// --- NYA TÅRTBITARNA (Exakt som bilden) ---
+// --- TÅRTBITARNA ---
 const ClockFractions = () => {
   const fractions = [
     { 
-      id: "hel",
-      title: "HEL", 
-      desc: "Detta är en hel timme (60 min).",
-      subDesc: "Ett helt varv runt klockan.",
-      bg: "bg-[#FFF8E7]",
-      titleColor: "text-[#991B1B]", 
-      piePath: <circle cx="50" cy="50" r="40" fill="#FDE047" />,
-      mDeg: 0,
-      hDeg: 0
+      id: "hel", title: "HEL", desc: "Detta är en hel timme (60 min).", subDesc: "Ett helt varv runt klockan.", bg: "bg-[#FFF8E7]", titleColor: "text-[#991B1B]", piePath: <circle cx="50" cy="50" r="40" fill="#FDE047" />, mDeg: 0, hDeg: 0
     },
     { 
-      id: "kvart_over",
-      title: "KVART ÖVER", 
-      desc: "Detta är en kvart (15 min).",
-      subDesc: "Från hel till kvart över.",
-      bg: "bg-[#EFF6FF]",
-      titleColor: "text-[#1E40AF]",
-      piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 90 50 Z" fill="#BFDBFE" />,
-      mDeg: 90,
-      hDeg: 7.5
+      id: "kvart_over", title: "KVART ÖVER", desc: "Detta är en kvart (15 min).", subDesc: "Från hel till kvart över.", bg: "bg-[#EFF6FF]", titleColor: "text-[#1E40AF]", piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 90 50 Z" fill="#BFDBFE" />, mDeg: 90, hDeg: 7.5
     },
     { 
-      id: "halv",
-      title: "HALV", 
-      desc: "Detta är en halvtimme (30 min).",
-      subDesc: "Från hel till halv.",
-      bg: "bg-[#ECFDF5]",
-      titleColor: "text-[#065F46]",
-      piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 50 90 Z" fill="#A7F3D0" />,
-      mDeg: 180,
-      hDeg: 15
+      id: "halv", title: "HALV", desc: "Detta är en halvtimme (30 min).", subDesc: "Från hel till halv.", bg: "bg-[#ECFDF5]", titleColor: "text-[#065F46]", piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 50 90 Z" fill="#A7F3D0" />, mDeg: 180, hDeg: 15
     },
     { 
-      id: "kvart_i",
-      title: "KVART I", 
-      desc: "Detta är också en kvart (15 min).",
-      subDesc: "Från kvart i fram till hel.",
-      bg: "bg-[#FEF2F2]",
-      titleColor: "text-[#BE123C]",
-      piePath: <path d="M 50 50 L 10 50 A 40 40 0 0 1 50 10 Z" fill="#FECDD3" />,
-      mDeg: 270,
-      hDeg: 22.5
+      id: "kvart_i", title: "KVART I", desc: "Detta är också en kvart (15 min).", subDesc: "Från kvart i fram till hel.", bg: "bg-[#FEF2F2]", titleColor: "text-[#BE123C]", piePath: <path d="M 50 50 L 10 50 A 40 40 0 0 1 50 10 Z" fill="#FECDD3" />, mDeg: 270, hDeg: 22.5
     }
   ];
 
@@ -220,15 +188,9 @@ const ClockFractions = () => {
       <div className="flex flex-col gap-3 sm:gap-4 px-1">
         {fractions.map((f) => (
           <div key={f.id} className={`${f.bg} rounded-[2rem] p-4 sm:p-5 border border-white/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-5 sm:gap-6`}>
-            
-            {/* SVG-klockan med siffror och tårtbit */}
             <div className="w-24 h-24 sm:w-[110px] sm:h-[110px] flex-shrink-0 relative flex items-center justify-center bg-white rounded-full border-[5px] border-[#1E293B] shadow-sm">
               <svg viewBox="0 0 100 100" className="w-full h-full rounded-full">
-                
-                {/* Tårtbiten i bakgrunden */}
                 {f.piePath}
-
-                {/* Siffrorna 1-12 */}
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
                   const angle = (num * 30 - 90) * (Math.PI / 180);
                   const radius = 32;
@@ -240,21 +202,16 @@ const ClockFractions = () => {
                     </text>
                   );
                 })}
-
-                {/* Timvisare */}
                 <g transform={`rotate(${f.hDeg} 50 50)`}>
                   <line x1="50" y1="50" x2="50" y2="28" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
                 </g>
-                {/* Minutvisare */}
                 <g transform={`rotate(${f.mDeg} 50 50)`}>
                   <line x1="50" y1="50" x2="50" y2="15" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
                 </g>
-                {/* Mittpunkt */}
                 <circle cx="50" cy="50" r="3.5" fill="#1E293B" />
               </svg>
             </div>
 
-            {/* Tydlig text bredvid */}
             <div className="flex flex-col justify-center">
               <span className={`font-black uppercase tracking-tight text-[22px] sm:text-[26px] ${f.titleColor} mb-1 leading-none`}>
                 {f.title}
@@ -266,7 +223,6 @@ const ClockFractions = () => {
                 {f.subDesc}
               </span>
             </div>
-            
           </div>
         ))}
       </div>
@@ -274,8 +230,11 @@ const ClockFractions = () => {
   );
 };
 
-// --- KALENDER (Premium Monthly Style) ---
-const CalendarCard = ({ date }) => {
+// --- KALENDER (Med månadsknappar och SUPERTYDLIG "Du är här") ---
+const CalendarCard = () => {
+  const [viewDate, setViewDate] = useState(new Date());
+  const realToday = new Date(); // Dagens faktiska datum
+
   const monthThemes = [
     { name: "Januari", emoji: "❄️", gradient: "from-blue-400 to-indigo-500" },
     { name: "Februari", emoji: "⛄", gradient: "from-cyan-400 to-blue-500" },
@@ -291,22 +250,45 @@ const CalendarCard = ({ date }) => {
     { name: "December", emoji: "🎄", gradient: "from-red-500 to-green-600" }
   ];
 
-  const currentMonth = monthThemes[date.getMonth()];
-  const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const today = date.getDate();
+  const currentMonth = monthThemes[viewDate.getMonth()];
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+
+  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
 
   return (
     <div className="bg-white rounded-[3rem] shadow-[0_8px_40px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden">
-      <div className={`bg-gradient-to-br ${currentMonth.gradient} p-8 flex items-center justify-between relative overflow-hidden`}>
+      <div className={`bg-gradient-to-br ${currentMonth.gradient} p-6 sm:p-8 flex items-center justify-between relative overflow-hidden`}>
         <div className="absolute -right-4 -bottom-8 opacity-20 transform scale-150 pointer-events-none">
           <PremiumEmoji emoji={currentMonth.emoji} className="w-40 h-40" />
         </div>
         
-        <div className="relative z-10">
-          <h2 className="text-white/80 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs mb-1">Dagens datum</h2>
-          <p className="text-white font-black text-4xl sm:text-5xl tracking-tight">
-            {today} <span className="font-bold opacity-90">{currentMonth.name}</span>
-          </p>
+        {/* Navigering för månader */}
+        <div className="relative z-10 flex items-center justify-between w-full">
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={prevMonth} 
+            className="bg-white/20 p-3 sm:p-4 rounded-full backdrop-blur-md shadow-sm flex items-center justify-center text-xl sm:text-2xl"
+          >
+            ⬅️
+          </motion.button>
+
+          <div className="text-center px-4">
+            <h2 className="text-white/80 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs mb-1">Månad</h2>
+            <p className="text-white font-black text-3xl sm:text-4xl tracking-tight leading-none">
+              {currentMonth.name} <span className="opacity-80 block text-lg sm:text-xl mt-1">{viewDate.getFullYear()}</span>
+            </p>
+          </div>
+
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={nextMonth} 
+            className="bg-white/20 p-3 sm:p-4 rounded-full backdrop-blur-md shadow-sm flex items-center justify-center text-xl sm:text-2xl"
+          >
+            ➡️
+          </motion.button>
         </div>
       </div>
 
@@ -316,20 +298,31 @@ const CalendarCard = ({ date }) => {
             <div key={i} className="text-center text-slate-400 font-black text-[10px]">{d}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        <div className="grid grid-cols-7 gap-2 sm:gap-3">
           {[...Array(daysInMonth)].map((_, i) => {
             const day = i + 1;
-            const isToday = day === today;
+            // Kontrollera om dagen vi ritar ut är EXAKT dagens datum i verkligheten
+            const isToday = 
+              day === realToday.getDate() && 
+              viewDate.getMonth() === realToday.getMonth() && 
+              viewDate.getFullYear() === realToday.getFullYear();
+
             return (
               <div 
                 key={i} 
-                className={`aspect-square flex items-center justify-center rounded-xl text-xs sm:text-sm font-black transition-all ${
+                className={`relative aspect-square flex flex-col items-center justify-center rounded-2xl text-sm sm:text-base font-black transition-all ${
                   isToday 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200/50 scale-110' 
-                  : 'text-slate-400'
+                  ? 'bg-yellow-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.6)] border-4 border-black scale-110 z-10' 
+                  : 'text-slate-500 bg-slate-50 hover:bg-slate-100'
                 }`}
               >
-                {day}
+                {/* Supertydlig markör inuti rutan om det är dagens datum */}
+                {isToday && (
+                  <span className="text-[7px] sm:text-[8px] font-black uppercase mb-0.5 leading-none tracking-tight text-center">
+                    Du är<br/>här
+                  </span>
+                )}
+                <span className={isToday ? "text-xl sm:text-2xl" : ""}>{day}</span>
               </div>
             );
           })}
@@ -339,65 +332,7 @@ const CalendarCard = ({ date }) => {
   );
 };
 
-// --- MINNESREGLER (Premium Flashcards) ---
-const LearnRhymes = () => {
-  const dayColors = [
-    { name: "Mån", full: "Måndag", color: "bg-[#4CAF50]", text: "Grön som gräset", icon: "🌱" },
-    { name: "Tis", full: "Tisdag", color: "bg-[#2196F3]", text: "Blå som havet", icon: "💧" },
-    { name: "Ons", full: "Onsdag", color: "bg-[#94a3b8]", text: "Lill-lördag (Vit)", icon: "☁️" },
-    { name: "Tor", full: "Torsdag", color: "bg-[#8D6E63]", text: "Brun som ett träd", icon: "🪵" },
-    { name: "Fre", full: "Fredag", color: "bg-[#FFEB3B]", text: "Gul som solen", icon: "☀️" },
-    { name: "Lör", full: "Lördag", color: "bg-[#E91E63]", text: "Rosa som godis", icon: "🍬" },
-    { name: "Sön", full: "Söndag", color: "bg-[#F44336]", text: "Röd för vila", icon: "🛑" }
-  ];
-
-  return (
-    <div className="space-y-8 pt-4">
-      {/* Veckans färger */}
-      <div>
-        <div className="flex items-center gap-2 mb-4 px-2">
-          <PremiumEmoji emoji="📅" className="w-6 h-6" />
-          <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Veckans färger</h3>
-        </div>
-        <div className="flex overflow-x-auto gap-3 pb-4 snap-x -mx-4 px-4 scrollbar-hide">
-          {dayColors.map(day => (
-            <div key={day.name} className="flex-shrink-0 w-32 snap-center bg-white rounded-[2rem] p-4 border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col items-center text-center">
-              <div className={`${day.color} w-14 h-14 rounded-2xl mb-3 shadow-inner flex items-center justify-center border-[3px] border-white`}>
-                <span className="text-2xl drop-shadow-sm">{day.icon}</span>
-              </div>
-              <span className="font-black text-[#1E293B] text-xs uppercase mb-1 tracking-wide">{day.full}</span>
-              <span className="text-[9px] font-bold text-slate-400 leading-tight tracking-widest uppercase">{day.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Knogtricket */}
-      <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center gap-3 mb-4">
-          <PremiumEmoji emoji="👊" className="w-8 h-8" />
-          <h3 className="font-black text-[#1E293B] uppercase tracking-tight text-lg">Knog-tricket</h3>
-        </div>
-        <p className="text-slate-500 font-bold text-xs leading-relaxed mb-6">
-          Gör händer till knytnävar. Knogar = 31 dagar. Dalar = 30 dagar!
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <div className="bg-blue-50/50 p-4 rounded-[1.5rem] border border-blue-100 flex flex-col items-center text-center">
-            <span className="text-3xl mb-2 drop-shadow-sm">⛰️</span>
-            <span className="font-black text-blue-800 text-xs uppercase tracking-wide">Knoge</span>
-            <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest mt-1">31 Dagar</span>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-[1.5rem] border border-slate-100 flex flex-col items-center text-center">
-            <span className="text-3xl mb-2 drop-shadow-sm">🕳️</span>
-            <span className="font-black text-slate-700 text-xs uppercase tracking-wide">Dal</span>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">30 Dagar</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
+// --- HUVUDKOMPONENT ---
 const LearnTab = () => {
   const [simTimeMs, setSimTimeMs] = useState(new Date().setSeconds(0));
 
@@ -408,7 +343,7 @@ const LearnTab = () => {
       transition={{ duration: 0.3 }}
       className="space-y-8 pb-12"
     >
-      <CalendarCard date={new Date()} />
+      <CalendarCard />
       
       <div className="pt-2">
         <div className="flex items-center gap-2 mb-4 px-2">
@@ -420,7 +355,6 @@ const LearnTab = () => {
 
       <ClockFractions />
       
-      <LearnRhymes />
     </motion.div>
   );
 };
