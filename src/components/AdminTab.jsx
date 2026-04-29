@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // --- PREMIUM 3D EMOJI KOMPONENT ---
@@ -13,7 +13,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
   />
 );
 
-const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
+const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
@@ -21,22 +21,40 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   const SECRET_PASSWORD = "sevil";
   const appId = 'test-schema-v2';
 
+  // --- FORMULÄR-STATES ---
+  const [editingId, setEditingId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newTime, setNewTime] = useState('15:00');
   const [newDuration, setNewDuration] = useState('60');
+  const [newPrepTime, setNewPrepTime] = useState('0');
+  const [isLiveEvent, setIsLiveEvent] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
 
+  const [favorites, setFavorites] = useState([]);
   const [localMessage, setLocalMessage] = useState(dailyMessage || '');
   const [localName, setLocalName] = useState(adminName || 'Din kompis');
+  const [localBedtime, setLocalBedtime] = useState(bedtime || '22:00');
+  const [confirmReset, setConfirmReset] = useState(false);
 
-  const quickTasks = [
-    { title: 'Duscha', duration: '15', icon: '🚿', time: '19:00', bg: 'bg-cyan-50', text: 'text-cyan-700' },
-    { title: 'Skärmtid', duration: '60', icon: '📱', time: '16:00', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-    { title: 'Speltid', duration: '60', icon: '🎮', time: '18:00', bg: 'bg-purple-50', text: 'text-purple-700' },
-    { title: 'Göra läxor', duration: '30', icon: '📚', time: '15:30', bg: 'bg-amber-50', text: 'text-amber-700' },
-    { title: 'Göra i ordning', duration: '30', icon: '🪥', time: '19:30', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-    { title: 'Läggdags', duration: '540', icon: '😴', time: '20:00', bg: 'bg-slate-100', text: 'text-slate-700' },
-  ];
+  // --- HÄMTA FAVORITER FRÅN FIREBASE ---
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const favDoc = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'favorites');
+    const unsubFav = onSnapshot(favDoc, (d) => {
+        if (d.exists()) {
+            setFavorites(d.data().list || []);
+        } else {
+            const defaultFavs = [
+                { title: "Duscha", duration: 15, prepTime: 0, icon: "🚿" },
+                { title: "Skola", duration: 360, prepTime: 15, icon: "🎒" },
+                { title: "Middag", duration: 45, prepTime: 5, icon: "🍝" }
+            ];
+            setDoc(favDoc, { list: defaultFavs }).catch(console.error);
+        }
+    });
+    return () => unsubFav();
+  }, [isUnlocked]);
 
   const handleUnlock = () => {
     if (password.toLowerCase() === SECRET_PASSWORD) {
@@ -62,9 +80,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
             <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-30"></div>
             <PremiumEmoji emoji="🔒" className="w-20 h-20 relative z-10" />
           </div>
-          
           <h2 className="text-xl font-black uppercase text-white mb-8 tracking-widest">Föräldraläge</h2>
-          
           <div className="w-full relative mb-6">
             <input 
               type="password" 
@@ -75,11 +91,8 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
               className="w-full bg-white/10 p-4 rounded-2xl text-center text-2xl tracking-[0.5em] font-black text-white outline-none border border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-100/10 transition-all placeholder:text-slate-600"
             />
           </div>
-          
           <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleUnlock}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleUnlock}
             className="w-full bg-blue-600 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg transition-all border border-blue-500"
           >
             Lås upp
@@ -89,7 +102,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
     );
   }
 
-  // --- FUNKTIONER ---
+  // --- FIREBASE FUNKTIONER ---
   const handleLoadSchoolDay = async (isTomorrow) => {
     const dayStr = isTomorrow ? 'imorgon' : 'idag';
     if (!window.confirm(`Vill du ladda in en komplett skoldag för ${dayStr}?`)) return;
@@ -102,11 +115,11 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
     const d = baseDate.getDate();
 
     const dailyRoutine = [
-      { title: 'Frukost', h: 7, min: 0, duration: 30 },
-      { title: 'Skola', h: 8, min: 0, duration: 450 },
-      { title: 'Middag', h: 18, min: 0, duration: 30 },
-      { title: 'Lära sig klockan', h: 19, min: 0, duration: 15 },
-      { title: 'Läsa', h: 19, min: 15, duration: 30 }
+      { title: 'Frukost', h: 7, min: 0, duration: 30, prepTime: 0 },
+      { title: 'Skola', h: 8, min: 0, duration: 450, prepTime: 15 },
+      { title: 'Middag', h: 18, min: 0, duration: 30, prepTime: 5 },
+      { title: 'Lära sig klockan', h: 19, min: 0, duration: 15, prepTime: 0 },
+      { title: 'Läsa', h: 19, min: 15, duration: 30, prepTime: 0 }
     ];
 
     try {
@@ -118,6 +131,8 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
           startTime: startMs,
           endTime: startMs + (item.duration * 60 * 1000),
           duration: item.duration,
+          prepTime: item.prepTime,
+          isLiveEvent: false,
           createdAt: Date.now()
         });
       });
@@ -132,50 +147,124 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
 
   const handleAddActivity = async (e) => {
     e.preventDefault();
-    if (!newTitle || !newTime || !newDate) return;
+    const finalTitle = isLiveEvent && !newTitle ? "Steal a brainroth" : newTitle;
+    if (!finalTitle || !newTime || !newDate) return;
 
     const [y, m, d] = newDate.split('-').map(Number);
     const [h, min] = newTime.split(':').map(Number);
     const startMs = new Date(y, m - 1, d, h, min).getTime();
 
+    const activityData = {
+      title: finalTitle,
+      startTime: startMs,
+      endTime: startMs + (Number(newDuration) * 60 * 1000),
+      duration: Number(newDuration),
+      prepTime: Number(newPrepTime),
+      isLiveEvent: isLiveEvent
+    };
+
     try {
-      const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
-      await addDoc(colPath, {
-        title: newTitle,
-        startTime: startMs,
-        endTime: startMs + (Number(newDuration) * 60 * 1000),
-        duration: Number(newDuration),
-        createdAt: Date.now()
-      });
-      alert("Tillagd i schemat!");
+      if (editingId) {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedule_items', editingId);
+        await updateDoc(docRef, activityData);
+      } else {
+        activityData.createdAt = Date.now();
+        const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
+        await addDoc(colPath, activityData);
+      }
+
+      // SPARA SOM FAVORIT
+      if (saveAsFavorite && finalTitle) {
+          if (!favorites.some(f => f.title.toLowerCase() === finalTitle.toLowerCase())) {
+              const newFav = { title: finalTitle, duration: Number(newDuration), prepTime: Number(newPrepTime), icon: "⭐" };
+              const updatedFavs = [...favorites, newFav];
+              const favDoc = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'favorites');
+              updateDoc(favDoc, { list: updatedFavs }).catch(console.error);
+          }
+      }
+
+      setEditingId(null);
       setNewTitle(''); 
+      setNewDuration('60');
+      setIsLiveEvent(false);
+      setSaveAsFavorite(false);
     } catch (err) {
       console.error(err);
-      alert("Något gick fel.");
+      alert("Något gick fel vid sparning.");
     }
   };
 
+  const handleEdit = (activity) => {
+      setEditingId(activity.id);
+      setNewTitle(activity.title);
+      
+      const d = new Date(activity.startTime);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      setNewDate(`${year}-${month}-${day}`);
+      setNewTime(d.toLocaleTimeString('sv-SE', {hour: '2-digit', minute:'2-digit'}));
+      
+      setNewDuration(activity.duration.toString());
+      setNewPrepTime((activity.prepTime || 0).toString());
+      setIsLiveEvent(activity.isLiveEvent || false);
+      
+      // Scrolla upp till formuläret
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleShift = async (activity, mins) => {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedule_items', activity.id);
+      const shiftMs = mins * 60 * 1000;
+      await updateDoc(docRef, { 
+          startTime: activity.startTime + shiftMs, 
+          endTime: activity.endTime + shiftMs 
+      });
+  };
+
   const handleDeleteActivity = async (id) => {
-    if (window.confirm("Vill du ta bort denna?")) {
+    if (window.confirm("Vill du ta bort denna aktivitet?")) {
       await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedule_items', id));
     }
   };
 
-  const handleUpdateBank = async (amount) => {
-    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
-    await updateDoc(bankDoc, { balance: bankBalance + amount });
-  };
-
-  const handleSaveMessage = async () => {
-    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
-    await updateDoc(bankDoc, { adminName: localName, dailyMessage: localMessage });
-    alert("Meddelande sparat!");
-  };
-
   const handleQuickPick = (task) => {
     setNewTitle(task.title);
-    setNewDuration(task.duration);
-    setNewTime(task.time);
+    setNewDuration(task.duration.toString());
+    setNewPrepTime((task.prepTime || 0).toString());
+  };
+
+  // --- BANK & INSTÄLLNINGAR FUNKTIONER ---
+  const handleUpdateBank = async (amount) => {
+    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    await updateDoc(bankDoc, { balance: (bankBalance || 0) + amount });
+  };
+
+  const setBankZero = async () => {
+      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+      await updateDoc(bankDoc, { balance: 0 });
+  };
+
+  const setStreakZero = async () => {
+      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+      await updateDoc(bankDoc, { streak: 0 });
+      alert("Streaken är nu nollställd!");
+  };
+
+  const resetDailyQuests = async () => {
+      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+      await updateDoc(bankDoc, { claimedQuests: {} });
+      alert("Dagens uppdrag är nu upplåsta igen!");
+  };
+
+  const handleSaveSettings = async () => {
+    const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    await updateDoc(bankDoc, { 
+        adminName: localName, 
+        dailyMessage: localMessage,
+        bedtime: localBedtime
+    });
+    alert("Inställningar & Meddelande sparat!");
   };
 
   return (
@@ -186,25 +275,26 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
             <PremiumEmoji emoji="💳" className="w-32 h-32" />
         </div>
-        
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Admin Panel</h2>
-        <button onClick={() => setIsUnlocked(false)} className="relative z-10 text-xs bg-slate-700/60 px-5 py-2 rounded-full font-black uppercase tracking-widest border border-slate-600 flex items-center gap-2"><span>🔒</span> Lås appen igen</button>
+        <button onClick={() => setIsUnlocked(false)} className="relative z-10 text-xs bg-slate-700/60 px-5 py-2 rounded-full font-black uppercase tracking-widest border border-slate-600 flex items-center gap-2 hover:bg-slate-700 transition-colors">
+            <span>🔒</span> Lås appen igen
+        </button>
       </div>
 
       {/* --- BULK-LADDARE (SKOLDAG) --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/50"></div>
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-blue-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1595113300742-0570b5550f24?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <PremiumEmoji emoji="🎒" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Komplett Skoldag</h3>
+            <h3 className="font-black uppercase tracking-widest text-blue-900 text-sm">Komplett Skoldag</h3>
           </div>
-          <p className="text-[11px] text-slate-600 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning på ett klick.</p>
+          <p className="text-[11px] text-blue-700/80 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning.</p>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/80 backdrop-blur-sm border border-slate-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white border border-blue-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs">
               Lägg in för IDAG
             </motion.button>
             <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(true)} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs border border-blue-700">
@@ -216,50 +306,76 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
 
       {/* --- BANK & SALDO --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/50"></div>
+        <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-right opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610375228956-c65171d9a9f2?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💳" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Justera Saldo</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-700 text-sm">Hantera Banken</h3>
           </div>
           
-          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-100 shadow-sm">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nuvarande</span>
-            <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance} kr</div>
+          <div className="bg-slate-50 rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-100 shadow-inner">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nuvarande Saldo</span>
+            <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance || 0} kr</div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-100 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-100 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-100 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 100 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-100 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 100 kr</motion.button>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 100 kr</motion.button>
+          </div>
+
+          {/* Farliga Nollställnings-knappar */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200/60">
+             <motion.button 
+                whileTap={{ scale: 0.95 }} 
+                onClick={() => {
+                    if(confirmReset) { setBankZero(); setConfirmReset(false); } 
+                    else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); }
+                }} 
+                className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
+             >
+                {confirmReset ? "Tryck igen för att bekräfta!" : "Nolla Saldot"}
+             </motion.button>
+             <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3 bg-orange-100 text-orange-700 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm">
+                Nolla Streak
+             </motion.button>
+             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm">
+                Lås upp uppdrag
+             </motion.button>
           </div>
         </div>
       </div>
 
-      {/* --- LÄGG TILL ENSTAKA UPPDRAG --- */}
+      {/* --- LÄGG TILL / ÄNDRA UPPDRAG --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40"></div>
+        <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
         
         <div className="relative z-10 flex flex-col w-full">
-          <div className="flex items-center gap-3 mb-6">
-            <PremiumEmoji emoji="📅" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Nytt Uppdrag</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+                <PremiumEmoji emoji="📅" className="w-8 h-8" />
+                <h3 className="font-black uppercase tracking-widest text-slate-700 text-sm drop-shadow-sm">
+                    {editingId ? 'Ändra Uppdrag' : 'Nytt Uppdrag'}
+                </h3>
+            </div>
+            {editingId && (
+                <button onClick={() => { setEditingId(null); setNewTitle(''); }} className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase">Avbryt ändring</button>
+            )}
           </div>
           
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Snabbval</p>
-          
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dina sparade favoriter</p>
           <div className="flex flex-wrap gap-2 mb-8">
-            {quickTasks.map((task, i) => (
+            {favorites.map((task, i) => (
               <button 
                 key={i} 
                 onClick={() => handleQuickPick(task)}
-                className={`${task.bg} ${task.text} border border-white/50 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm`}
+                className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm"
               >
-                <span>{task.icon}</span>
+                <span>{task.icon || "⭐"}</span>
                 <span className="font-bold text-[11px] uppercase tracking-wider">{task.title}</span>
               </button>
             ))}
@@ -268,7 +384,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
           <form onSubmit={handleAddActivity} className="space-y-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Vad ska göras?</label>
-              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors shadow-sm" required />
+              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors shadow-sm" required={!isLiveEvent} />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -282,29 +398,53 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
               </div>
             </div>
             
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Längd (Hur länge?)</label>
-              <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm">
-                <option value="15">15 Minuter</option>
-                <option value="30">30 Minuter</option>
-                <option value="45">45 Minuter</option>
-                <option value="60">1 Timme</option>
-                <option value="120">2 Timmar</option>
-                <option value="180">3 Timmar</option>
-                <option value="450">7.5 Timmar (Skoldag)</option>
-                <option value="540">9 Timmar (Sova)</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Hur länge?</label>
+                <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm">
+                  <option value="15">15 Minuter</option>
+                  <option value="30">30 Minuter</option>
+                  <option value="45">45 Minuter</option>
+                  <option value="60">1 Timme</option>
+                  <option value="120">2 Timmar</option>
+                  <option value="180">3 Timmar</option>
+                  <option value="450">7.5 Timmar (Skoldag)</option>
+                  <option value="540">9 Timmar (Sova)</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Förberedelsetid</label>
+                <select value={newPrepTime} onChange={e => setNewPrepTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm">
+                  <option value="0">Inget larm innan</option>
+                  <option value="5">Larma 5 min innan</option>
+                  <option value="10">Larma 10 min innan</option>
+                  <option value="15">Larma 15 min innan</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Snygga Checkboxes (Toggles) */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <label className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors ${saveAsFavorite ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                    <span className={`font-black uppercase text-[10px] tracking-widest ${saveAsFavorite ? 'text-indigo-700' : 'text-slate-500'}`}>⭐ Spara som favorit</span>
+                    <input type="checkbox" checked={saveAsFavorite} onChange={e => setSaveAsFavorite(e.target.checked)} className="w-5 h-5 accent-indigo-600 rounded" />
+                </label>
+
+                <label className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors ${isLiveEvent ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                    <span className={`font-black uppercase text-[10px] tracking-widest ${isLiveEvent ? 'text-blue-700' : 'text-slate-500'}`}>🚨 Steal a Brainroth</span>
+                    <input type="checkbox" checked={isLiveEvent} onChange={e => setIsLiveEvent(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
+                </label>
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2 border border-slate-700">
-              Spara i schemat
+            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-4 border border-slate-700">
+              {editingId ? 'Spara Ändringar' : 'Lägg till i schemat'}
             </motion.button>
           </form>
 
-          {/* --- AKTUELLT SCHEMA LISTA --- */}
+          {/* --- AKTUELLT SCHEMA LISTA (Med edit och tids-shift) --- */}
           <div className="mt-10">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Inplanerat just nu</p>
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Inplanerat framöver</p>
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
               {activities.length === 0 && (
                 <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 text-center border border-slate-100 shadow-sm">
                   <span className="text-2xl mb-2 block">✨</span>
@@ -312,23 +452,29 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
                 </div>
               )}
               
-              {activities.map(a => (
-                <div key={a.id} className="flex justify-between items-center bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                  <div>
-                    <p className="font-black text-sm text-slate-800">{a.title}</p>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-                      {new Date(a.startTime).toLocaleString('sv-SE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
-                    </p>
+              {activities.filter(a => a.endTime > Date.now()).map(a => (
+                <div key={a.id} className="flex flex-col bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow gap-3">
+                  <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-black text-sm text-slate-800">{a.isLiveEvent ? '🚨 LIVE EVENT' : a.title}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                            {new Date(a.startTime).toLocaleString('sv-SE', {weekday:'short', hour:'2-digit', minute:'2-digit'})} • {a.duration} min
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                          <button onClick={() => handleEdit(a)} className="bg-slate-100 text-slate-500 w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors" title="Ändra">
+                              ✏️
+                          </button>
+                          <button onClick={() => handleDeleteActivity(a.id)} className="bg-red-50 text-red-500 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-100 transition-colors" title="Ta bort">
+                              🗑️
+                          </button>
+                      </div>
                   </div>
-                  <button 
-                    onClick={() => handleDeleteActivity(a.id)} 
-                    className="bg-red-50 text-red-500 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-100 transition-colors"
-                    title="Ta bort"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
-                  </button>
+                  {/* Tidsförskjutning (Quick Shifts) */}
+                  <div className="flex gap-2 pt-2 border-t border-slate-100/80">
+                      <button onClick={() => handleShift(a, -15)} className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[10px] font-black uppercase py-2 rounded-lg border border-slate-100 transition-colors">-15 min</button>
+                      <button onClick={() => handleShift(a, 15)} className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-black uppercase py-2 rounded-lg border border-blue-100 transition-colors">+15 min</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -336,30 +482,35 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         </div>
       </div>
 
-      {/* --- DAGENS MEDDELANDE --- */}
+      {/* --- INSTÄLLNINGAR & MEDDELANDE --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2rem] border border-rose-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590794071375-9e6b4d326442?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40"></div>
+        <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590794071375-9e6b4d326442?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/40"></div>
         
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💬" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Dagens Meddelande</h3>
+            <h3 className="font-black uppercase tracking-widest text-rose-900 text-sm">Inställningar & Hälsning</h3>
           </div>
           
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Avsändare</label>
-              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors text-slate-800 shadow-sm" />
+              <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">Standard Läggdags</label>
+              <input type="time" value={localBedtime} onChange={e => setLocalBedtime(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-rose-200 p-4 rounded-xl font-black font-clock outline-none focus:border-rose-400 transition-colors text-slate-800 shadow-sm" />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">Avsändare för meddelande</label>
+              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-sm border border-rose-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors text-slate-800 shadow-sm" />
             </div>
             
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Meddelande</label>
-              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-sm" />
+              <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">Dagens Meddelande</label>
+              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-sm border border-rose-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors min-h-[100px] resize-none text-slate-800 leading-relaxed shadow-sm" />
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessage} className="w-full bg-rose-500 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2 border border-rose-600">
-              Spara Meddelande
+            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveSettings} className="w-full bg-rose-500 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2 border border-rose-600">
+              Spara Inställningar
             </motion.button>
           </div>
         </div>
@@ -367,13 +518,8 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
       
       {/* Scroll-hide hack */}
       <style>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </motion.div>
   );
