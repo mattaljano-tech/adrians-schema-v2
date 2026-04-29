@@ -313,12 +313,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             <div className="mt-4">
               {mindStatus === 'idle' && (
                 <button onClick={startMindfulness} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
-                  ▶ Starta
+                   Starta
                 </button>
               )}
               {mindStatus === 'playing' && (
                 <button onClick={cancelMindfulness} className="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform border border-slate-200 hover:bg-slate-200">
-                  ⏹ Avbryt (Ger ingen belöning)
+                   Avbryt (Ger ingen belöning)
                 </button>
               )}
               {mindStatus === 'finished' && (
