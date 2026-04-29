@@ -102,6 +102,16 @@ const App = () => {
     });
   }, []);
 
+  // --- 0.5 KOLLA BEFINTLIGA NOTIS-RÄTTIGHETER ---
+  useEffect(() => {
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        setNotifsEnabled(true);
+      }
+    }
+  }, []);
+
+  
   // --- 1. KLOCKAN ---
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
