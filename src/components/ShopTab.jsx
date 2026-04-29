@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // --- PREMIUM 3D EMOJI KOMPONENT ---
 const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
@@ -11,7 +11,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
   />
 );
 
-const ShopTab = ({ bankBalance, handleBuy }) => {
+const ShopTab = ({ bankBalance, bankStreak, handleBuy }) => {
   // Adrians belöningar
   const bigGoal = { id: 's8', title: "Nytt PS5-spel", cost: 1500, icon: "📀" };
   
@@ -34,32 +34,43 @@ const ShopTab = ({ bankBalance, handleBuy }) => {
       transition={{ duration: 0.3 }} 
       className="space-y-8 pb-12"
     >
-      {/* --- SALDO-VISARE (Ny Premium & Triggande Design) --- */}
-      <div className="relative pt-6 mb-10 flex justify-center px-4">
-        {/* Magisk bakgrunds-glow som pulserar */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 bg-gradient-to-r from-emerald-400 to-blue-400 blur-[40px] opacity-30 rounded-full pointer-events-none animate-pulse"></div>
-        
-        <div className="bg-white rounded-[2.5rem] px-8 py-8 shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col items-center relative z-10 w-full max-w-[320px] transform hover:scale-105 transition-transform duration-300">
-          <span className="text-slate-400 font-black uppercase tracking-[0.25em] text-[10px] sm:text-xs mb-4 flex items-center gap-2">
-             Din Plånbok
-          </span>
+      {/* --- VIRTUELL BANK (Exakt samma Fintech Style som i EarnTab) --- */}
+      <div className="pt-4 px-2">
+        <div id="adrians-bank-balance" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2rem] p-6 sm:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.15)] relative overflow-hidden border border-slate-700/50">
           
-          <div className="flex items-center gap-3 sm:gap-5">
-            <PremiumEmoji emoji="💰" className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-xl animate-[bounce_3s_infinite]" />
-            <div className="text-[5rem] sm:text-[6rem] leading-none font-black text-[#1E293B] font-clock tabular-nums tracking-tight flex items-baseline gap-2">
-              {bankBalance} <span className="text-2xl sm:text-3xl text-emerald-500 font-sans tracking-wide">kr</span>
+          {/* Dekorativ bakgrundseffekt */}
+          <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
+            <PremiumEmoji emoji="💳" className="w-48 h-48" />
+          </div>
+          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-500/10 to-transparent pointer-events-none"></div>
+
+          <div className="relative z-10 flex justify-between items-start mb-5">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm">
+                Adrians Bank
+              </h2>
+              {bankStreak > 0 && (
+                <div className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-max shadow-sm backdrop-blur-sm flex items-center gap-1.5">
+                  <span className="text-sm">🔥</span> {bankStreak} Dagars Streak!
+                </div>
+              )}
+            </div>
+            
+            <div className="w-10 h-8 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-md border border-yellow-200/50 shadow-inner flex flex-col justify-evenly p-1.5 opacity-90">
+              <div className="w-full h-[1px] bg-yellow-700/40"></div>
+              <div className="w-full h-[1px] bg-yellow-700/40"></div>
+              <div className="w-full h-[1px] bg-yellow-700/40"></div>
             </div>
           </div>
-          
-          {bankBalance > 0 ? (
-             <div className="mt-6 bg-[#dcfce7] text-[#059669] px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest border border-green-200 shadow-sm flex items-center gap-2">
-                Redo att shoppa! <span className="text-sm">🛒</span>
-             </div>
-          ) : (
-             <div className="mt-6 bg-slate-100 text-slate-500 px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest border border-slate-200 flex items-center gap-2">
-                Gör uppdrag för pengar <span className="text-sm">💪</span>
-             </div>
-          )}
+
+          <div className="relative z-10 pt-2">
+            <p className="text-slate-500 font-bold uppercase tracking-[0.15em] text-[9px] sm:text-[10px] mb-1">
+              Tillgängligt Saldo
+            </p>
+            <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md">
+              {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
+            </div>
+          </div>
         </div>
       </div>
 
