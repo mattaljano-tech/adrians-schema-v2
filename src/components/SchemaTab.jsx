@@ -205,6 +205,7 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
           </h2>
           
           <div className="w-full flex flex-col items-center">
+            {/* HÄR ÄR TIMERN - DEN SKA VARA KVAR */}
             <PremiumTimer 
               totalMs={current.duration * 60000} 
               remainingMs={getRemMs(current.endTime)} 
@@ -242,19 +243,14 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
             Visa uppdrag
           </motion.button>
 
+          {/* HÄR LÅG DEN STORA BLÅ CIRKELN INNAN - NU ÄR DEN BORTA OCH ERSATT MED EN IKON */}
           {nextRealActivity && (
             <div className="mt-10 pt-6 border-t border-slate-100 w-full">
               <p className="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-4">Ditt nästa inplanerade pass</p>
               
-              <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-5 border border-slate-100">
-                <div className="w-16 h-16 flex-shrink-0">
-                  <PremiumTimer 
-                    totalMs={(nextRealActivity.startTime - (current?.endTime || now)) || (60 * 60000)}
-                    remainingMs={getRemMs(nextRealActivity.startTime)} 
-                    colorStop1="#60a5fa" 
-                    colorStop2="#3b82f6"
-                    trackColor="#e2e8f0"
-                  />
+              <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-4 border border-slate-100">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 flex-shrink-0 text-xl">
+                  ⏭️
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-lg font-black text-slate-800 mb-0.5">{nextRealActivity.title}</p>
