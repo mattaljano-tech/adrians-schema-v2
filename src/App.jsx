@@ -381,8 +381,6 @@ const App = () => {
                 currentTime={currentTime} 
                 dailyMessage={dailyMessage} 
                 adminName={adminName}
-                bedtime={bedtime}
-                showToast={showToast}
                 onNavigateToEarn={() => { setView('earn'); triggerVibrate(); }}
               />
             </motion.section>
@@ -404,7 +402,15 @@ const App = () => {
           )}
           {view === 'admin' && (
             <motion.section key="admin" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-              <AdminTab activities={activities} bankBalance={bankBalance} dailyMessage={dailyMessage} adminName={adminName} />
+              <AdminTab 
+                activities={activities} 
+                bankBalance={bankBalance} 
+                bankStreak={bankStreak} 
+                dailyMessage={dailyMessage} 
+                adminName={adminName}
+                bedtime={bedtime}
+                showToast={showToast}
+              />
             </motion.section>
           )}
         </AnimatePresence>
