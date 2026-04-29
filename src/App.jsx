@@ -349,7 +349,9 @@ const App = () => {
       
       {/* --- HEADER (Exakt som din skärmdump) --- */}
       <header className="pt-12 pb-6 px-6 flex flex-col items-center">
-        <h1 className="text-4xl sm:text-5xl font-black text-[#1E293B] uppercase tracking-tight leading-none mb-1">Adrian</h1>
+        <h1 className="text-4xl sm:text-5xl font-black text-slate-800 uppercase tracking-[0.3em] ml-[0.3em] mb-2 drop-shadow-sm">
+  ADRIAN
+</h1>
         <div onClick={handleSecretUnlock} className="text-xl sm:text-2xl font-black text-[#3b82f6] font-clock tabular-nums tracking-widest cursor-pointer select-none">
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
