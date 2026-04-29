@@ -74,7 +74,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
   const currentSong = mindfulnessSongs.find(s => s.id === selectedSongId);
 
-  // --- UPPDRAGSDATA (Hela listan bevarad!) ---
+  // --- UPPDRAGSDATA ---
   const cleanTasks = [
     { id: 'c1', text: 'Plocka upp kläder', reward: 5 },
     { id: 'c2', text: 'Bädda sängen', reward: 5 }
@@ -272,7 +272,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
           </div>
         </div>
 
-        {/* --- MINDFULNESS-KORT ("ALL OR NOTHING") --- */}
+        {/* --- MINDFULNESS-KORT --- */}
         <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${mindStatus === 'playing' ? 'border-purple-300 ring-4 ring-purple-50' : mindStatus === 'finished' ? 'border-emerald-300 ring-4 ring-emerald-50' : 'border-slate-100 shadow-sm'}`}>
           <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&q=80&w=800')" }}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
@@ -301,7 +301,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               </div>
             </div>
 
-            {/* Dolt ljudspår */}
             <audio 
               ref={audioRef} 
               src={currentSong.url} 
@@ -309,7 +308,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               onEnded={handleAudioEnded}
             />
 
-            {/* Dynamiska knappar i botten */}
             <div className="mt-4">
               {mindStatus === 'idle' && (
                 <button onClick={startMindfulness} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
@@ -380,7 +378,13 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                         Max {totalReward} kr
                       </span>
                     )}
-                    <div className={`text-slate-400 transition-transform ${expandedQuest === q.id ? 'rotate-180' : ''}`}>▼</div>
+                    
+                    {/* --- PREMIUM PIL --- */}
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 ${expandedQuest === q.id ? 'bg-slate-800 text-white rotate-180 shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </div>
                   </div>
                 )}
               </div>
