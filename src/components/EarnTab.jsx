@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- PREMIUM 3D EMOJI KOMPONENT ---
+// Tvingar fram Apples högupplösta 3D-emojis oavsett vilken telefon/dator man använder!
+const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
+  <img 
+    src={`https://emojicdn.elk.sh/${emoji}?style=apple`} 
+    alt={emoji} 
+    className={`${className} drop-shadow-md select-none pointer-events-none`} 
+    draggable="false"
+  />
+);
+
 // --- FLYING COIN ANIMATION ---
 const FlyingCoin = ({ coin }) => {
   const [pos, setPos] = useState({ left: coin.startX, top: coin.startY, scale: 1, opacity: 1 });
@@ -237,7 +248,9 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       <div id="adrians-bank-balance" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2rem] p-6 sm:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.15)] relative overflow-hidden mt-4 border border-slate-700/50">
         
         {/* Dekorativ bakgrundseffekt */}
-        <div className="absolute -right-6 -top-10 opacity-10 text-[130px] pointer-events-none select-none blur-[1px] rotate-12">💳</div>
+        <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
+          <PremiumEmoji emoji="💳" className="w-48 h-48" />
+        </div>
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-500/10 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10 flex justify-between items-start mb-5">
@@ -252,7 +265,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             )}
           </div>
           
-          {/* Guld-chip (Ger kreditkorts-känsla) */}
           <div className="w-10 h-8 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-md border border-yellow-200/50 shadow-inner flex flex-col justify-evenly p-1.5 opacity-90">
             <div className="w-full h-[1px] bg-yellow-700/40"></div>
             <div className="w-full h-[1px] bg-yellow-700/40"></div>
@@ -272,7 +284,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
       {/* --- RUBRIK --- */}
       <div className="flex items-center justify-center gap-2 pt-2 mb-2">
-        <span className="text-lg">🎯</span>
+        <PremiumEmoji emoji="🎯" className="w-6 h-6" />
         <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fasta Uppdrag</h3>
       </div>
       
@@ -298,13 +310,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                   else setExpandedChore(expandedChore === q.id ? null : q.id);
                 }}
               >
-                {/* Vänster: Ikon i en egen mjuk box */}
+                {/* Vänster: 3D Ikon i en egen mjuk box */}
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl flex-shrink-0 transition-colors ${completelyDone ? 'bg-slate-50' : 'bg-[#f8fafc]'}`}>
-                    {q.icon}
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${completelyDone ? 'bg-slate-50' : 'bg-[#f8fafc]'}`}>
+                    <PremiumEmoji emoji={q.icon} className={`w-10 h-10 sm:w-12 sm:h-12 ${completelyDone ? 'grayscale' : ''}`} />
                   </div>
                   
-                  {/* Mitten: Titel och Subtitel */}
                   <div className="flex flex-col justify-center">
                     <span className={`font-black uppercase tracking-wide text-sm sm:text-base ${completelyDone ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
                       {q.title}
@@ -322,10 +333,10 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                   </div>
                 </div>
                 
-                {/* Höger: Prislapp och "Visa"-knapp/Pil */}
+                {/* Höger: Prislapp */}
                 <div className="flex flex-col items-end justify-center gap-2 flex-shrink-0 pl-2">
                   <div className={`${completelyDone ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm'} font-black px-4 py-2 rounded-full text-xs sm:text-sm tracking-wide`}>
-                    {q.type === 'checklist' ? `Max +${totalReward} kr` : `+${q.reward} kr`}
+                    {q.type === 'checklist' ? `Upp till +${totalReward} kr` : `+${q.reward} kr`}
                   </div>
                   
                   {q.type === 'checklist' && !completelyDone && (
@@ -339,7 +350,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 </div>
               </div>
 
-              {/* CHECKLISTAN */}
+              {/* CHECKLISTAN (Utökad meny) */}
               <AnimatePresence>
                 {q.type === 'checklist' && expandedChore === q.id && (
                   <motion.div 
@@ -379,7 +390,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       </div>
 
       <div className="flex items-center justify-center gap-3 pt-6 mb-4">
-        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Fokus & Rörelse</h3>
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-xs">Fokus & Rörelse</h3>
       </div>
 
       {/* --- TIMERS: LÄSA --- */}
@@ -396,10 +407,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
         <div className="relative z-20">
           <div className="flex items-center gap-4 mb-6">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm ${isReading ? 'bg-orange-100 animate-pulse' : 'bg-slate-50'}`}>📖</div>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm ${isReading ? 'bg-orange-100 animate-pulse' : 'bg-slate-50'}`}>
+              <PremiumEmoji emoji="📖" className="w-10 h-10" />
+            </div>
             <div>
               <h4 className="text-xl font-black text-[#1E293B] uppercase tracking-wide">Läs en bok</h4>
-              <p className="text-slate-500 font-bold text-xs mt-1">Läs hur länge du vill. Tjäna 10 kr för varje 10 minuter.</p>
+              <p className="text-slate-500 font-bold text-xs mt-1">Läs hur länge du vill. Tjäna 10 kr per 10 minuter.</p>
             </div>
           </div>
 
@@ -455,7 +468,9 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
         <div className="relative z-20">
           <div className="flex items-center gap-4 mb-6">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm ${isWalking ? 'bg-green-100 animate-bounce' : 'bg-slate-50'}`}>🚶‍♂️</div>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm ${isWalking ? 'bg-green-100 animate-bounce' : 'bg-slate-50'}`}>
+              <PremiumEmoji emoji="🚶‍♂️" className="w-10 h-10" />
+            </div>
             <div>
               <h4 className="text-xl font-black text-[#1E293B] uppercase tracking-wide">Ta en promenad</h4>
               <p className="text-slate-500 font-bold text-xs mt-1">Gå ut och rör på dig. Tjäna 1 kr per minut.</p>
@@ -501,7 +516,9 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
         <div className="relative z-20">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm bg-indigo-50 text-indigo-500">🎧</div>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm bg-indigo-50 text-indigo-500">
+              <PremiumEmoji emoji="🎧" className="w-10 h-10" />
+            </div>
             <div>
               <h4 className="text-xl font-black text-[#1E293B] uppercase tracking-wide flex items-center gap-3">
                 Mindfulness
