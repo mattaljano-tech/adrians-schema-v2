@@ -1,33 +1,7 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-
-// --- HJÄLPRESA: PEDAGOGISKA FÄRGER ---
-const getDayColor = (dayOfWeek) => {
-  // dayOfWeek: 0 = Måndag, 1 = Tisdag ... 6 = Söndag
-  const colors = [
-    '#4CAF50', // Måndag: Grön
-    '#2196F3', // Tisdag: Blå
-    '#FFFFFF', // Onsdag: Vit
-    '#8D6E63', // Torsdag: Brun
-    '#FFEB3B', // Fredag: Gul
-    '#E91E63', // Lördag: Rosa
-    '#F44336'  // Söndag: Röd
-  ];
-  return colors[dayOfWeek];
-};
-
-const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
-  <img 
-    src={`https://emojicdn.elk.sh/${emoji}?style=apple`} 
-    alt={emoji} 
-    className={`${className} drop-shadow-md select-none pointer-events-none`} 
-    draggable="false"
-  />
-);
-
+// --- KALENDER (Premium, rena ikoner, supertydlig dag) ---
 const CalendarCard = () => {
   const [viewDate, setViewDate] = useState(new Date());
-  const realToday = new Date();
+  const realToday = new Date(); // Dagens faktiska datum
 
   const monthThemes = [
     { name: "Januari", emoji: "❄️", gradient: "from-blue-400 to-indigo-500" },
@@ -45,125 +19,83 @@ const CalendarCard = () => {
   ];
 
   const currentMonth = monthThemes[viewDate.getMonth()];
-  
-  // Beräkna dagar
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 = Söndag
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
-  // Justera så måndag är först (JS: 0=Sön, 1=Mån... -> Vi vill: 0=Mån, 6=Sön)
-  const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
 
-  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
 
   return (
-    <div className="bg-[#F8FAFC] rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white overflow-hidden max-w-md mx-auto">
-      {/* HEADER */}
-      <div className={`bg-gradient-to-br ${currentMonth.gradient} p-8 relative`}>
-        <div className="absolute right-2 bottom-2 opacity-30">
-          <PremiumEmoji emoji={currentMonth.emoji} className="w-32 h-32" />
+    <div className="bg-white rounded-[3rem] shadow-[0_8px_40px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden">
+      <div className={`bg-gradient-to-br ${currentMonth.gradient} p-6 sm:p-8 flex items-center justify-between relative overflow-hidden`}>
+        <div className="absolute -right-4 -bottom-8 opacity-20 transform scale-150 pointer-events-none">
+          <PremiumEmoji emoji={currentMonth.emoji} className="w-40 h-40" />
         </div>
         
-        <div className="relative z-10 flex items-center justify-between">
+        {/* Navigering för månader - Premium UI */}
+        <div className="relative z-10 flex items-center justify-between w-full">
           <motion.button 
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={prevMonth} 
-            className="bg-white/20 p-4 rounded-3xl backdrop-blur-md border border-white/30 shadow-lg text-white"
+            className="bg-white/20 hover:bg-white/30 p-3 sm:p-4 rounded-full backdrop-blur-md border border-white/30 shadow-lg flex items-center justify-center transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={4} stroke="currentColor" className="w-6 h-6">
+            {/* Vänsterpil SVG */}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6 text-white">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </motion.button>
 
-          <div className="text-center">
-            <p className="text-white/80 font-black uppercase tracking-[0.2em] text-xs mb-1">Månad</p>
-            <h2 className="text-white font-black text-4xl tracking-tight leading-none uppercase">
-              {currentMonth.name}
-            </h2>
-            <p className="text-white/60 font-bold text-lg">{year}</p>
+          <div className="text-center px-4">
+            <h2 className="text-white/80 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs mb-1">Månad</h2>
+            <p className="text-white font-black text-3xl sm:text-4xl tracking-tight leading-none">
+              {currentMonth.name} <span className="opacity-80 block text-lg sm:text-xl mt-1">{viewDate.getFullYear()}</span>
+            </p>
           </div>
 
           <motion.button 
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={nextMonth} 
-            className="bg-white/20 p-4 rounded-3xl backdrop-blur-md border border-white/30 shadow-lg text-white"
+            className="bg-white/20 hover:bg-white/30 p-3 sm:p-4 rounded-full backdrop-blur-md border border-white/30 shadow-lg flex items-center justify-center transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={4} stroke="currentColor" className="w-6 h-6">
+            {/* Högerpil SVG */}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6 text-white">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </motion.button>
         </div>
       </div>
 
-      {/* KALENDER-GRID */}
-      <div className="p-6 bg-white">
+      <div className="p-6 sm:p-8">
         <div className="grid grid-cols-7 gap-2 mb-4">
-          {["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"].map((d, i) => (
-            <div key={i} className="text-center text-slate-400 font-black text-[10px] uppercase tracking-widest">{d}</div>
+          {["M", "T", "O", "T", "F", "L", "S"].map((d, i) => (
+            <div key={i} className="text-center text-slate-400 font-black text-[10px]">{d}</div>
           ))}
         </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {/* Tomma rutor innan den 1:a i månaden */}
-          {[...Array(startOffset)].map((_, i) => (
-            <div key={`empty-${i}`} className="aspect-square" />
-          ))}
-
-          {/* Dagarna */}
+        <div className="grid grid-cols-7 gap-2 sm:gap-3">
           {[...Array(daysInMonth)].map((_, i) => {
-            const dayNum = i + 1;
-            const dayOfWeek = (i + startOffset) % 7; // Vilken veckodag (0-6)
-            const color = getDayColor(dayOfWeek);
-            
+            const day = i + 1;
+            // Kontrollera om dagen vi ritar ut är EXAKT dagens datum i verkligheten
             const isToday = 
-              dayNum === realToday.getDate() && 
-              month === realToday.getMonth() && 
-              year === realToday.getFullYear();
+              day === realToday.getDate() && 
+              viewDate.getMonth() === realToday.getMonth() && 
+              viewDate.getFullYear() === realToday.getFullYear();
 
             return (
-              <motion.div 
-                key={dayNum}
-                initial={isToday ? { scale: 1 } : false}
-                animate={isToday ? { scale: [1, 1.05, 1] } : false}
-                transition={{ repeat: Infinity, duration: 2 }}
-                style={{ backgroundColor: color }}
-                className={`
-                  aspect-square rounded-2xl flex items-center justify-center relative
-                  border-2 border-slate-100 shadow-sm
-                  ${isToday ? 'border-[5px] border-black z-20 shadow-2xl scale-110' : ''}
-                `}
+              <div 
+                key={i} 
+                className={`relative aspect-square flex flex-col items-center justify-center rounded-2xl font-black transition-all ${
+                  isToday 
+                  ? 'bg-[#FDE047] text-black border-[3px] border-black scale-[1.15] z-10 shadow-[0_4px_15px_rgba(250,204,21,0.5)]' 
+                  : 'text-slate-500 bg-slate-50 hover:bg-slate-100 text-sm sm:text-base'
+                }`}
               >
-                <span className={`
-                  font-black text-lg
-                  ${dayOfWeek === 2 || dayOfWeek === 4 ? 'text-slate-800' : 'text-slate-900'} 
-                  ${isToday ? 'text-2xl' : ''}
-                `}>
-                  {dayNum}
-                </span>
-                
-                {/* Liten prick för att göra onsdag (vit) tydligare */}
-                {dayOfWeek === 2 && !isToday && (
-                  <div className="absolute bottom-1 w-1 h-1 bg-slate-200 rounded-full" />
-                )}
-              </motion.div>
+                <span className={isToday ? "text-2xl sm:text-3xl" : ""}>{day}</span>
+              </div>
             );
           })}
         </div>
       </div>
-
-      {/* FÖRKLARING (Valfri, kan tas bort om det blir för mycket) */}
-      <div className="px-8 pb-8 bg-white flex justify-between items-center opacity-60">
-        <div className="flex gap-1">
-          {[0,1,2,3,4,5,6].map(d => (
-            <div key={d} className="w-3 h-3 rounded-full" style={{backgroundColor: getDayColor(d)}} />
-          ))}
-        </div>
-        <span className="text-[10px] font-black uppercase text-slate-400">Veckans färger</span>
-      </div>
     </div>
   );
 };
-
-export default CalendarCard;
