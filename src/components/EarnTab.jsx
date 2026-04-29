@@ -61,12 +61,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const [showReadPrompt, setShowReadPrompt] = useState(false);
   const [expandedQuest, setExpandedQuest] = useState(null);
 
-  // --- NY MINDFULNESS LOGIK ("All or Nothing") ---
+  // --- MINDFULNESS LOGIK ---
   const audioRef = useRef(null);
   const mindfulnessSongs = [
-    { id: 'm1', title: 'Avslappning i Rymden', url: 'Avslappning i rymden.mp3', reward: 5 },
-    { id: 'm2', title: 'Lugna Skogen', url: 'Lugna Skogen.mp3', reward: 5 },
-    { id: 'm3', title: 'Gaming Chill Lofi', url: 'https://din-länk-till-låt-3.mp3', reward: 5 }
+    { id: 'm1', title: 'Rymden', url: 'Avslappning i rymden.mp3', reward: 5 },
+    { id: 'm2', title: 'Skogen', url: 'Lugna Skogen.mp3', reward: 5 },
+    { id: 'm3', title: 'Lofi', url: 'https://din-länk-till-låt-3.mp3', reward: 5 }
   ];
   const [selectedSongId, setSelectedSongId] = useState(mindfulnessSongs[0].id);
   const [mindStatus, setMindStatus] = useState('idle'); // 'idle', 'playing', 'finished'
@@ -235,10 +235,10 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 <p className="text-slate-600 font-bold text-xs">10 kr per 10 minuter</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(readTime)}</div>
               </div>
-              <button onClick={() => setIsReading(!isReading)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700' : 'bg-blue-600 text-white'}`}>{isReading ? 'Pausa' : 'Starta'}</button>
+              <button onClick={() => setIsReading(!isReading)} className={`px-5 py-3 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700' : 'bg-blue-600 text-white active:scale-95'}`}>{isReading ? 'Pausa' : 'Starta'}</button>
             </div>
             {readTime > 0 && !isReading && (
-              <button onClick={(e) => { triggerReward(readReward, e, 'read', 'Läsning'); setReadTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {readReward} kr</button>
+              <button onClick={(e) => { triggerReward(readReward, e, 'read', 'Läsning'); setReadTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">Hämta {readReward} kr</button>
             )}
             {showReadPrompt && (
               <div className="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center animate-pulse">
@@ -264,19 +264,20 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 <p className="text-slate-600 font-bold text-xs">1 kr per minut</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(walkTime)}</div>
               </div>
-              <button onClick={() => setIsWalking(!isWalking)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isWalking ? 'bg-green-100 text-green-700' : 'bg-green-600 text-white'}`}>{isWalking ? 'Pausa' : 'Starta'}</button>
+              <button onClick={() => setIsWalking(!isWalking)} className={`px-5 py-3 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-sm ${isWalking ? 'bg-green-100 text-green-700' : 'bg-green-600 text-white active:scale-95'}`}>{isWalking ? 'Pausa' : 'Starta'}</button>
             </div>
             {walkTime > 0 && !isWalking && (
-              <button onClick={(e) => { triggerReward(walkReward, e, 'walk', 'Promenad'); setWalkTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {walkReward} kr</button>
+              <button onClick={(e) => { triggerReward(walkReward, e, 'walk', 'Promenad'); setWalkTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">Hämta {walkReward} kr</button>
             )}
           </div>
         </div>
 
-        {/* --- MINDFULNESS-KORT --- */}
+        {/* --- MINDFULNESS-KORT (PREMIUM NY DESIGN) --- */}
         <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${mindStatus === 'playing' ? 'border-purple-300 ring-4 ring-purple-50' : mindStatus === 'finished' ? 'border-emerald-300 ring-4 ring-emerald-50' : 'border-slate-100 shadow-sm'}`}>
           <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&q=80&w=800')" }}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
-          <div className="relative z-10 p-5">
+          
+          <div className="relative z-10 p-5 flex flex-col">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-sm">
                 <TimerRing percentage={mindProgress} color={mindStatus === 'finished' ? "#10b981" : "#8b5cf6"} />
@@ -284,21 +285,27 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               </div>
               
               <div className="flex-1">
-                <h3 className="font-black text-slate-800 text-xl tracking-tight leading-none">Mindfulness</h3>
+                <h3 className="font-black text-slate-800 text-xl tracking-tight leading-none mb-1">Mindfulness</h3>
                 {mindStatus === 'idle' ? (
-                  <select 
-                    value={selectedSongId}
-                    onChange={(e) => setSelectedSongId(e.target.value)}
-                    className="mt-2 w-full p-2 bg-purple-50 border border-purple-200 rounded-lg text-xs font-bold text-purple-900 outline-none shadow-sm"
-                  >
-                    {mindfulnessSongs.map(s => <option key={s.id} value={s.id}>{s.title} (+{s.reward} kr)</option>)}
-                  </select>
+                  <p className="text-slate-600 font-bold text-xs">Slappna av & tjäna {currentSong.reward} kr</p>
                 ) : (
-                  <div className="mt-2 text-sm font-bold text-purple-700 leading-tight">
-                    {currentSong.title}
+                  <div className="mt-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold w-max shadow-sm">
+                    Låten "{currentSong.title}" spelas...
                   </div>
                 )}
               </div>
+              
+              {/* START/AVBRYT KNAPP LÄNGST TILL HÖGER */}
+              {mindStatus === 'idle' && (
+                <button onClick={startMindfulness} className="px-5 py-3 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest bg-purple-600 text-white shadow-sm active:scale-95 transition-transform">
+                   Starta
+                </button>
+              )}
+              {mindStatus === 'playing' && (
+                <button onClick={cancelMindfulness} className="px-5 py-3 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200 shadow-sm active:scale-95 transition-transform">
+                   Avbryt
+                </button>
+              )}
             </div>
 
             <audio 
@@ -308,23 +315,36 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               onEnded={handleAudioEnded}
             />
 
-            <div className="mt-4">
-              {mindStatus === 'idle' && (
-                <button onClick={startMindfulness} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
-                   Starta
-                </button>
-              )}
-              {mindStatus === 'playing' && (
-                <button onClick={cancelMindfulness} className="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform border border-slate-200 hover:bg-slate-200">
-                   Avbryt (Ger ingen belöning)
-                </button>
-              )}
-              {mindStatus === 'finished' && (
-                <button onClick={claimMindfulness} className="w-full bg-emerald-500 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md active:scale-95 transition-transform animate-bounce">
+            {/* DE NYA PREMIUM-CHIPSEN (Visas bara när man kan välja låt) */}
+            {mindStatus === 'idle' && (
+              <div className="mt-6">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 px-1">Välj Låt</p>
+                <div className="flex overflow-x-auto gap-2 pb-2 snap-x hide-scrollbar">
+                  {mindfulnessSongs.map((song) => (
+                    <button
+                      key={song.id}
+                      onClick={() => setSelectedSongId(song.id)}
+                      className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-2xl border font-bold text-xs transition-all ${
+                        selectedSongId === song.id 
+                        ? 'bg-purple-50 border-purple-300 text-purple-800 shadow-sm' 
+                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                      }`}
+                    >
+                      {song.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* HÄMTA BELÖNING (Pulsande) */}
+            {mindStatus === 'finished' && (
+              <div className="mt-5">
+                <button onClick={claimMindfulness} className="w-full bg-emerald-500 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-md active:scale-95 transition-transform animate-bounce">
                   ✨ Hämta {currentSong.reward} kr ✨
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
           </div>
         </div>
@@ -332,7 +352,11 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       </div>
 
       {/* --- DAGENS UPPDRAG --- */}
-      <div className="flex items-center gap-2 pt-6 px-4 mb-2"><PremiumEmoji emoji="🎯" className="w-6 h-6" /><h3 className="text-[#8ba3b8] font-black uppercase text-[10px] sm:text-xs tracking-widest">Dagens Uppdrag</h3></div>
+      <div className="flex items-center gap-2 pt-6 px-4 mb-2">
+        <PremiumEmoji emoji="🎯" className="w-6 h-6" />
+        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Dagens Uppdrag</h3>
+      </div>
+
       <div className="space-y-3 px-2 sm:px-4">
         {quests.map(q => {
           const done = q.type === 'simple' ? isDone(q.id) : q.tasks.every(t => isDone(t.id));
@@ -362,9 +386,9 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                       if(q.id === 'q12') window.open('https://spotify.com', '_blank');
                       triggerReward(q.reward, e, q.id, q.title);
                     }} 
-                    className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95 transition-transform'}`}
+                    className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95 transition-transform'}`}
                   >
-                    {done ? 'Klar' : `+${q.reward} kr`}
+                    {done ? 'Hämtad' : `+${q.reward} kr`}
                   </button>
                 ) : (
                   <div className="flex items-center gap-3 pr-2">
@@ -379,9 +403,9 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                       </span>
                     )}
                     
-                    {/* --- PREMIUM PIL --- */}
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 ${expandedQuest === q.id ? 'bg-slate-800 text-white rotate-180 shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                    {/* Snygg pil istället för texten "V" */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${expandedQuest === q.id ? 'bg-slate-800 text-white rotate-180 shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                       </svg>
                     </div>
@@ -398,7 +422,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                         return (
                           <div key={t.id} className={`flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm transition-colors ${tDone ? 'opacity-50' : ''}`}>
                             <span className={`text-xs font-bold ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
-                            <button disabled={tDone} onClick={(e) => triggerReward(t.reward, e, t.id, t.text)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-sm ${tDone ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white active:scale-95 transition-transform'}`}>
+                            <button disabled={tDone} onClick={(e) => triggerReward(t.reward, e, t.id, t.text)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${tDone ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white active:scale-95 transition-transform'}`}>
                                 {tDone ? 'Klar' : `+${t.reward} kr`}
                             </button>
                           </div>
@@ -412,6 +436,17 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
           );
         })}
       </div>
+      
+      {/* Litet hack för att gömma en default-scroll i tailwind */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </motion.div>
   );
 };
