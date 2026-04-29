@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-
+import { getMessaging } from "firebase/messaging";
 const firebaseConfig = {
   apiKey: "AIzaSyD32139sl-MYBnStg5FsGA5tIXS9wQ15JI",
   authDomain: "adrians-schema.firebaseapp.com",
@@ -21,3 +21,4 @@ try {
 }
 
 export { db };
+export const messaging = getMessaging(app);

@@ -1,0 +1,24 @@
+{
+  "name": "Adrians Schema & Uppdrag",
+  "short_name": "Adrian",
+  "description": "Adrians personliga schema och belöningssystem",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#f1f5f9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-270.png",
+      "sizes": "270x270",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-540.png",
+      "sizes": "540x540",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

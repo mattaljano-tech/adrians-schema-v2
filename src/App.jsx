@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, collection, onSnapshot, updateDoc, setDoc } from 'firebase/firestore'; 
 import { getAuth, signInAnonymously } from 'firebase/auth';
-import { db } from './firebase'; 
+import { getToken } from 'firebase/messaging'; // Importerar getToken
+import { db, messaging } from './firebase';    // Importerar db och messaging
+
 import EarnTab from './components/EarnTab'; 
 import ShopTab from './components/ShopTab';
 import SchemaTab from './components/SchemaTab'; 
@@ -101,7 +103,6 @@ const App = () => {
   }, []);
 
   // --- 1. KLOCKAN ---
-  
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -147,7 +148,7 @@ const App = () => {
     };
   }, []);
 
-  // 4. LARM & NOTISER
+  // 4. LARM & NOTISER (Frontend-timers)
   useEffect(() => {
     if (!notifsEnabled) return;
     const nowMs = currentTime.getTime();
@@ -216,6 +217,42 @@ const App = () => {
       } catch (err) { console.error(err); }
     }
   };
+
+  // =====================================================================
+  // HÄR ÄR DEN NYA FUNKTIONEN FÖR FIREBASE-NOTISER MED VAPID-NYCKELN!
+  // =====================================================================
+  const requestNotificationPermission = async () => {
+    try {
+      console.log("Frågar om notis-behörighet...");
+      const permission = await Notification.requestPermission();
+      
+      if (permission === 'granted') {
+        console.log("Behörighet beviljad! Hämtar token...");
+        
+        // HÄR ANVÄNDS DIN VAPID-NYCKEL
+        const token = await getToken(messaging, { 
+          vapidKey: 'BKc6JIfn6UU5KfzfPe0l56Pj5gFfQflQeroH8hEenz3OoeiFrfQIdwhKD1c380MP9ydhPVdOyvIE4C-Schh-0sA' 
+        });
+
+        if (token) {
+          console.log('Din enhets-token är:', token);
+          
+          // Spara till backendens exakta sökväg
+          const tokenRef = doc(db, 'artifacts/gaming-schema-app-light/public/data/device_tokens/adrians_telefon');
+          await setDoc(tokenRef, { tokens: [token] }, { merge: true });
+          
+          showToast("Larm och notiser aktiverade!");
+        } else {
+          console.log('Kunde inte generera token.');
+        }
+      } else {
+        console.log("Användaren nekade notiser.");
+      }
+    } catch (error) {
+      console.error('Fel vid hämtning av notis-token:', error);
+    }
+  };
+  // =====================================================================
 
   const now = currentTime.getTime();
   const future = activities.filter(a => a.startTime > now);
@@ -307,11 +344,13 @@ const App = () => {
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
 
+        {/* HÄR KÖRS DIN NYA NOTISFUNKTION NÄR MAN KLICKAR PÅ KNAPPEN */}
         {!notifsEnabled && (
           <button 
-            onClick={() => {
+            onClick={async () => {
               setNotifsEnabled(true);
               audioRef.current?.play().catch(e => console.log(e));
+              await requestNotificationPermission(); // <--- KÖR FUNKTIONEN HÄR!
             }}
             className="mt-6 bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] px-6 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest shadow-sm flex items-center gap-2 transition-transform active:scale-95"
           >
