@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { collection, addDoc, deleteDoc, doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -37,7 +37,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   const [localBedtime, setLocalBedtime] = useState(bedtime || '22:00');
   const [confirmReset, setConfirmReset] = useState(false);
 
-  // --- HÄMTA FAVORITER ---
+  // --- HÄMTA FAVORITER FRÅN FIREBASE ---
   useEffect(() => {
     if (!isUnlocked) return;
     const favDoc = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'favorites');
@@ -66,24 +66,21 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     }
   };
 
-  // --- LÅSSKÄRMEN (Premium Glass) ---
+  // --- LÅSSKÄRMEN ---
   if (!isUnlocked) {
     return (
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1200')" }}
-      >
-        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xl"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xl">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }} 
           animate={{ opacity: 1, scale: 1, x: shake ? [-10, 10, -10, 10, 0] : 0 }} 
           transition={{ duration: shake ? 0.4 : 0.3 }}
-          className="bg-white/20 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.3)] border border-white/30 w-full max-w-sm flex flex-col items-center relative z-10"
+          className="bg-slate-900/80 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-slate-700/50 w-full max-w-sm flex flex-col items-center"
         >
           <div className="w-24 h-24 mb-6 relative flex justify-center items-center">
-            <PremiumEmoji emoji="🔒" className="w-20 h-20 relative z-10 drop-shadow-xl" />
+            <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-30"></div>
+            <PremiumEmoji emoji="🔒" className="w-20 h-20 relative z-10" />
           </div>
-          <h2 className="text-xl font-black uppercase text-white mb-8 tracking-widest drop-shadow-md">Föräldraläge</h2>
+          <h2 className="text-xl font-black uppercase text-white mb-8 tracking-widest">Föräldraläge</h2>
           <div className="w-full relative mb-6">
             <input 
               type="password" 
@@ -91,12 +88,12 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
               placeholder="••••••"
-              className="w-full bg-white/40 p-4 rounded-2xl text-center text-2xl tracking-[0.5em] font-black text-slate-900 outline-none border border-white/50 shadow-inner focus:border-white focus:bg-white/60 transition-all placeholder:text-slate-600/50"
+              className="w-full bg-white/10 p-4 rounded-2xl text-center text-2xl tracking-[0.5em] font-black text-white outline-none border border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-100/10 transition-all placeholder:text-slate-600"
             />
           </div>
           <motion.button 
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleUnlock}
-            className="w-full bg-blue-600/90 backdrop-blur-md text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg transition-all border border-blue-400"
+            className="w-full bg-blue-600 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg transition-all border border-blue-500"
           >
             Lås upp
           </motion.button>
@@ -236,6 +233,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     setNewPrepTime((task.prepTime || 0).toString());
   };
 
+  // --- BANK & INSTÄLLNINGAR FUNKTIONER ---
   const handleUpdateBank = async (amount) => {
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     await updateDoc(bankDoc, { balance: (bankBalance || 0) + amount });
@@ -268,152 +266,137 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     alert("Meddelande och inställningar sparade!");
   };
 
-  // --- GEMENSAM KORT-STIL FÖR GLASSMORPHISM ---
-  const glassCardClass = "bg-white/40 backdrop-blur-2xl p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/60 relative overflow-hidden";
-  const inputClass = "w-full bg-white/60 backdrop-blur-md border border-white/80 p-4 rounded-xl font-bold outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-inner";
-
   return (
-    // Yttre container med mjuk, ljus gradient/bild som lyser igenom glassmorphism-korten
-    <div 
-      className="min-h-screen bg-cover bg-fixed bg-center relative pb-24"
-      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=1200')" }}
-    >
-      <div className="absolute inset-0 bg-slate-100/50 backdrop-blur-[10px] pointer-events-none"></div>
-
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 space-y-6 px-3 pt-6 max-w-lg mx-auto">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
+      
+      {/* --- 1. DAGENS MEDDELANDE (Nu högst upp!) --- */}
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-slate-100">
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/40"></div>
         
-        {/* --- PREMIUM TOGGLE STIL --- */}
-        <style>{`
-          .premium-toggle-input { display: none; }
-          .premium-toggle {
-            position: relative; width: 44px; height: 24px;
-            background-color: rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 99px; cursor: pointer; transition: all 0.3s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-          }
-          .premium-toggle-thumb {
-            position: absolute; top: 1px; left: 1px;
-            width: 20px; height: 20px;
-            background-color: white; border-radius: 99px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-          }
-          .premium-toggle-input:checked + .premium-toggle { background-color: #3b82f6; border-color: #2563eb; }
-          .premium-toggle-input:checked + .premium-toggle .premium-toggle-thumb { transform: translateX(20px); }
-          .hide-scrollbar::-webkit-scrollbar { display: none; }
-          .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        `}</style>
-
-        {/* --- 1. DAGENS MEDDELANDE & INSTÄLLNINGAR --- */}
-        <div className={glassCardClass}>
+        <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💬" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm">Meddelande & Tid</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Dagens Meddelande</h3>
           </div>
           
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Avsändare</label>
-              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="T.ex. Mamma" className={inputClass} />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Avsändare</label>
+              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
             </div>
             
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Meddelande</label>
-              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className={`${inputClass} min-h-[100px] resize-none leading-relaxed`} />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Meddelande</label>
+              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-sm" />
             </div>
 
             <div className="space-y-1 pt-2">
-              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Standard Läggdags</label>
-              <input type="time" value={localBedtime} onChange={e => setLocalBedtime(e.target.value)} className={`${inputClass} font-clock`} />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Standard Läggdags</label>
+              <input type="time" value={localBedtime} onChange={e => setLocalBedtime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessageAndSettings} className="w-full bg-blue-600/90 backdrop-blur-sm text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-[0_4px_15px_rgba(37,99,235,0.4)] mt-2 border border-blue-400">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessageAndSettings} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-lg mt-2 border border-blue-700">
               Spara Uppgifter
             </motion.button>
           </div>
         </div>
+      </div>
 
-        {/* --- 2. BULK-LADDARE (SKOLDAG) --- */}
-        <div className={glassCardClass}>
+      {/* --- 2. BULK-LADDARE (SKOLDAG) --- */}
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-blue-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1595113300742-0570b5550f24?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-transparent"></div>
+        
+        <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <PremiumEmoji emoji="🎒" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm">Komplett Skoldag</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Komplett Skoldag</h3>
           </div>
-          <p className="text-xs text-slate-600 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning på ett klick.</p>
+          <p className="text-[11px] text-slate-600 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning.</p>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/70 backdrop-blur-md border border-white text-slate-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs hover:bg-white transition-colors">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/80 backdrop-blur-md border border-slate-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs hover:bg-white">
               Lägg in för IDAG
             </motion.button>
-            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(true)} className="w-full bg-blue-600/90 backdrop-blur-sm text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md text-xs border border-blue-400">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(true)} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md text-xs border border-blue-700">
               Lägg in för IMORGON
             </motion.button>
           </div>
         </div>
+      </div>
 
-        {/* --- 3. BANK & SALDO --- */}
-        <div className={glassCardClass}>
+      {/* --- 3. BANK & SALDO --- */}
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-right opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610375228956-c65171d9a9f2?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent"></div>
+        
+        <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💳" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm">Hantera Banken</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Hantera Banken</h3>
           </div>
           
-          <div className="bg-white/50 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-white/60 shadow-inner">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Nuvarande Saldo</span>
-            <div className="text-5xl font-black text-slate-800 font-clock">{bankBalance || 0} <span className="text-xl text-slate-500 font-sans tracking-widest">kr</span></div>
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-200 shadow-sm">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nuvarande Saldo</span>
+            <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance || 0} kr</div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/70 border border-white text-slate-700 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 50</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/70 border border-white text-slate-700 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 50</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/70 border border-white text-slate-700 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 100</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/70 border border-white text-slate-700 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 100</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 100 kr</motion.button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200/80">
              <motion.button 
                 whileTap={{ scale: 0.95 }} 
                 onClick={() => {
                     if(confirmReset) { setBankZero(); setConfirmReset(false); } 
                     else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); }
                 }} 
-                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-500 text-white border-red-600' : 'bg-white/60 text-slate-600 border-white hover:bg-white'}`}
+                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-white/80 backdrop-blur-sm text-slate-500 border-slate-200 hover:bg-white'}`}
              >
-                {confirmReset ? "Tryck igen för att bekräfta" : "Nolla Saldot"}
+                {confirmReset ? "Tryck igen för att bekräfta!" : "Nolla Saldot"}
              </motion.button>
-             <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3.5 bg-white/60 text-slate-600 border border-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-white transition-colors">
+             <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-orange-100 transition-colors">
                 Nolla Streak
              </motion.button>
-             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-white/60 text-slate-600 border border-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-white transition-colors">
+             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-colors">
                 Lås upp uppdrag
              </motion.button>
           </div>
         </div>
+      </div>
 
-        {/* --- 4. LÄGG TILL / ÄNDRA UPPDRAG --- */}
-        <div className={glassCardClass}>
+      {/* --- 4. LÄGG TILL / ÄNDRA UPPDRAG --- */}
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/40"></div>
+        
+        <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-                <PremiumEmoji emoji="✨" className="w-8 h-8" />
-                <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm">
+                <PremiumEmoji emoji="📅" className="w-8 h-8" />
+                <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">
                     {editingId ? 'Ändra Uppdrag' : 'Nytt Uppdrag'}
                 </h3>
             </div>
             {editingId && (
-                <button onClick={() => { setEditingId(null); setNewTitle(''); }} className="text-[10px] font-black text-slate-500 bg-white/60 border border-white px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Avbryt ändring</button>
+                <button onClick={() => { setEditingId(null); setNewTitle(''); }} className="text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm">Avbryt ändring</button>
             )}
           </div>
           
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Dina sparade favoriter</p>
-          <div className="flex overflow-x-auto gap-2 mb-8 pb-2 hide-scrollbar snap-x">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Dina sparade favoriter</p>
+          <div className="flex flex-wrap gap-2 mb-8">
             {favorites.map((task, i) => (
               <button 
                 key={i} 
                 onClick={() => handleQuickPick(task)}
-                className="flex-shrink-0 snap-start bg-white/70 backdrop-blur-md text-slate-700 border border-white px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-white"
+                className="bg-white/80 backdrop-blur-md text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-white"
               >
-                <span className="drop-shadow-sm">{task.icon || "⭐"}</span>
+                <span>{task.icon || "⭐"}</span>
                 <span className="font-bold text-[11px] uppercase tracking-wider">{task.title}</span>
               </button>
             ))}
@@ -421,25 +404,25 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
 
           <form onSubmit={handleAddActivity} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Vad ska göras?</label>
-              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className={inputClass} required={!isLiveEvent} />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Vad ska göras?</label>
+              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all shadow-sm text-slate-800" required={!isLiveEvent} />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Datum</label>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className={inputClass} required />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Datum</label>
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm" required />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Tid</label>
-                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className={`${inputClass} font-clock`} required />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Tid</label>
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm" required />
               </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Längd (Hur länge?)</label>
-                <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className={inputClass}>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Hur länge?</label>
+                <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm">
                   <option value="15">15 Minuter</option>
                   <option value="30">30 Minuter</option>
                   <option value="45">45 Minuter</option>
@@ -451,8 +434,8 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Förberedelsetid</label>
-                <select value={newPrepTime} onChange={e => setNewPrepTime(e.target.value)} className={inputClass}>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Förberedelsetid</label>
+                <select value={newPrepTime} onChange={e => setNewPrepTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm">
                   <option value="0">Inget larm innan</option>
                   <option value="5">Larma 5 min innan</option>
                   <option value="10">Larma 10 min innan</option>
@@ -461,78 +444,85 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
               </div>
             </div>
 
-            {/* iOS Style Glass Toggles */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <label className="flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer bg-white/50 border border-white/80 shadow-sm hover:bg-white/70 transition-colors">
-                    <span className="font-black uppercase text-[10px] tracking-widest text-slate-600 flex items-center gap-2">⭐ Spara som favorit</span>
-                    <input type="checkbox" checked={saveAsFavorite} onChange={e => setSaveAsFavorite(e.target.checked)} className="premium-toggle-input" />
-                    <div className="premium-toggle"><div className="premium-toggle-thumb"></div></div>
-                </label>
+            {/* Custom Checkboxes (Toggles) */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button type="button" onClick={() => setSaveAsFavorite(!saveAsFavorite)} className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors shadow-sm ${saveAsFavorite ? 'bg-indigo-50 border-indigo-200' : 'bg-white/80 border-slate-200 hover:bg-white'}`}>
+                    <span className={`font-black uppercase text-[10px] tracking-widest ${saveAsFavorite ? 'text-indigo-700' : 'text-slate-500'}`}>⭐ Spara som favorit</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${saveAsFavorite ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
+                        {saveAsFavorite && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                    </div>
+                </button>
 
-                <label className="flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer bg-white/50 border border-white/80 shadow-sm hover:bg-white/70 transition-colors">
-                    <span className="font-black uppercase text-[10px] tracking-widest text-slate-600 flex items-center gap-2">🚨 Steal a Brainroth</span>
-                    <input type="checkbox" checked={isLiveEvent} onChange={e => setIsLiveEvent(e.target.checked)} className="premium-toggle-input" />
-                    <div className="premium-toggle"><div className="premium-toggle-thumb"></div></div>
-                </label>
+                <button type="button" onClick={() => setIsLiveEvent(!isLiveEvent)} className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors shadow-sm ${isLiveEvent ? 'bg-blue-50 border-blue-200' : 'bg-white/80 border-slate-200 hover:bg-white'}`}>
+                    <span className={`font-black uppercase text-[10px] tracking-widest ${isLiveEvent ? 'text-blue-700' : 'text-slate-500'}`}>🚨 Steal a Brainroth</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isLiveEvent ? 'border-blue-600 bg-blue-600' : 'border-slate-300'}`}>
+                        {isLiveEvent && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                    </div>
+                </button>
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800/90 backdrop-blur-sm text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-lg mt-4 border border-slate-700">
+            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-4 border border-slate-700">
               {editingId ? 'Spara Ändringar' : 'Lägg till i schemat'}
             </motion.button>
           </form>
 
           {/* --- AKTUELLT SCHEMA LISTA --- */}
-          <div className="mt-12 pt-6 border-t border-slate-300/30">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Inplanerat framöver</p>
-            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
+          <div className="mt-10">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Inplanerat framöver</p>
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
               {activities.length === 0 && (
-                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/60 shadow-sm">
-                  <span className="text-3xl mb-3 block opacity-80">✨</span>
-                  <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Schemat är tomt</p>
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 text-center border border-slate-100 shadow-sm">
+                  <span className="text-2xl mb-2 block">✨</span>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Schemat är tomt</p>
                 </div>
               )}
               
               {activities.filter(a => a.endTime > Date.now()).map(a => (
-                <div key={a.id} className="flex flex-col bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white shadow-sm hover:shadow-md transition-shadow gap-3">
+                <div key={a.id} className="flex flex-col bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow gap-3">
                   <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-black text-[15px] text-slate-800">{a.isLiveEvent ? '🚨 LIVE EVENT' : a.title}</p>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5 font-clock">
+                        <p className="font-black text-sm text-slate-800">{a.isLiveEvent ? '🚨 LIVE EVENT' : a.title}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                             {new Date(a.startTime).toLocaleString('sv-SE', {weekday:'short', hour:'2-digit', minute:'2-digit'})} • {a.duration} min
                         </p>
                       </div>
                       <div className="flex gap-2">
-                          <button onClick={() => handleEdit(a)} className="bg-white/80 text-slate-600 w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-slate-100 hover:bg-white transition-colors" title="Ändra">
+                          <button onClick={() => handleEdit(a)} className="bg-slate-50 border border-slate-200 text-slate-500 w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors shadow-sm" title="Ändra">
                               ✏️
                           </button>
-                          <button onClick={() => handleDeleteActivity(a.id)} className="bg-white/80 text-red-500 w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-slate-100 hover:bg-white transition-colors" title="Ta bort">
+                          <button onClick={() => handleDeleteActivity(a.id)} className="bg-red-50 border border-red-200 text-red-500 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-100 transition-colors shadow-sm" title="Ta bort">
                               🗑️
                           </button>
                       </div>
                   </div>
-                  <div className="flex gap-2 pt-2 border-t border-slate-200/50">
-                      <button onClick={() => handleShift(a, -15)} className="flex-1 bg-white/50 hover:bg-white text-slate-600 text-[10px] font-black uppercase py-2.5 rounded-xl border border-white shadow-sm transition-colors">-15 min</button>
-                      <button onClick={() => handleShift(a, 15)} className="flex-1 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-[10px] font-black uppercase py-2.5 rounded-xl border border-blue-100 shadow-sm transition-colors">+15 min</button>
+                  <div className="flex gap-2 pt-2 border-t border-slate-100/80">
+                      <button onClick={() => handleShift(a, -15)} className="flex-1 bg-white hover:bg-slate-50 text-slate-500 text-[10px] font-black uppercase py-2.5 rounded-xl border border-slate-200 shadow-sm transition-colors">-15 min</button>
+                      <button onClick={() => handleShift(a, 15)} className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-black uppercase py-2.5 rounded-xl border border-blue-200 shadow-sm transition-colors">+15 min</button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* --- 5. LÅS APPEN IGEN (LÄNGST NER - GLASSMORPHISM) --- */}
-      <div className="pt-4 pb-8 max-w-lg mx-auto px-3">
+      {/* --- 5. LÅS APPEN IGEN (LÄNGST NER) --- */}
+      <div className="pt-8 pb-4">
         <motion.button 
           whileTap={{ scale: 0.98 }} 
           onClick={() => setIsUnlocked(false)} 
-          className="w-full bg-slate-900/80 backdrop-blur-xl text-white font-black uppercase tracking-widest py-5 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.2)] border border-slate-700/50 flex items-center justify-center gap-3 relative z-10"
+          className="w-full bg-slate-900 text-white font-black uppercase tracking-widest py-5 rounded-[1.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.2)] border border-slate-700 flex items-center justify-center gap-3"
         >
-          <PremiumEmoji emoji="🔒" className="w-6 h-6" /> Lås appen igen
+          <span className="text-xl">🔒</span> Lås appen igen
         </motion.button>
       </div>
       
-    </div>
+      {/* Scroll-hide hack */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </motion.div>
   );
 };
 
