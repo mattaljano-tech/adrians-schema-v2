@@ -19,9 +19,7 @@ const TimerRing = ({ percentage, color = "#3b82f6" }) => {
 
   return (
     <svg className="w-full h-full transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
-      {/* Bakgrundsspåret (Gjorde detta mörkare så man ser ringen även på 0%) */}
       <circle cx="50" cy="50" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="12" />
-      {/* Den färgade tiden */}
       <circle
         cx="50" cy="50" r={radius}
         fill="none"
@@ -56,68 +54,37 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const [isReading, setIsReading] = useState(false);
   const [walkTime, setWalkTime] = useState(0);
   const [isWalking, setIsWalking] = useState(false);
+  const [mindTime, setMindTime] = useState(0);
+  const [isMindActive, setIsMindActive] = useState(false);
   const [expandedQuest, setExpandedQuest] = useState(null);
   const [showReadPrompt, setShowReadPrompt] = useState(false);
 
   // --- UPPDRAGSDATA ---
-  const cleanTasks = [
-    { id: 'c1', text: 'Plocka upp kläder', reward: 5 },
-    { id: 'c2', text: 'Bädda sängen', reward: 5 }
-  ];
-  const schoolTasks = [
-    { id: 'h1', text: 'Gör läxa / Träna hjärnan 15 min', reward: 10 },
-    { id: 'h2', text: 'Packa skolväskan', reward: 5 }
-  ];
-  const learnTasks = [
-    { id: 'l1', text: 'Träna på klockan', reward: 5 },
-    { id: 'l2', text: 'Träna på veckodagarna', reward: 5 },
-    { id: 'l3', text: 'Träna på månaderna', reward: 5 },
-    { id: 'l4', text: 'Lärande dokumentär (10 min)', reward: 15 }
-  ];
-  const physicalTasks = [
-    { id: 'p1', text: 'Armhävningar (3x5)', reward: 10 },
-    { id: 'p2', text: 'Squats / Benböj (20 st)', reward: 10 },
-    { id: 'p3', text: 'Plankan (30 sekunder)', reward: 10 }
-  ];
+  const cleanTasks = [{ id: 'c1', text: 'Plocka upp kläder', reward: 5 }, { id: 'c2', text: 'Bädda sängen', reward: 5 }];
+  const schoolTasks = [{ id: 'h1', text: 'Gör läxa / Träna 15 min', reward: 10 }, { id: 'h2', text: 'Packa skolväskan', reward: 5 }];
+  const learnTasks = [{ id: 'l1', text: 'Träna på klockan', reward: 5 }, { id: 'l2', text: 'Träna på veckodagarna', reward: 5 }, { id: 'l4', text: 'Lärande film (10 min)', reward: 15 }];
+  const physicalTasks = [{ id: 'p1', text: 'Armhävningar (3x5)', reward: 10 }, { id: 'p2', text: 'Benböj (20 st)', reward: 10 }];
 
   const quests = [
     { id: 'q1', title: "Hjälpa till med disken", reward: 15, icon: "🍽️", type: "simple" },
-    { id: 'q4', title: "Duka bordet", reward: 10, icon: "🥣", type: "simple" },
     { id: 'q2', title: "Städa ditt rum", icon: "🧹", type: "checklist", tasks: cleanTasks },
     { id: 'q5', title: "Skol-Fix", icon: "🎒", type: "checklist", tasks: schoolTasks },
-    { id: 'q3', title: "Ta ut sopor & Återvinning", reward: 10, icon: "🗑️", type: "simple" },
     { id: 'q10', title: "Hjärngympa & Lärande", icon: "🧠", type: "checklist", tasks: learnTasks },
-    { id: 'q9', title: "Egen Fysisk Utmaning", icon: "🏃‍♂️", type: "checklist", tasks: physicalTasks },
-    { id: 'q7', title: "Gymmet med Mamma", reward: 30, icon: "🏋️‍♀️", type: "simple" },
-    { id: 'q8', title: "Spela fotboll med Mathias", reward: 30, icon: "⚽", type: "simple" },
     { id: 'q12', title: "Lyssna på musik (10 min)", reward: 10, icon: "🎧", type: "simple" }
   ];
 
-  // --- LOGIK ---
+  // --- LOGIK FÖR TIMERS ---
   useEffect(() => {
     let interval;
-    if (isReading || isWalking) {
+    if (isReading || isWalking || isMindActive) {
       interval = setInterval(() => {
         if (isReading) setReadTime(t => t + 1);
         if (isWalking) setWalkTime(t => t + 1);
+        if (isMindActive) setMindTime(t => t + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isReading, isWalking]);
-
-  // Läspåminnelse (15 min)
-  useEffect(() => {
-    if (readTime === 900) setShowReadPrompt(true); 
-    if (readTime === 1020 && showReadPrompt) { 
-      setIsReading(false);
-      setShowReadPrompt(false);
-    }
-  }, [readTime, showReadPrompt]);
-
-  const isDone = (id) => {
-    if (!claimedQuests || !claimedQuests[id]) return false;
-    return new Date(claimedQuests[id]).toDateString() === new Date().toDateString();
-  };
+  }, [isReading, isWalking, isMindActive]);
 
   const triggerReward = (amount, e, id, title) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -134,26 +101,31 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
   const formatMinSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   
-  // Beräkningar
-  const readableTens = Math.floor(readTime / 600);
-  const readReward = readableTens * 10;
-  const walkEarned = Math.floor(walkTime / 60);
+  const readReward = Math.floor(readTime / 600) * 10;
+  const walkReward = Math.floor(walkTime / 60);
+  const mindReward = Math.floor(mindTime / 300) * 5; 
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6 pb-12">
       {flyingCoins.map(c => <FlyingCoin key={c.id} coin={c} />)}
 
-      {/* --- BANK HERO --- */}
+      {/* --- BANK HERO MED PULSERANDE STREAK --- */}
       <div className="px-2 sm:px-4 pt-4">
         <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2.5rem] p-6 sm:p-8 shadow-md relative overflow-hidden border border-slate-700/50">
           <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
             <PremiumEmoji emoji="💳" className="w-48 h-48" />
           </div>
           <div className="relative z-10 flex flex-col">
-            <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm mb-2">
-              Ditt saldo
-            </h2>
-            <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md">
+            <div className="flex justify-between items-start mb-2">
+              <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm mt-1">Ditt saldo</h2>
+              {bankStreak > 0 && (
+                <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse border border-orange-400/50 flex items-center gap-1.5">
+                  <span className="drop-shadow-md text-sm">🔥</span>
+                  <span>{bankStreak} Dagars Streak!</span>
+                </div>
+              )}
+            </div>
+            <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md mt-1">
               {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
             </div>
           </div>
@@ -165,183 +137,134 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Aktiva Uppdrag</h3>
       </div>
 
-      {/* --- AKTIVA TIMERS (LÄSA / GÅ) --- */}
       <div className="grid grid-cols-1 gap-4 px-2 sm:px-4">
         
-        {/* --- LÄS-KORT (BOK-BAKGRUND) --- */}
-        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isReading ? 'border-blue-300 ring-4 ring-blue-50 shadow-md' : 'border-slate-100 shadow-sm'}`}>
-          {/* Snygg bild på högra halvan, tonar in mot vitt på vänstra halvan */}
-          <div 
-            className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-right opacity-60" 
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800')" }}
-          ></div>
+        {/* --- LÄS-KORT --- */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isReading ? 'border-blue-300 ring-4 ring-blue-50' : 'border-slate-100 shadow-sm'}`}>
+          <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-right opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800')" }}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
-
           <div className="relative z-10 p-5">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-sm">
                 <TimerRing percentage={(readTime % 600) / 6} color="#3b82f6" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <PremiumEmoji emoji="📖" className="w-8 h-8" />
-                </div>
+                <div className="absolute inset-0 flex items-center justify-center"><PremiumEmoji emoji="📖" className="w-8 h-8" /></div>
               </div>
               <div className="flex-1">
-                {/* Dyslexivänlig rubrik utan uppercase */}
                 <h3 className="font-black text-slate-800 text-xl tracking-tight">Läs en bok</h3>
-                <p className="text-slate-600 font-bold text-xs mt-0.5">10 kr per 10 minuter</p>
+                <p className="text-slate-600 font-bold text-xs">10 kr per 10 minuter</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(readTime)}</div>
               </div>
-              <button 
-                onClick={() => setIsReading(!isReading)}
-                className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
-              >
-                {isReading ? 'Pausa' : 'Starta'}
-              </button>
+              <button onClick={() => setIsReading(!isReading)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700' : 'bg-blue-600 text-white'}`}>{isReading ? 'Pausa' : 'Starta'}</button>
             </div>
-
-            {/* Belöningsinfo för Läsning */}
-            {readTime > 0 && (
-              <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 bg-white/90 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Intjänat:</span>
-                  <span className={`font-black text-sm ${readReward > 0 ? 'text-green-600' : 'text-slate-400'}`}>+{readReward} kr</span>
-                </div>
-                {!isReading && (
-                  <button onClick={(e) => { triggerReward(readReward, e, 'read', 'Läsning'); setReadTime(0); }} className="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
-                    Avsluta & Hämta
-                  </button>
-                )}
-              </div>
-            )}
-            
-            {/* Påminnelse */}
-            {showReadPrompt && (
-              <div className="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center animate-pulse">
-                <p className="font-black text-yellow-800 text-xs uppercase mb-2">Läser du fortfarande?</p>
-                <button onClick={() => setShowReadPrompt(false)} className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-black text-xs uppercase shadow-sm">Ja, jag läser!</button>
-              </div>
+            {readTime > 0 && !isReading && (
+              <button onClick={(e) => { triggerReward(readReward, e, 'read', 'Läsning'); setReadTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {readReward} kr</button>
             )}
           </div>
         </div>
 
-        {/* --- GÅ-KORT (MIDSOMMARKRANSEN / PARK-BAKGRUND) --- */}
-        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isWalking ? 'border-blue-300 ring-4 ring-blue-50 shadow-md' : 'border-slate-100 shadow-sm'}`}>
-          {/* Lummig park/sommarkänsla */}
-          <div 
-            className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-60" 
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=800')" }}
-          ></div>
+        {/* --- PROMENAD-KORT --- */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isWalking ? 'border-green-300 ring-4 ring-green-50' : 'border-slate-100 shadow-sm'}`}>
+          <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=800')" }}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
-
           <div className="relative z-10 p-5">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-                <TimerRing percentage={(walkTime % 60) * 1.66} color="#3b82f6" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <PremiumEmoji emoji="🏃‍♂️" className="w-8 h-8" />
-                </div>
+              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-sm">
+                <TimerRing percentage={(walkTime % 60) * 1.66} color="#10b981" />
+                <div className="absolute inset-0 flex items-center justify-center"><PremiumEmoji emoji="🏃‍♂️" className="w-8 h-8" /></div>
               </div>
               <div className="flex-1">
                 <h3 className="font-black text-slate-800 text-xl tracking-tight">Ta en promenad</h3>
-                <p className="text-slate-600 font-bold text-xs mt-0.5">1 kr per minut</p>
+                <p className="text-slate-600 font-bold text-xs">1 kr per minut</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(walkTime)}</div>
               </div>
-              <button 
-                onClick={() => setIsWalking(!isWalking)}
-                className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
-              >
-                {isWalking ? 'Pausa' : 'Starta'}
-              </button>
+              <button onClick={() => setIsWalking(!isWalking)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isWalking ? 'bg-green-100 text-green-700' : 'bg-green-600 text-white'}`}>{isWalking ? 'Pausa' : 'Starta'}</button>
             </div>
-
-            {/* Belöningsinfo för Promenad */}
-            {walkTime > 0 && (
-              <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 bg-white/90 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Intjänat:</span>
-                  <span className={`font-black text-sm ${walkEarned > 0 ? 'text-green-600' : 'text-slate-400'}`}>+{walkEarned} kr</span>
-                </div>
-                {!isWalking && (
-                  <button onClick={(e) => { triggerReward(walkEarned, e, 'walk', 'Promenad'); setWalkTime(0); }} className="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
-                    Avsluta & Hämta
-                  </button>
-                )}
-              </div>
+            {walkTime > 0 && !isWalking && (
+              <button onClick={(e) => { triggerReward(walkReward, e, 'walk', 'Promenad'); setWalkTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {walkReward} kr</button>
             )}
           </div>
         </div>
+
+        {/* --- MINDFULNESS-KORT --- */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isMindActive ? 'border-purple-300 ring-4 ring-purple-50' : 'border-slate-100 shadow-sm'}`}>
+          <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&q=80&w=800')" }}></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
+          <div className="relative z-10 p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-sm">
+                <TimerRing percentage={(mindTime % 300) / 3} color="#8b5cf6" />
+                <div className="absolute inset-0 flex items-center justify-center"><PremiumEmoji emoji="🧘‍♂️" className="w-8 h-8" /></div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-black text-slate-800 text-xl tracking-tight">Mindfulness</h3>
+                <p className="text-slate-600 font-bold text-xs">5 kr per 5 minuter</p>
+                <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(mindTime)}</div>
+              </div>
+              <button onClick={() => setIsMindActive(!isMindActive)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isMindActive ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white'}`}>{isMindActive ? 'Pausa' : 'Starta'}</button>
+            </div>
+            {mindTime > 0 && !isMindActive && (
+              <button onClick={(e) => { triggerReward(mindReward, e, 'mind', 'Mindfulness'); setMindTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {mindReward} kr</button>
+            )}
+          </div>
+        </div>
+
       </div>
 
-      <div className="flex items-center gap-2 pt-6 px-4 mb-2">
-        <PremiumEmoji emoji="🎯" className="w-6 h-6" />
-        <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Dagens Uppdrag</h3>
-      </div>
-
-      {/* --- UPPDRAGSLISTA --- */}
+      {/* --- DAGENS UPPDRAG --- */}
+      <div className="flex items-center gap-2 pt-6 px-4 mb-2"><PremiumEmoji emoji="🎯" className="w-6 h-6" /><h3 className="text-[#8ba3b8] font-black uppercase text-[10px] sm:text-xs tracking-widest">Dagens Uppdrag</h3></div>
       <div className="space-y-3 px-2 sm:px-4">
         {quests.map(q => {
-          const done = q.type === 'simple' ? isDone(q.id) : q.tasks.every(t => isDone(t.id));
-          
+          const done = q.type === 'simple' ? claimedQuests?.[q.id] : q.tasks.every(t => claimedQuests?.[t.id]);
+          // Räknar ut totalbeloppet för alla moment i listan
+          const totalReward = q.type === 'checklist' ? q.tasks.reduce((sum, t) => sum + t.reward, 0) : q.reward;
+
           return (
-            <div key={q.id} className={`bg-white rounded-[1.5rem] border transition-all duration-200 ${done ? 'opacity-60 grayscale-[30%] border-slate-100' : 'border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-md'}`}>
+            <div key={q.id} className={`bg-white rounded-[1.5rem] border transition-all duration-200 ${done ? 'opacity-60 grayscale-[30%] shadow-none border-slate-100' : 'shadow-sm hover:shadow-md border-slate-200'}`}>
               <div 
-                className="p-3 sm:p-4 flex items-center justify-between cursor-pointer"
-                onClick={() => q.type === 'checklist' ? setExpandedQuest(expandedQuest === q.id ? null : q.id) : null}
+                className="p-3 sm:p-4 flex items-center justify-between cursor-pointer" 
+                onClick={() => q.type === 'checklist' && setExpandedQuest(expandedQuest === q.id ? null : q.id)}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${done ? 'bg-slate-50' : 'bg-[#f8fafc]'}`}>
-                    <PremiumEmoji emoji={q.icon} className="w-10 h-10" />
-                  </div>
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#f8fafc]"><PremiumEmoji emoji={q.icon} className="w-10 h-10" /></div>
                   <div className="flex flex-col">
-                    <h4 className={`font-black tracking-wide text-sm sm:text-base ${done ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
-                      {q.title}
-                    </h4>
+                    <h4 className={`font-black text-sm sm:text-base ${done ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>{q.title}</h4>
                     {q.type === 'checklist' && !done && (
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{q.tasks.length} delmoment</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{q.tasks.length} delmoment</p>
                     )}
-                    {done && (
-                      <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">✅ Klar för idag</p>
-                    )}
+                    {done && <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">✅ Klar för idag</p>}
                   </div>
                 </div>
                 
                 {q.type === 'simple' ? (
-                  <button 
-                    disabled={done}
-                    onClick={(e) => {
-                      if(q.id === 'q12') window.open('https://spotify.com', '_blank');
-                      triggerReward(q.reward, e, q.id, q.title);
-                    }}
-                    className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest flex-shrink-0 ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95 transition-transform'}`}
-                  >
-                    {done ? 'Hämtad' : `+${q.reward} kr`}
-                  </button>
+                  <button disabled={done} onClick={(e) => triggerReward(q.reward, e, q.id, q.title)} className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95'}`}>{done ? 'Klar' : `+${q.reward} kr`}</button>
                 ) : (
-                  <div className="text-slate-400 pr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-300 ${expandedQuest === q.id ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                  <div className="flex items-center gap-3 pr-2">
+                    {!done && (
+                      <span className="bg-emerald-50 text-emerald-600 font-black px-3 py-1.5 rounded-full text-[10px] uppercase whitespace-nowrap border border-emerald-200 shadow-sm hidden sm:block">
+                        Upp till +{totalReward} kr
+                      </span>
+                    )}
+                    {!done && (
+                      <span className="bg-emerald-50 text-emerald-600 font-black px-2 py-1 rounded-full text-[10px] uppercase whitespace-nowrap border border-emerald-200 shadow-sm sm:hidden">
+                        Max {totalReward} kr
+                      </span>
+                    )}
+                    <div className={`text-slate-400 transition-transform ${expandedQuest === q.id ? 'rotate-180' : ''}`}>▼</div>
                   </div>
                 )}
               </div>
-
-              {/* Checklist-detaljer (Utökad) */}
+              
               <AnimatePresence>
                 {q.type === 'checklist' && expandedQuest === q.id && (
-                  <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                    <div className="p-3 bg-slate-50/80 border-t border-slate-100 space-y-2 rounded-b-[1.5rem]">
+                  <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-slate-50/80 rounded-b-[1.5rem] border-t border-slate-100 px-4 pb-4">
+                    <div className="pt-4 space-y-2">
                       {q.tasks.map(t => {
-                        const tDone = isDone(t.id);
+                        const tDone = claimedQuests?.[t.id];
                         return (
-                          <div key={t.id} className={`flex items-center justify-between p-3 rounded-2xl border transition-colors ${tDone ? 'bg-transparent border-transparent opacity-60' : 'bg-white border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]'}`}>
-                            {/* Inga versaler här heller för bättre ordbild */}
-                            <span className={`text-xs font-bold pl-1 ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
-                            <button 
-                              disabled={tDone}
-                              onClick={(e) => triggerReward(t.reward, e, t.id, t.text)}
-                              className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm flex-shrink-0 ${tDone ? 'bg-slate-200 text-slate-400' : 'bg-[#10b981] text-white active:scale-95 transition-transform'}`}
-                            >
-                              {tDone ? 'Klar' : `+${t.reward} kr`}
+                          <div key={t.id} className={`flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm transition-colors ${tDone ? 'opacity-50' : ''}`}>
+                            <span className={`text-xs font-bold ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
+                            <button disabled={tDone} onClick={(e) => triggerReward(t.reward, e, t.id, t.text)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-sm ${tDone ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white active:scale-95'}`}>
+                                {tDone ? 'Klar' : `+${t.reward} kr`}
                             </button>
                           </div>
                         );
