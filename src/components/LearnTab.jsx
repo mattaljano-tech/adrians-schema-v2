@@ -6,7 +6,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
   <img 
     src={`https://emojicdn.elk.sh/${emoji}?style=apple`} 
     alt={emoji} 
-    className={`${className} drop-shadow-sm select-none pointer-events-none`} 
+    className={`${className} drop-shadow-md select-none pointer-events-none`} 
     draggable="false"
   />
 );
@@ -50,7 +50,7 @@ const getSwedishAnalog = (date) => {
   return `${60 - m} i ${nextH}`;
 };
 
-// --- INTERAKTIV KLOCKA (Premium Silver Look) ---
+// --- INTERAKTIV KLOCKA ---
 const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   const svgRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -101,10 +101,8 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
           onDoubleClick={handleDoubleClick}
           className="w-64 h-64 sm:w-72 sm:h-72 touch-none cursor-grab active:cursor-grabbing bg-slate-50 rounded-full border border-slate-200 shadow-inner"
         >
-          {/* Urtavlan */}
           <circle cx="140" cy="140" r="135" fill="none" />
           
-          {/* Minut-prickar */}
           {[...Array(60)].map((_, i) => (
             <circle 
               key={`min-${i}`} 
@@ -115,7 +113,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
             />
           ))}
 
-          {/* Siffrorna 1-12 */}
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
             const angle = (num * 30 - 90) * (Math.PI / 180);
             const radius = 98; 
@@ -123,11 +120,8 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
             const y = 140 + radius * Math.sin(angle);
             return (
               <text 
-                key={num} 
-                x={x} 
-                y={y} 
-                textAnchor="middle" 
-                dominantBaseline="central" 
+                key={num} x={x} y={y} 
+                textAnchor="middle" dominantBaseline="central" 
                 className="text-[26px] font-black font-clock fill-slate-800 select-none pointer-events-none"
               >
                 {num}
@@ -135,7 +129,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
             );
           })}
 
-          {/* Skuggor för visare (för 3D effekt) */}
           <g transform={`rotate(${hDeg} 140 140)`}>
             <line x1="140" y1="140" x2="140" y2="85" stroke="rgba(0,0,0,0.15)" strokeWidth="8" strokeLinecap="round" transform="translate(2, 2)" />
           </g>
@@ -143,17 +136,14 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
             <line x1="140" y1="140" x2="140" y2="40" stroke="rgba(0,0,0,0.15)" strokeWidth="6" strokeLinecap="round" transform="translate(2, 2)" />
           </g>
 
-          {/* Timvisare (Röd) */}
           <g transform={`rotate(${hDeg} 140 140)`}>
             <line x1="140" y1="140" x2="140" y2="85" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" />
           </g>
           
-          {/* Minutvisare (Blå) */}
           <g transform={`rotate(${mDeg} 140 140)`}>
             <line x1="140" y1="140" x2="140" y2="40" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" />
           </g>
           
-          {/* Mittenplupp */}
           <circle cx="140" cy="140" r="10" fill="#1e293b" />
           <circle cx="140" cy="140" r="4" fill="#f8fafc" />
         </svg>
@@ -182,7 +172,7 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   );
 };
 
-// --- TÅRTBITARNA (Premium & Lugn stil) ---
+// --- TÅRTBITARNA ---
 const ClockFractions = () => {
   const fractions = [
     { id: "hel", title: "Hel timme", desc: "Ett helt varv", mins: "60 min", color: "text-[#eab308]", shadow: "shadow-yellow-500/20", piePath: <circle cx="50" cy="50" r="40" fill="#fde047" />, mDeg: 0, hDeg: 0 },
@@ -265,31 +255,47 @@ const CalendarCard = () => {
   const todayColor = weekColors[realTodayDayOfWeek];
 
   return (
-    <div className="bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] overflow-hidden max-w-[450px] mx-auto border border-slate-50">
+    <div className="relative bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] max-w-[450px] mx-auto border border-slate-50 mt-4">
       
-      {/* HEADER BILD */}
-      <div className="bg-gradient-to-b from-[#86EFAC] to-[#A7F3D0] h-[160px] relative flex justify-center pt-8 overflow-hidden border-b border-[#6ee7b7]">
+      {/* HEADER BILD (OBS: Har tagit bort overflow-hidden härifrån!) */}
+      <div className="bg-gradient-to-b from-[#86EFAC] to-[#A7F3D0] h-[150px] rounded-t-[2.5rem] relative flex justify-center pt-8 border-b border-[#6ee7b7] overflow-hidden">
         <PremiumEmoji emoji="🌷" className="absolute left-4 bottom-6 w-16 h-16 opacity-40 blur-[1px]" />
         <PremiumEmoji emoji="🌷" className="absolute right-4 bottom-6 w-16 h-16 opacity-40 blur-[1px]" />
         
         <PremiumEmoji emoji="🐣" className="w-20 h-20 relative z-10 drop-shadow-xl" />
+      </div>
 
-        {/* Månads-navigering (Ny vit design) */}
-        <div className="absolute -bottom-6 z-20 flex items-center justify-between bg-white text-slate-700 px-4 py-3 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.08)] w-[260px] border border-slate-100">
-          <motion.button whileTap={{ scale: 0.8 }} onClick={prevMonth} className="px-3 py-1 font-black text-lg hover:text-slate-900 transition-colors">
-            &lt;
-          </motion.button>
-          <span className="font-black uppercase tracking-widest text-[13px]">
-            {currentMonthName} {currentYear}
-          </span>
-          <motion.button whileTap={{ scale: 0.8 }} onClick={nextMonth} className="px-3 py-1 font-black text-lg hover:text-slate-900 transition-colors">
-            &gt;
-          </motion.button>
-        </div>
+      {/* --- MÅNADS-NAVIGERING (Flyter NU fritt ovanpå kanten) --- */}
+      <div className="absolute top-[126px] left-1/2 -translate-x-1/2 z-20 flex items-center justify-between bg-white text-slate-800 p-1.5 rounded-[1.25rem] shadow-[0_8px_25px_rgba(0,0,0,0.08)] w-[260px] border border-slate-100">
+        <motion.button 
+          whileTap={{ scale: 0.9 }} 
+          onClick={prevMonth} 
+          className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          {/* Snygg Vänsterpil i SVG */}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </motion.button>
+
+        <span className="font-black uppercase tracking-widest text-[12px] pt-0.5">
+          {currentMonthName} {currentYear}
+        </span>
+
+        <motion.button 
+          whileTap={{ scale: 0.9 }} 
+          onClick={nextMonth} 
+          className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          {/* Snygg Högerpil i SVG */}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </motion.button>
       </div>
 
       {/* KALENDER KROPP */}
-      <div className="pt-14 pb-8 px-6 bg-[#FAFAF9]">
+      <div className="pt-16 pb-8 px-6 bg-[#FAFAF9] rounded-b-[2.5rem]">
         
         <div className="grid grid-cols-7 gap-1.5 mb-4">
           {weekColors.map((day, i) => (
