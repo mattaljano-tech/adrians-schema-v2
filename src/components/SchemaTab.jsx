@@ -2,29 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 // --- PREMIUM VISUELL TIMER ---
-// En tjock, modern Apple Watch-liknande ring med gradient och mjuk skugga
 const PremiumTimer = ({ totalMs, remainingMs }) => {
   const percentage = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
   
   const radius = 36; 
   const circumference = 2 * Math.PI * radius;
-  // När tiden minskar, minskar ringen
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
     <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
-      {/* Mjukt glödande bakgrund bakom klockan för premium-känsla */}
       <div className="absolute inset-0 bg-rose-400/10 rounded-full blur-2xl"></div>
       
       <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_4px_12px_rgba(225,29,72,0.2)]" viewBox="0 0 100 100">
         <defs>
           <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fb7185" /> {/* Mjuk ljusröd */}
-            <stop offset="100%" stopColor="#e11d48" /> {/* Djupare röd */}
+            <stop offset="0%" stopColor="#fb7185" />
+            <stop offset="100%" stopColor="#e11d48" />
           </linearGradient>
         </defs>
 
-        {/* Bakgrundsspåret (Tydliggör hela timmen) */}
         <circle 
           cx="50" cy="50" r={radius} 
           fill="none" 
@@ -32,13 +28,12 @@ const PremiumTimer = ({ totalMs, remainingMs }) => {
           strokeWidth="16" 
         />
         
-        {/* Den färgade tiden som är kvar */}
         <circle
           cx="50" cy="50" r={radius}
           fill="none"
           stroke="url(#timerGradient)"
           strokeWidth="16"
-          strokeLinecap="round" /* Ger mjuka, runda ändar på tiden! */
+          strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-linear"
@@ -70,7 +65,8 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
       if (gapMs >= 5 * 60000) { 
         timeline.push({
           id: `gap-${currentEvent.id}`,
-          title: 'Ledig tid',
+          // HÄR ÄR ÄNDRINGEN: Uppdaterade namnet på luckan i listan!
+          title: 'Välj ett uppdrag för att tjäna pengar',
           startTime: currentEvent.endTime,
           endTime: nextEvent.startTime,
           duration: Math.round(gapMs / 60000),
@@ -86,7 +82,6 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
 
   const getRemMs = (targetTime) => Math.max(0, targetTime - now);
   
-  // Formaterar "304 minuter" till "5 timmar och 4 minuter"
   const formatTimeLeft = (targetTime) => {
     const diffMs = getRemMs(targetTime);
     const totalMins = Math.ceil(diffMs / 60000);
@@ -126,13 +121,12 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
         </div>
       )}
 
-      {/* --- VAD HÄNDER JUST NU? (Premium Kort) --- */}
+      {/* --- VAD HÄNDER JUST NU? --- */}
       {current ? (
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_12px_40px_rgba(0,0,0,0.04)] border border-slate-50 flex flex-col items-center relative z-20 w-full overflow-hidden">
-          {/* Liten bakgrundsdekor för djup */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full opacity-50 pointer-events-none"></div>
 
-          <div className="bg-blue-50 text-blue-600 px-5 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] mb-5 shadow-sm">
+          <div className="bg-blue-100 text-blue-600 px-5 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] mb-5 shadow-sm">
             Händer just nu
           </div>
           
@@ -146,7 +140,6 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
               remainingMs={getRemMs(current.endTime)} 
             />
             
-            {/* Tiden utskriven i klartext under klockan */}
             <div className="mt-6 text-center">
               <p className="text-slate-800 font-black text-xl sm:text-2xl mb-1">
                 {formatTimeLeft(current.endTime)}
@@ -158,16 +151,15 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
           </div>
         </div>
       ) : (
-        /* --- LEDIG TID (Premium Kort) --- */
+        /* --- LEDIG TID KORTET --- */
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_12px_40px_rgba(0,0,0,0.04)] border border-slate-50 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center mb-5 shadow-sm">
             <span className="text-4xl">🎯</span>
           </div>
           
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-3">Ledig tid</h2>
-          <p className="text-slate-500 font-medium text-base max-w-[260px] leading-relaxed mb-8">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6">
             Välj ett uppdrag för att tjäna pengar
-          </p>
+          </h2>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -180,7 +172,7 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
 
           {nextRealActivity && (
             <div className="mt-10 pt-6 border-t border-slate-100 w-full">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4">Ditt nästa uppdrag</p>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4">Ditt nästa inplanerade pass</p>
               
               <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-5 border border-slate-100">
                 <div className="w-16 h-16 flex-shrink-0">
@@ -220,8 +212,9 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
                   >
                     <div className="text-2xl ml-1">🎯</div>
                     <div className="flex-1">
-                      <div className="font-black text-emerald-800">{a.title}</div>
-                      <div className="font-bold text-emerald-600/80 text-[11px] mt-0.5">Cirka {formatDuration(a.duration)}</div>
+                      {/* Titeln ändrades högre upp i loopen! */}
+                      <div className="font-black text-emerald-800 text-sm sm:text-base leading-tight">{a.title}</div>
+                      <div className="font-bold text-emerald-600/80 text-[11px] mt-1">Cirka {formatDuration(a.duration)}</div>
                     </div>
                   </motion.div>
                 );
