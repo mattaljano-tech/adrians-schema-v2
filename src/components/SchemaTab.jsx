@@ -86,7 +86,7 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
 
   const getRemMs = (targetTime) => Math.max(0, targetTime - now);
   
-  // FIX: Formaterar "304 minuter" till "5 timmar och 4 minuter"
+  // Formaterar "304 minuter" till "5 timmar och 4 minuter"
   const formatTimeLeft = (targetTime) => {
     const diffMs = getRemMs(targetTime);
     const totalMins = Math.ceil(diffMs / 60000);
@@ -165,8 +165,8 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
           </div>
           
           <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-3">Ledig tid</h2>
-          <p className="text-slate-500 font-medium text-sm max-w-[260px] leading-relaxed mb-8">
-            Inget är inplanerat just nu. Vill du göra ett uppdrag och tjäna lite extra pengar?
+          <p className="text-slate-500 font-medium text-base max-w-[260px] leading-relaxed mb-8">
+            Välj ett uppdrag för att tjäna pengar
           </p>
 
           <motion.button
