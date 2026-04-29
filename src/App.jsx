@@ -186,6 +186,7 @@ const App = () => {
         const data = d.data();
         setBankBalance(data.balance || 0);
         setBankStreak(data.streak || 0);
+        setBedtime(data.bedtime || '22:00');
         setClaimedQuests(data.claimedQuests || {});
         setAdminName(data.adminName || 'Din kompis'); 
         setDailyMessage(data.dailyMessage || ''); 
