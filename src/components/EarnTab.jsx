@@ -15,7 +15,9 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
 const TimerRing = ({ percentage, color = "#3b82f6" }) => {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  // Säkerställ att percentage inte blir NaN
+  const safePercentage = isNaN(percentage) ? 0 : percentage;
+  const strokeDashoffset = circumference - (safePercentage / 100) * circumference;
 
   return (
     <svg className="w-full h-full transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
@@ -28,7 +30,7 @@ const TimerRing = ({ percentage, color = "#3b82f6" }) => {
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={strokeDashoffset}
-        className="transition-all duration-1000 ease-linear"
+        className="transition-all duration-300 ease-linear"
       />
     </svg>
   );
@@ -50,41 +52,86 @@ const FlyingCoin = ({ coin }) => {
 
 const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const [flyingCoins, setFlyingCoins] = useState([]);
+  
+  // States för Läsning & Promenad
   const [readTime, setReadTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
   const [walkTime, setWalkTime] = useState(0);
   const [isWalking, setIsWalking] = useState(false);
-  const [mindTime, setMindTime] = useState(0);
-  const [isMindActive, setIsMindActive] = useState(false);
-  const [expandedQuest, setExpandedQuest] = useState(null);
   const [showReadPrompt, setShowReadPrompt] = useState(false);
+  const [expandedQuest, setExpandedQuest] = useState(null);
 
-  // --- UPPDRAGSDATA ---
-  const cleanTasks = [{ id: 'c1', text: 'Plocka upp kläder', reward: 5 }, { id: 'c2', text: 'Bädda sängen', reward: 5 }];
-  const schoolTasks = [{ id: 'h1', text: 'Gör läxa / Träna 15 min', reward: 10 }, { id: 'h2', text: 'Packa skolväskan', reward: 5 }];
-  const learnTasks = [{ id: 'l1', text: 'Träna på klockan', reward: 5 }, { id: 'l2', text: 'Träna på veckodagarna', reward: 5 }, { id: 'l4', text: 'Lärande film (10 min)', reward: 15 }];
-  const physicalTasks = [{ id: 'p1', text: 'Armhävningar (3x5)', reward: 10 }, { id: 'p2', text: 'Benböj (20 st)', reward: 10 }];
+  // --- NY MINDFULNESS LOGIK ("All or Nothing") ---
+  const audioRef = useRef(null);
+  const mindfulnessSongs = [
+    { id: 'm1', title: 'Avslappning i Rymden', url: 'Avslappning i rymden.mp3', reward: 5 },
+    { id: 'm2', title: 'Lugna Skogen', url: 'Lugna Skogen.mp3', reward: 5 },
+    { id: 'm3', title: 'Gaming Chill Lofi', url: 'https://din-länk-till-låt-3.mp3', reward: 5 }
+  ];
+  const [selectedSongId, setSelectedSongId] = useState(mindfulnessSongs[0].id);
+  const [mindStatus, setMindStatus] = useState('idle'); // 'idle', 'playing', 'finished'
+  const [mindProgress, setMindProgress] = useState(0);
+
+  const currentSong = mindfulnessSongs.find(s => s.id === selectedSongId);
+
+  // --- UPPDRAGSDATA (Hela listan bevarad!) ---
+  const cleanTasks = [
+    { id: 'c1', text: 'Plocka upp kläder', reward: 5 },
+    { id: 'c2', text: 'Bädda sängen', reward: 5 }
+  ];
+  const schoolTasks = [
+    { id: 'h1', text: 'Gör läxa / Träna hjärnan 15 min', reward: 10 },
+    { id: 'h2', text: 'Packa skolväskan', reward: 5 }
+  ];
+  const learnTasks = [
+    { id: 'l1', text: 'Träna på klockan', reward: 5 },
+    { id: 'l2', text: 'Träna på veckodagarna', reward: 5 },
+    { id: 'l3', text: 'Träna på månaderna', reward: 5 },
+    { id: 'l4', text: 'Lärande dokumentär (10 min)', reward: 15 }
+  ];
+  const physicalTasks = [
+    { id: 'p1', text: 'Armhävningar (3x5)', reward: 10 },
+    { id: 'p2', text: 'Squats / Benböj (20 st)', reward: 10 },
+    { id: 'p3', text: 'Plankan (30 sekunder)', reward: 10 }
+  ];
 
   const quests = [
     { id: 'q1', title: "Hjälpa till med disken", reward: 15, icon: "🍽️", type: "simple" },
+    { id: 'q4', title: "Duka bordet", reward: 10, icon: "🥣", type: "simple" },
     { id: 'q2', title: "Städa ditt rum", icon: "🧹", type: "checklist", tasks: cleanTasks },
     { id: 'q5', title: "Skol-Fix", icon: "🎒", type: "checklist", tasks: schoolTasks },
+    { id: 'q3', title: "Ta ut sopor & Återvinning", reward: 10, icon: "🗑️", type: "simple" },
     { id: 'q10', title: "Hjärngympa & Lärande", icon: "🧠", type: "checklist", tasks: learnTasks },
+    { id: 'q9', title: "Egen Fysisk Utmaning", icon: "🏃‍♂️", type: "checklist", tasks: physicalTasks },
+    { id: 'q7', title: "Gymmet med Mamma", reward: 30, icon: "🏋️‍♀️", type: "simple" },
+    { id: 'q8', title: "Spela fotboll med Mathias", reward: 30, icon: "⚽", type: "simple" },
     { id: 'q12', title: "Lyssna på musik (10 min)", reward: 10, icon: "🎧", type: "simple" }
   ];
 
-  // --- LOGIK FÖR TIMERS ---
+  // --- LOGIK FÖR LÄS/GÅ-TIMERS ---
   useEffect(() => {
     let interval;
-    if (isReading || isWalking || isMindActive) {
+    if (isReading || isWalking) {
       interval = setInterval(() => {
         if (isReading) setReadTime(t => t + 1);
         if (isWalking) setWalkTime(t => t + 1);
-        if (isMindActive) setMindTime(t => t + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isReading, isWalking, isMindActive]);
+  }, [isReading, isWalking]);
+
+  useEffect(() => {
+    if (readTime === 900) setShowReadPrompt(true); 
+    if (readTime === 1020 && showReadPrompt) { 
+      setIsReading(false);
+      setShowReadPrompt(false);
+    }
+  }, [readTime, showReadPrompt]);
+
+  const isDone = (id) => {
+    if (!claimedQuests || !claimedQuests[id]) return false;
+    return new Date(claimedQuests[id]).toDateString() === new Date().toDateString();
+  };
 
   const triggerReward = (amount, e, id, title) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -100,16 +147,50 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   };
 
   const formatMinSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  
   const readReward = Math.floor(readTime / 600) * 10;
   const walkReward = Math.floor(walkTime / 60);
-  const mindReward = Math.floor(mindTime / 300) * 5; 
+
+  // --- MINDFULNESS HANDLERS ---
+  const startMindfulness = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.log("Audio play failed: ", e));
+      setMindStatus('playing');
+    }
+  };
+
+  const cancelMindfulness = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setMindStatus('idle');
+    setMindProgress(0);
+  };
+
+  const handleAudioTimeUpdate = () => {
+    if (audioRef.current && audioRef.current.duration) {
+      const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+      setMindProgress(progress);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setMindStatus('finished');
+    setMindProgress(100);
+  };
+
+  const claimMindfulness = (e) => {
+    triggerReward(currentSong.reward, e, `mind_${currentSong.id}_${Date.now()}`, currentSong.title);
+    setMindStatus('idle');
+    setMindProgress(0);
+    if (audioRef.current) audioRef.current.currentTime = 0;
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6 pb-12">
       {flyingCoins.map(c => <FlyingCoin key={c.id} coin={c} />)}
 
-      {/* --- BANK HERO MED PULSERANDE STREAK --- */}
+      {/* --- BANK HERO --- */}
       <div className="px-2 sm:px-4 pt-4">
         <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2.5rem] p-6 sm:p-8 shadow-md relative overflow-hidden border border-slate-700/50">
           <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
@@ -121,7 +202,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               {bankStreak > 0 && (
                 <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse border border-orange-400/50 flex items-center gap-1.5">
                   <span className="drop-shadow-md text-sm">🔥</span>
-                  <span>{bankStreak} Dagars Streak!</span>
+                  <span>{bankStreak} {bankStreak === 1 ? 'Dags' : 'Dagars'} Streak!</span>
                 </div>
               )}
             </div>
@@ -159,6 +240,12 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             {readTime > 0 && !isReading && (
               <button onClick={(e) => { triggerReward(readReward, e, 'read', 'Läsning'); setReadTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {readReward} kr</button>
             )}
+            {showReadPrompt && (
+              <div className="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center animate-pulse">
+                <p className="font-black text-yellow-800 text-xs uppercase mb-2">Läser du fortfarande?</p>
+                <button onClick={() => setShowReadPrompt(false)} className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-black text-xs uppercase shadow-sm">Ja, jag läser!</button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -185,26 +272,62 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
           </div>
         </div>
 
-        {/* --- MINDFULNESS-KORT --- */}
-        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isMindActive ? 'border-purple-300 ring-4 ring-purple-50' : 'border-slate-100 shadow-sm'}`}>
+        {/* --- MINDFULNESS-KORT ("ALL OR NOTHING") --- */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${mindStatus === 'playing' ? 'border-purple-300 ring-4 ring-purple-50' : mindStatus === 'finished' ? 'border-emerald-300 ring-4 ring-emerald-50' : 'border-slate-100 shadow-sm'}`}>
           <div className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&q=80&w=800')" }}></div>
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
           <div className="relative z-10 p-5">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-sm">
-                <TimerRing percentage={(mindTime % 300) / 3} color="#8b5cf6" />
+                <TimerRing percentage={mindProgress} color={mindStatus === 'finished' ? "#10b981" : "#8b5cf6"} />
                 <div className="absolute inset-0 flex items-center justify-center"><PremiumEmoji emoji="🧘‍♂️" className="w-8 h-8" /></div>
               </div>
+              
               <div className="flex-1">
-                <h3 className="font-black text-slate-800 text-xl tracking-tight">Mindfulness</h3>
-                <p className="text-slate-600 font-bold text-xs">5 kr per 5 minuter</p>
-                <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(mindTime)}</div>
+                <h3 className="font-black text-slate-800 text-xl tracking-tight leading-none">Mindfulness</h3>
+                {mindStatus === 'idle' ? (
+                  <select 
+                    value={selectedSongId}
+                    onChange={(e) => setSelectedSongId(e.target.value)}
+                    className="mt-2 w-full p-2 bg-purple-50 border border-purple-200 rounded-lg text-xs font-bold text-purple-900 outline-none shadow-sm"
+                  >
+                    {mindfulnessSongs.map(s => <option key={s.id} value={s.id}>{s.title} (+{s.reward} kr)</option>)}
+                  </select>
+                ) : (
+                  <div className="mt-2 text-sm font-bold text-purple-700 leading-tight">
+                    {currentSong.title}
+                  </div>
+                )}
               </div>
-              <button onClick={() => setIsMindActive(!isMindActive)} className={`px-5 py-3 rounded-2xl font-black text-xs uppercase transition-all shadow-sm ${isMindActive ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white'}`}>{isMindActive ? 'Pausa' : 'Starta'}</button>
             </div>
-            {mindTime > 0 && !isMindActive && (
-              <button onClick={(e) => { triggerReward(mindReward, e, 'mind', 'Mindfulness'); setMindTime(0); }} className="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Hämta {mindReward} kr</button>
-            )}
+
+            {/* Dolt ljudspår */}
+            <audio 
+              ref={audioRef} 
+              src={currentSong.url} 
+              onTimeUpdate={handleAudioTimeUpdate} 
+              onEnded={handleAudioEnded}
+            />
+
+            {/* Dynamiska knappar i botten */}
+            <div className="mt-4">
+              {mindStatus === 'idle' && (
+                <button onClick={startMindfulness} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform">
+                  ▶ Starta
+                </button>
+              )}
+              {mindStatus === 'playing' && (
+                <button onClick={cancelMindfulness} className="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-transform border border-slate-200 hover:bg-slate-200">
+                  ⏹ Avbryt (Ger ingen belöning)
+                </button>
+              )}
+              {mindStatus === 'finished' && (
+                <button onClick={claimMindfulness} className="w-full bg-emerald-500 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md active:scale-95 transition-transform animate-bounce">
+                  ✨ Hämta {currentSong.reward} kr ✨
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -214,8 +337,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       <div className="flex items-center gap-2 pt-6 px-4 mb-2"><PremiumEmoji emoji="🎯" className="w-6 h-6" /><h3 className="text-[#8ba3b8] font-black uppercase text-[10px] sm:text-xs tracking-widest">Dagens Uppdrag</h3></div>
       <div className="space-y-3 px-2 sm:px-4">
         {quests.map(q => {
-          const done = q.type === 'simple' ? claimedQuests?.[q.id] : q.tasks.every(t => claimedQuests?.[t.id]);
-          // Räknar ut totalbeloppet för alla moment i listan
+          const done = q.type === 'simple' ? isDone(q.id) : q.tasks.every(t => isDone(t.id));
           const totalReward = q.type === 'checklist' ? q.tasks.reduce((sum, t) => sum + t.reward, 0) : q.reward;
 
           return (
@@ -236,7 +358,16 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                 </div>
                 
                 {q.type === 'simple' ? (
-                  <button disabled={done} onClick={(e) => triggerReward(q.reward, e, q.id, q.title)} className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95'}`}>{done ? 'Klar' : `+${q.reward} kr`}</button>
+                  <button 
+                    disabled={done} 
+                    onClick={(e) => {
+                      if(q.id === 'q12') window.open('https://spotify.com', '_blank');
+                      triggerReward(q.reward, e, q.id, q.title);
+                    }} 
+                    className={`px-4 py-2.5 rounded-full font-black text-[10px] uppercase ${done ? 'bg-slate-100 text-slate-400' : 'bg-[#dcfce7] text-[#059669] shadow-sm active:scale-95 transition-transform'}`}
+                  >
+                    {done ? 'Klar' : `+${q.reward} kr`}
+                  </button>
                 ) : (
                   <div className="flex items-center gap-3 pr-2">
                     {!done && (
@@ -259,11 +390,11 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                   <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-slate-50/80 rounded-b-[1.5rem] border-t border-slate-100 px-4 pb-4">
                     <div className="pt-4 space-y-2">
                       {q.tasks.map(t => {
-                        const tDone = claimedQuests?.[t.id];
+                        const tDone = isDone(t.id);
                         return (
                           <div key={t.id} className={`flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm transition-colors ${tDone ? 'opacity-50' : ''}`}>
                             <span className={`text-xs font-bold ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
-                            <button disabled={tDone} onClick={(e) => triggerReward(t.reward, e, t.id, t.text)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-sm ${tDone ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white active:scale-95'}`}>
+                            <button disabled={tDone} onClick={(e) => triggerReward(t.reward, e, t.id, t.text)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-sm ${tDone ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white active:scale-95 transition-transform'}`}>
                                 {tDone ? 'Klar' : `+${t.reward} kr`}
                             </button>
                           </div>
