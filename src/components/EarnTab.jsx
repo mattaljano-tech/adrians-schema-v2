@@ -248,7 +248,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               </div>
               <button 
                 onClick={() => setIsWalking(!isWalking)}
-                className={`px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm ${isWalking ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
+                className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
               >
                 {isWalking ? 'Pausa' : 'Starta'}
               </button>
