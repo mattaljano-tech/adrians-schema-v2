@@ -87,6 +87,7 @@ const App = () => {
 
   const [bankBalance, setBankBalance] = useState(0);
   const [bankStreak, setBankStreak] = useState(0);
+  const [bedtime, setBedtime] = useState('20:00');
   const [claimedQuests, setClaimedQuests] = useState({});
   const [activities, setActivities] = useState([]); 
   const [adminName, setAdminName] = useState(''); 
