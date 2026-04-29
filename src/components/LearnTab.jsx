@@ -74,6 +74,11 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
     setSimTimeMs(date.getTime());
   };
 
+  // Återställer klockan till exakt nu
+  const handleDoubleClick = () => {
+    setSimTimeMs(new Date().setSeconds(0));
+  };
+
   const date = new Date(simTimeMs);
   const hDeg = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
   const mDeg = date.getMinutes() * 6;
@@ -83,8 +88,8 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
 
   return (
     <div className="bg-white rounded-[3rem] p-6 sm:p-8 shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-slate-100 flex flex-col items-center">
-      <div className="bg-blue-50 text-blue-600 px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-blue-100 flex items-center gap-2">
-        <PremiumEmoji emoji="👆" className="w-4 h-4" /> Snurra på minutvisaren
+      <div className="bg-blue-50 text-blue-600 px-5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest mb-6 border border-blue-100 flex items-center gap-2 text-center">
+        <PremiumEmoji emoji="👆" className="w-4 h-4" /> Snurra / Dubbelklicka för "Nu"
       </div>
 
       <svg 
@@ -93,6 +98,7 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
         onPointerDown={() => setIsDragging(true)}
         onPointerUp={() => setIsDragging(false)}
         onPointerMove={handlePointerMove}
+        onDoubleClick={handleDoubleClick}
         className="w-64 h-64 sm:w-80 sm:h-80 touch-none cursor-grab active:cursor-grabbing drop-shadow-2xl"
       >
         <circle cx="140" cy="140" r="135" fill="#1E293B" />
@@ -208,20 +214,20 @@ const ClockFractions = () => {
   );
 };
 
-// --- KALENDER (LUGNA PREMIUMFÄRGER) ---
+// --- KALENDER (LUGNA PREMIUMFÄRGER PÅ ALLA DAGAR) ---
 const CalendarCard = () => {
   const realToday = new Date();
   const [viewDate, setViewDate] = useState(new Date(realToday.getFullYear(), realToday.getMonth(), 1));
 
-  // Lugna pastellfärger med hög läsbarhet (Premium-känsla)
+  // Lugna pastellfärger med hög läsbarhet
   const weekColors = [
-    { name: "MÅN", bg: "bg-[#D1FAE5]", text: "text-[#065F46]", border: "border-[#A7F3D0]" }, // Mjuk Salviagrön
-    { name: "TIS", bg: "bg-[#E0F2FE]", text: "text-[#075985]", border: "border-[#BAE6FD]" }, // Mjuk Himmelsblå
-    { name: "ONS", bg: "bg-[#F1F5F9]", text: "text-[#475569]", border: "border-[#E2E8F0]" }, // Mjuk Ljusgrå
-    { name: "TOR", bg: "bg-[#F5F5F4]", text: "text-[#57534E]", border: "border-[#E7E5E4]" }, // Mjuk Varmgrå/Brun
-    { name: "FRE", bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", border: "border-[#FEF08A]" }, // Mjuk Smörgul
-    { name: "LÖR", bg: "bg-[#FCE7F3]", text: "text-[#9D174D]", border: "border-[#FBCFE8]" }, // Mjuk Gammelrosa
-    { name: "SÖN", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", border: "border-[#FECACA]" }  // Mjuk Korallröd
+    { name: "MÅN", bg: "bg-[#D1FAE5]", text: "text-[#065F46]", border: "border-[#A7F3D0]" }, // Grön
+    { name: "TIS", bg: "bg-[#E0F2FE]", text: "text-[#075985]", border: "border-[#BAE6FD]" }, // Blå
+    { name: "ONS", bg: "bg-[#F1F5F9]", text: "text-[#475569]", border: "border-[#E2E8F0]" }, // Grå (Istället för vit)
+    { name: "TOR", bg: "bg-[#F5F5F4]", text: "text-[#57534E]", border: "border-[#E7E5E4]" }, // Varmgrå/Brun
+    { name: "FRE", bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", border: "border-[#FEF08A]" }, // Gul
+    { name: "LÖR", bg: "bg-[#FCE7F3]", text: "text-[#9D174D]", border: "border-[#FBCFE8]" }, // Rosa
+    { name: "SÖN", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", border: "border-[#FECACA]" }  // Röd
   ];
 
   const monthNames = ["JANUARI", "FEBRUARI", "MARS", "APRIL", "MAJ", "JUNI", "JULI", "AUGUSTI", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DECEMBER"];
@@ -241,14 +247,14 @@ const CalendarCard = () => {
   return (
     <div className="bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] overflow-hidden max-w-[450px] mx-auto border border-slate-50">
       
-      {/* HEADER BILD (Lugnare grön ton) */}
+      {/* HEADER BILD */}
       <div className="bg-gradient-to-b from-[#86EFAC] to-[#A7F3D0] h-[140px] relative flex justify-center pt-6 overflow-hidden">
         <PremiumEmoji emoji="🌷" className="absolute left-4 bottom-8 w-16 h-16 opacity-30" />
         <PremiumEmoji emoji="🌷" className="absolute right-4 bottom-8 w-16 h-16 opacity-30" />
         
         <PremiumEmoji emoji="🐣" className="w-16 h-16 relative z-10 drop-shadow-lg" />
 
-        {/* Premium "Glassmorphism" Piller-navigering */}
+        {/* Piller-navigering */}
         <div className="absolute -bottom-5 z-20 flex items-center justify-between bg-white/80 backdrop-blur-md text-[#065F46] px-3 py-2 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.05)] w-[240px] border border-white/60">
           <motion.button whileTap={{ scale: 0.8 }} onClick={prevMonth} className="px-3 py-1 font-black text-lg hover:text-[#059669] transition-colors">
             &lt;
@@ -283,45 +289,43 @@ const CalendarCard = () => {
           {[...Array(daysInMonth)].map((_, i) => {
             const dayNum = i + 1;
             const dayOfWeek = (startOffset + i) % 7;
+            const dayColor = weekColors[dayOfWeek]; // Hämta färgen för just den här kolumnen
+            
             const isToday = dayNum === realToday.getDate() && viewDate.getMonth() === realToday.getMonth() && viewDate.getFullYear() === realToday.getFullYear();
             const isPast = (dayNum < realToday.getDate() && viewDate.getMonth() === realToday.getMonth() && viewDate.getFullYear() === realToday.getFullYear()) || viewDate < new Date(realToday.getFullYear(), realToday.getMonth(), 1);
 
             if (isToday) {
               return (
                 <div key={dayNum} className="relative z-10 flex flex-col items-center justify-center">
-                  <div className={`${weekColors[dayOfWeek].bg} ${weekColors[dayOfWeek].text} ${weekColors[dayOfWeek].border} aspect-square w-full rounded-2xl flex items-center justify-center font-black text-2xl border-[3px] shadow-[0_8px_20px_rgba(0,0,0,0.08)] scale-110`}>
+                  <div className={`${dayColor.bg} ${dayColor.text} ${dayColor.border} aspect-square w-full rounded-2xl flex items-center justify-center font-black text-2xl border-[3px] shadow-[0_8px_20px_rgba(0,0,0,0.15)] scale-110`}>
                     {dayNum}
                   </div>
-                  {/* Mjuk markör under */}
-                  <div className={`absolute -bottom-2.5 w-1.5 h-1.5 rounded-full ${weekColors[dayOfWeek].bg.replace('bg-', 'bg-').replace('100', '400')}`} style={{backgroundColor: 'currentColor'}}></div>
+                  {/* Liten färgprick under */}
+                  <div className={`absolute -bottom-2.5 w-1.5 h-1.5 rounded-full ${dayColor.text}`}></div>
                 </div>
               );
             }
 
             if (isPast) {
               return (
-                <div key={dayNum} className="aspect-square rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl text-[#CBD5E1] bg-transparent">
+                <div key={dayNum} className={`${dayColor.bg} ${dayColor.text} opacity-40 aspect-square rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl border border-transparent`}>
                   {dayNum}
                 </div>
               );
             }
 
             return (
-              <div key={dayNum} className="aspect-square rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl text-[#64748B] bg-white shadow-sm border border-slate-50 hover:bg-slate-50 transition-colors">
+              <div key={dayNum} className={`${dayColor.bg} ${dayColor.text} aspect-square rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl shadow-sm border border-white hover:brightness-95 transition-all`}>
                 {dayNum}
               </div>
             );
           })}
         </div>
 
-        {/* BOTTEN: IDAG ÄR DET... */}
+        {/* BOTTEN: IDAG ÄR DET... (Utan den krångliga pilen) */}
         {viewDate.getMonth() === realToday.getMonth() && viewDate.getFullYear() === realToday.getFullYear() && (
-          <div className="mt-10 flex flex-col items-center justify-center relative">
-            <svg width="40" height="20" viewBox="0 0 40 20" fill="none" className="-mb-2 text-slate-300">
-              <path d="M20 2 C 25 10, 35 15, 35 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6"/>
-            </svg>
-            
-            <div className={`border-[3px] ${todayColor.border} bg-white rounded-full px-6 py-3 shadow-md flex items-center gap-2`}>
+          <div className="mt-8 flex flex-col items-center justify-center relative">
+            <div className={`border-[3px] ${todayColor.border} bg-white rounded-full px-6 py-3 shadow-sm flex items-center gap-2`}>
               <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">Idag är det:</span>
               <span className={`text-sm font-black uppercase tracking-wider ${todayColor.text}`}>
                 {todayColor.name}DAG
