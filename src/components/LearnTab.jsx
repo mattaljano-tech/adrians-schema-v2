@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // --- PREMIUM 3D EMOJI KOMPONENT ---
 const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
@@ -17,7 +17,7 @@ const speakText = (text) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'sv-SE';
-    utterance.rate = 0.85; // Liiite långsammare så det blir väldigt tydligt
+    utterance.rate = 0.85; 
     const voices = window.speechSynthesis.getVoices();
     const swedishVoice = voices.find(v => v.name.includes('Klara') || v.name.includes('Premium') || v.lang === 'sv-SE');
     if (swedishVoice) utterance.voice = swedishVoice;
@@ -32,13 +32,11 @@ const getSwedishAnalog = (date) => {
   const h = hNum % 12 || 12;
   const nextH = (hNum + 1) % 12 || 12;
 
-  // Hela och halva
   if (m === 0) return `Klockan är ${h}`;
   if (m === 15) return `Kvart över ${h}`;
   if (m === 30) return `Halv ${nextH}`;
   if (m === 45) return `Kvart i ${nextH}`;
 
-  // Jämna 5-minutare
   if (m === 5) return `Fem över ${h}`;
   if (m === 10) return `Tio över ${h}`;
   if (m === 20) return `Tjugo över ${h}`;
@@ -48,7 +46,6 @@ const getSwedishAnalog = (date) => {
   if (m === 50) return `Tio i ${nextH}`;
   if (m === 55) return `Fem i ${nextH}`;
 
-  // Om det är "ojämna" minuter (t.ex. 12 över)
   if (m < 30) return `${m} över ${h}`;
   return `${60 - m} i ${nextH}`;
 };
@@ -81,7 +78,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   const hDeg = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
   const mDeg = date.getMinutes() * 6;
 
-  // Ljudsträngen: "Klockan är 8 och 55. Det betyder: fem i nio."
   const mString = date.getMinutes() < 10 ? `noll ${date.getMinutes()}` : date.getMinutes();
   const spokenText = `Klockan är ${date.getHours()} och ${mString}. Det betyder: ${getSwedishAnalog(date).toLowerCase()}.`;
 
@@ -102,7 +98,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
         <circle cx="140" cy="140" r="135" fill="#1E293B" />
         <circle cx="140" cy="140" r="120" fill="white" opacity="0.05" />
         
-        {/* Minut-prickar */}
         {[...Array(60)].map((_, i) => (
           <circle 
             key={`min-${i}`} 
@@ -113,7 +108,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
           />
         ))}
 
-        {/* Tydliga siffror */}
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
           const angle = (num * 30 - 90) * (Math.PI / 180);
           const radius = 95; 
@@ -133,7 +127,6 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
           );
         })}
 
-        {/* Visare */}
         <g transform={`rotate(${hDeg} 140 140)`}>
           <line x1="140" y1="140" x2="140" y2="85" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" />
         </g>
@@ -146,12 +139,10 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
       </svg>
 
       <div className="mt-8 flex flex-col items-center w-full">
-        {/* Exakt Digital Tid */}
         <div className="text-[5rem] sm:text-[6rem] font-black text-[#1E293B] font-clock tracking-tighter mb-2 tabular-nums leading-none">
           {date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
         
-        {/* Exakt Analog Tid */}
         <div className="bg-[#f8fafc] px-6 sm:px-8 py-5 rounded-2xl border border-slate-200 text-center relative w-full sm:w-[90%] shadow-inner mt-4">
           <p className="text-blue-600 font-black uppercase text-xl sm:text-2xl tracking-tight leading-tight pr-6">
             {getSwedishAnalog(date)}
@@ -170,111 +161,114 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   );
 };
 
-// --- POWERPOINT-TÅRTBITARNA (UTBRUTNA BITAR) ---
+// --- NYA TÅRTBITARNA (Exakt som bilden) ---
 const ClockFractions = () => {
   const fractions = [
     { 
-      title: "Kvart Över", 
-      desc: "Detta är en kvart (15 min).",
-      subDesc: "Från hel till kvart över.",
-      color: "blue",
-      // Utbruten bit övre högra hörnet. Klockan ritad i bakgrunden.
-      svg: (
-        <>
-          <circle cx="60" cy="60" r="40" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
-          <path d="M 60 60 L 60 20 A 40 40 0 0 1 100 60 Z" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="2" transform="translate(6, -6)" />
-        </>
-      )
-    },
-    { 
-      title: "Halv", 
-      desc: "Detta är en halvtimme (30 min).",
-      subDesc: "Från hel till halv.",
-      color: "emerald",
-      // Utbruten högra halvan.
-      svg: (
-        <>
-          <circle cx="60" cy="60" r="40" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
-          <path d="M 60 60 L 60 20 A 40 40 0 0 1 60 100 Z" fill="#a7f3d0" stroke="#10b981" strokeWidth="2" transform="translate(8, 0)" />
-        </>
-      )
-    },
-    { 
-      title: "Kvart I", 
-      desc: "Detta är också en kvart (15 min).",
-      subDesc: "Från kvart i fram till hel.",
-      color: "rose",
-      // Utbruten övre vänstra hörnet.
-      svg: (
-        <>
-          <circle cx="60" cy="60" r="40" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
-          <path d="M 60 60 L 20 60 A 40 40 0 0 1 60 20 Z" fill="#fecdd3" stroke="#f43f5e" strokeWidth="2" transform="translate(-6, -6)" />
-        </>
-      )
-    },
-    { 
-      title: "Hel Timme", 
+      id: "hel",
+      title: "HEL", 
       desc: "Detta är en hel timme (60 min).",
       subDesc: "Ett helt varv runt klockan.",
-      color: "amber",
-      // Utbruten hel cirkel.
-      svg: (
-        <>
-          <circle cx="60" cy="60" r="40" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
-          <circle cx="60" cy="60" r="40" fill="#fde68a" stroke="#f59e0b" strokeWidth="2" transform="translate(0, -8)" />
-        </>
-      )
+      bg: "bg-[#FFF8E7]",
+      titleColor: "text-[#991B1B]", 
+      piePath: <circle cx="50" cy="50" r="40" fill="#FDE047" />,
+      mDeg: 0,
+      hDeg: 0
+    },
+    { 
+      id: "kvart_over",
+      title: "KVART ÖVER", 
+      desc: "Detta är en kvart (15 min).",
+      subDesc: "Från hel till kvart över.",
+      bg: "bg-[#EFF6FF]",
+      titleColor: "text-[#1E40AF]",
+      piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 90 50 Z" fill="#BFDBFE" />,
+      mDeg: 90,
+      hDeg: 7.5
+    },
+    { 
+      id: "halv",
+      title: "HALV", 
+      desc: "Detta är en halvtimme (30 min).",
+      subDesc: "Från hel till halv.",
+      bg: "bg-[#ECFDF5]",
+      titleColor: "text-[#065F46]",
+      piePath: <path d="M 50 50 L 50 10 A 40 40 0 0 1 50 90 Z" fill="#A7F3D0" />,
+      mDeg: 180,
+      hDeg: 15
+    },
+    { 
+      id: "kvart_i",
+      title: "KVART I", 
+      desc: "Detta är också en kvart (15 min).",
+      subDesc: "Från kvart i fram till hel.",
+      bg: "bg-[#FEF2F2]",
+      titleColor: "text-[#BE123C]",
+      piePath: <path d="M 50 50 L 10 50 A 40 40 0 0 1 50 10 Z" fill="#FECDD3" />,
+      mDeg: 270,
+      hDeg: 22.5
     }
   ];
 
-  const getColorClasses = (color) => {
-    const classes = {
-      blue: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" },
-      emerald: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-100" },
-      amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" },
-      rose: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-100" }
-    };
-    return classes[color];
-  };
-
   return (
-    <div className="pt-2">
+    <div className="pt-4">
       <div className="flex items-center gap-2 mb-4 px-2">
         <PremiumEmoji emoji="🍕" className="w-6 h-6" />
         <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Tårtbitarna (Bråkdelar)</h3>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {fractions.map((f, i) => {
-          const colors = getColorClasses(f.color);
-          return (
-            <div key={i} className={`rounded-[2rem] p-5 border flex items-center gap-4 shadow-sm ${colors.bg} ${colors.border}`}>
-              
-              {/* SVG-klockan med utbruten tårtbit */}
-              <div className="w-24 h-24 flex-shrink-0 relative flex items-center justify-center bg-white rounded-full border border-slate-200 shadow-inner">
-                <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90 scale-[0.85]">
-                  {f.svg}
-                  {/* Mittplupp */}
-                  <circle cx="60" cy="60" r="4" fill="#1E293B" />
-                </svg>
-              </div>
+      <div className="flex flex-col gap-3 sm:gap-4 px-1">
+        {fractions.map((f) => (
+          <div key={f.id} className={`${f.bg} rounded-[2rem] p-4 sm:p-5 border border-white/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-5 sm:gap-6`}>
+            
+            {/* SVG-klockan med siffror och tårtbit */}
+            <div className="w-24 h-24 sm:w-[110px] sm:h-[110px] flex-shrink-0 relative flex items-center justify-center bg-white rounded-full border-[5px] border-[#1E293B] shadow-sm">
+              <svg viewBox="0 0 100 100" className="w-full h-full rounded-full">
+                
+                {/* Tårtbiten i bakgrunden */}
+                {f.piePath}
 
-              {/* Tydlig förklarande text */}
-              <div className="flex flex-col justify-center">
-                <span className={`font-black uppercase tracking-wide text-lg sm:text-xl ${colors.text} mb-1`}>
-                  {f.title}
-                </span>
-                <span className="text-[11px] sm:text-xs font-bold text-slate-600 mb-1 leading-tight">
-                  {f.desc}
-                </span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
-                  {f.subDesc}
-                </span>
-              </div>
-              
+                {/* Siffrorna 1-12 */}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
+                  const angle = (num * 30 - 90) * (Math.PI / 180);
+                  const radius = 32;
+                  const x = 50 + radius * Math.cos(angle);
+                  const y = 50 + radius * Math.sin(angle);
+                  return (
+                    <text key={num} x={x} y={y} textAnchor="middle" dominantBaseline="central" className="text-[11px] font-black font-clock fill-[#1E293B]">
+                      {num}
+                    </text>
+                  );
+                })}
+
+                {/* Timvisare */}
+                <g transform={`rotate(${f.hDeg} 50 50)`}>
+                  <line x1="50" y1="50" x2="50" y2="28" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
+                </g>
+                {/* Minutvisare */}
+                <g transform={`rotate(${f.mDeg} 50 50)`}>
+                  <line x1="50" y1="50" x2="50" y2="15" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
+                </g>
+                {/* Mittpunkt */}
+                <circle cx="50" cy="50" r="3.5" fill="#1E293B" />
+              </svg>
             </div>
-          );
-        })}
+
+            {/* Tydlig text bredvid */}
+            <div className="flex flex-col justify-center">
+              <span className={`font-black uppercase tracking-tight text-[22px] sm:text-[26px] ${f.titleColor} mb-1 leading-none`}>
+                {f.title}
+              </span>
+              <span className="text-[12px] sm:text-[14px] font-medium text-[#1E293B] mb-1.5 leading-snug">
+                {f.desc}
+              </span>
+              <span className="text-[11px] sm:text-[12px] font-black text-slate-400 uppercase tracking-wide">
+                {f.subDesc}
+              </span>
+            </div>
+            
+          </div>
+        ))}
       </div>
     </div>
   );
