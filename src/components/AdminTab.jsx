@@ -21,7 +21,6 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   const SECRET_PASSWORD = "sevil";
   const appId = 'test-schema-v2';
 
-  // Formulär-states för enstaka uppdrag
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newTime, setNewTime] = useState('15:00');
@@ -30,7 +29,6 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   const [localMessage, setLocalMessage] = useState(dailyMessage || '');
   const [localName, setLocalName] = useState(adminName || 'Din kompis');
 
-  // Snabbval för ENSTAKA uppdrag
   const quickTasks = [
     { title: 'Duscha', duration: '15', icon: '🚿', time: '19:00', bg: 'bg-cyan-50', text: 'text-cyan-700' },
     { title: 'Skärmtid', duration: '60', icon: '📱', time: '16:00', bg: 'bg-indigo-50', text: 'text-indigo-700' },
@@ -50,7 +48,7 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
     }
   };
 
-  // --- LÅSSKÄRMEN (GLASSMORPHISM - MÖRK PREMIUM-TON) ---
+  // --- LÅSSKÄRMEN ---
   if (!isUnlocked) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xl">
@@ -183,9 +181,8 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-12 px-2 pt-4">
       
-      {/* HEADER / LÅS APPEN (Sleek design) */}
+      {/* HEADER / LÅS APPEN */}
       <div className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] text-white p-6 rounded-3xl text-center shadow-lg border border-slate-700/50 flex flex-col items-center relative overflow-hidden">
-        {/* Dekorativ bank-ikon i bakgrunden */}
         <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
             <PremiumEmoji emoji="💳" className="w-32 h-32" />
         </div>
@@ -194,25 +191,20 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         <button onClick={() => setIsUnlocked(false)} className="relative z-10 text-xs bg-slate-700/60 px-5 py-2 rounded-full font-black uppercase tracking-widest border border-slate-600 flex items-center gap-2"><span>🔒</span> Lås appen igen</button>
       </div>
 
-      {/* --- BULK-LADDARE (HERO-KORT MED BAKGRUND) --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-blue-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        {/* Soluppgångs-bakgrund */}
-        <div 
-          className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" 
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1595113300742-0570b5550f24?auto=format&fit=crop&q=80&w=800')" }}
-        ></div>
-        {/* Vit gradient för läsbarhet */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
+      {/* --- BULK-LADDARE (SKOLDAG) --- */}
+      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/50"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <PremiumEmoji emoji="🎒" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-blue-900 text-sm">Komplett Skoldag</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Komplett Skoldag</h3>
           </div>
-          <p className="text-[11px] text-blue-700/80 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning på ett klick.</p>
+          <p className="text-[11px] text-slate-600 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning på ett klick.</p>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white border border-blue-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/80 backdrop-blur-sm border border-slate-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs">
               Lägg in för IDAG
             </motion.button>
             <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(true)} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs border border-blue-700">
@@ -222,61 +214,50 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         </div>
       </div>
 
-      {/* --- BANK & SALDO (HERO-KORT MED BAKGRUND) --- */}
+      {/* --- BANK & SALDO --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        {/* Guldmynts-bakgrund */}
-        <div 
-          className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-right opacity-30" 
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610375228956-c65171d9a9f2?auto=format&fit=crop&q=80&w=800')" }}
-        ></div>
-        {/* Vit gradient för läsbarhet */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/50"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💳" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-700 text-sm">Justera Saldo</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Justera Saldo</h3>
           </div>
           
-          <div className="bg-slate-50 rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-100 shadow-inner">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nuvarande</span>
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nuvarande</span>
             <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance} kr</div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 100 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-100 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-100 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-100 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm">- 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-100 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm">+ 100 kr</motion.button>
           </div>
         </div>
       </div>
 
-      {/* --- LÄGG TILL ENSTAKA UPPDRAG (MED BAKGRUND) --- */}
+      {/* --- LÄGG TILL ENSTAKA UPPDRAG --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        {/* Organiserat skrivbord-bakgrund */}
-        <div 
-          className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" 
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}
-        ></div>
-        {/* Vit gradient för läsbarhet */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40"></div>
         
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="📅" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-700 text-sm">Nytt Uppdrag</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Nytt Uppdrag</h3>
           </div>
           
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Snabbval</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Snabbval</p>
           
-          {/* Färgkodade piller för snabbval */}
           <div className="flex flex-wrap gap-2 mb-8">
             {quickTasks.map((task, i) => (
               <button 
                 key={i} 
                 onClick={() => handleQuickPick(task)}
-                className={`${task.bg} ${task.text} border border-white px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm`}
+                className={`${task.bg} ${task.text} border border-white/50 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm`}
               >
                 <span>{task.icon}</span>
                 <span className="font-bold text-[11px] uppercase tracking-wider">{task.title}</span>
@@ -286,24 +267,24 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
 
           <form onSubmit={handleAddActivity} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Vad ska göras?</label>
-              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 focus:bg-white transition-colors shadow-inner" required />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Vad ska göras?</label>
+              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors shadow-sm" required />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Datum</label>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 focus:bg-white transition-colors text-slate-700 shadow-inner" required />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Datum</label>
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm" required />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Tid</label>
-                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-500 focus:bg-white transition-colors text-slate-700 shadow-inner" required />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Tid</label>
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm" required />
               </div>
             </div>
             
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Längd (Hur länge?)</label>
-              <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 focus:bg-white transition-colors text-slate-700 shadow-inner">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Längd (Hur länge?)</label>
+              <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-500 transition-colors text-slate-700 shadow-sm">
                 <option value="15">15 Minuter</option>
                 <option value="30">30 Minuter</option>
                 <option value="45">45 Minuter</option>
@@ -315,27 +296,27 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
               </select>
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2">
+            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2 border border-slate-700">
               Spara i schemat
             </motion.button>
           </form>
 
-          {/* --- INPLANERAT JUST NU (Städad lista) --- */}
+          {/* --- AKTUELLT SCHEMA LISTA --- */}
           <div className="mt-10">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Inplanerat just nu</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Inplanerat just nu</p>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
               {activities.length === 0 && (
-                <div className="bg-slate-50 rounded-xl p-6 text-center border border-slate-100 shadow-inner">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 text-center border border-slate-100 shadow-sm">
                   <span className="text-2xl mb-2 block">✨</span>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Schemat är tomt</p>
                 </div>
               )}
               
               {activities.map(a => (
-                <div key={a.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                <div key={a.id} className="flex justify-between items-center bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                   <div>
                     <p className="font-black text-sm text-slate-800">{a.title}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                       {new Date(a.startTime).toLocaleString('sv-SE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
                     </p>
                   </div>
@@ -355,34 +336,29 @@ const AdminTab = ({ activities, bankBalance, dailyMessage, adminName }) => {
         </div>
       </div>
 
-      {/* --- DAGENS MEDDELANDE (MED BAKGRUND) --- */}
+      {/* --- DAGENS MEDDELANDE --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2rem] border border-rose-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-        {/* Golden hour-himmel-bakgrund */}
-        <div 
-          className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-30" 
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590794071375-9e6b4d326442?auto=format&fit=crop&q=80&w=800')" }}
-        ></div>
-        {/* Vit gradient för läsbarhet */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent"></div>
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590794071375-9e6b4d326442?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40"></div>
         
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💬" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-rose-900 text-sm">Dagens Meddelande</h3>
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Dagens Meddelande</h3>
           </div>
           
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest px-1">Avsändare</label>
-              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white border border-rose-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors text-slate-800 shadow-inner" />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Avsändare</label>
+              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors text-slate-800 shadow-sm" />
             </div>
             
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest px-1">Meddelande</label>
-              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white border border-rose-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-inner" />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Meddelande</label>
+              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-sm border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-rose-400 transition-colors min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-sm" />
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessage} className="w-full bg-rose-500 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessage} className="w-full bg-rose-500 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-2 border border-rose-600">
               Spara Meddelande
             </motion.button>
           </div>
