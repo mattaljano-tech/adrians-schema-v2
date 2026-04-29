@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { collection, addDoc, deleteDoc, doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -266,14 +266,20 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     alert("Meddelande och inställningar sparade!");
   };
 
+  // --- GEMENSAMMA STILAR ---
+  const inputClass = "w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all shadow-sm text-slate-800";
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6 max-w-lg mx-auto">
       
-      {/* --- 1. DAGENS MEDDELANDE (Nu högst upp!) --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-slate-100">
-        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/40"></div>
-        
+      {/* Skymmer rullisten (Scroll-hide hack) */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
+      {/* --- 1. DAGENS MEDDELANDE (💬) --- */}
+      <div className="relative bg-white/40 backdrop-blur-2xl p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden border border-white/60">
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
             <PremiumEmoji emoji="💬" className="w-8 h-8" />
@@ -283,17 +289,17 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
           <div className="space-y-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Avsändare</label>
-              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className={inputClass} />
             </div>
             
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Meddelande</label>
-              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-sm" />
+              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className={`${inputClass} min-h-[120px] resize-none leading-relaxed`} />
             </div>
 
             <div className="space-y-1 pt-2">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Standard Läggdags</label>
-              <input type="time" value={localBedtime} onChange={e => setLocalBedtime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+              <input type="time" value={localBedtime} onChange={e => setLocalBedtime(e.target.value)} className={`${inputClass} font-clock`} />
             </div>
             
             <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessageAndSettings} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-lg mt-2 border border-blue-700">
@@ -303,10 +309,11 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         </div>
       </div>
 
-      {/* --- 2. BULK-LADDARE (SKOLDAG) --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-blue-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1595113300742-0570b5550f24?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-transparent"></div>
+      {/* --- 2. BULK-LADDARE (SKOLDAG MED BAKGRUND) --- */}
+      <div className="relative bg-white/40 backdrop-blur-2xl p-6 sm:p-8 rounded-[2.5rem] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden">
+        {/* Frostad bakgrundsbild (Skrivbord) */}
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30 mix-blend-multiply" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1595113300742-0570b5550f24?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/70 to-white/40 backdrop-blur-sm"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-2">
@@ -316,7 +323,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
           <p className="text-[11px] text-slate-600 font-bold mb-6">Lägger in Frukost, Skola, Middag, Klockan & Läsning.</p>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/80 backdrop-blur-md border border-slate-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs hover:bg-white">
+            <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(false)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 text-blue-700 font-black uppercase tracking-widest p-4 rounded-xl shadow-sm text-xs hover:bg-white transition-colors">
               Lägg in för IDAG
             </motion.button>
             <motion.button whileTap={{ scale: 0.98 }} onClick={() => handleLoadSchoolDay(true)} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md text-xs border border-blue-700">
@@ -326,10 +333,11 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         </div>
       </div>
 
-      {/* --- 3. BANK & SALDO --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-right opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610375228956-c65171d9a9f2?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent"></div>
+      {/* --- 3. BANK & SALDO (MED BAKGRUND) --- */}
+      <div className="relative bg-white/40 backdrop-blur-2xl p-6 sm:p-8 rounded-[2.5rem] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden">
+        {/* Frostad bakgrundsbild (Guldmynt) */}
+        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30 mix-blend-multiply" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610375228956-c65171d9a9f2?auto=format&fit=crop&q=80&w=800')" }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/70 to-white/40 backdrop-blur-sm"></div>
         
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
@@ -337,28 +345,28 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Hantera Banken</h3>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-200 shadow-sm">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center mb-6 border border-slate-200 shadow-sm">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nuvarande Saldo</span>
             <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance || 0} kr</div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 100 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white transition-colors">- 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white transition-colors">+ 50 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white transition-colors">- 100 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white transition-colors">+ 100 kr</motion.button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200/80">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-300/50">
              <motion.button 
                 whileTap={{ scale: 0.95 }} 
                 onClick={() => {
                     if(confirmReset) { setBankZero(); setConfirmReset(false); } 
                     else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); }
                 }} 
-                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-white/80 backdrop-blur-sm text-slate-500 border-slate-200 hover:bg-white'}`}
+                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-white/90 text-slate-600 border-slate-200 hover:bg-white'}`}
              >
-                {confirmReset ? "Tryck igen för att bekräfta!" : "Nolla Saldot"}
+                {confirmReset ? "Tryck igen för bekräfta" : "Nolla Saldot"}
              </motion.button>
              <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-orange-100 transition-colors">
                 Nolla Streak
@@ -370,33 +378,30 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         </div>
       </div>
 
-      {/* --- 4. LÄGG TILL / ÄNDRA UPPDRAG --- */}
-      <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=800')" }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/40"></div>
-        
+      {/* --- 4. LÄGG TILL / ÄNDRA UPPDRAG (✨) --- */}
+      <div className="relative bg-white/40 backdrop-blur-2xl p-6 sm:p-8 rounded-[2.5rem] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden">
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-                <PremiumEmoji emoji="📅" className="w-8 h-8" />
+                <PremiumEmoji emoji="✨" className="w-8 h-8" />
                 <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">
                     {editingId ? 'Ändra Uppdrag' : 'Nytt Uppdrag'}
                 </h3>
             </div>
             {editingId && (
-                <button onClick={() => { setEditingId(null); setNewTitle(''); }} className="text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm">Avbryt ändring</button>
+                <button onClick={() => { setEditingId(null); setNewTitle(''); }} className="text-[10px] font-black text-slate-500 bg-white/90 border border-slate-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-white">Avbryt ändring</button>
             )}
           </div>
           
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Dina sparade favoriter</p>
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex overflow-x-auto gap-2 mb-8 pb-2 hide-scrollbar snap-x">
             {favorites.map((task, i) => (
               <button 
                 key={i} 
                 onClick={() => handleQuickPick(task)}
-                className="bg-white/80 backdrop-blur-md text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-white"
+                className="flex-shrink-0 snap-start bg-white/90 backdrop-blur-md text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-full flex items-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-white"
               >
-                <span>{task.icon || "⭐"}</span>
+                <span className="drop-shadow-sm">{task.icon || "⭐"}</span>
                 <span className="font-bold text-[11px] uppercase tracking-wider">{task.title}</span>
               </button>
             ))}
@@ -405,24 +410,24 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
           <form onSubmit={handleAddActivity} className="space-y-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Vad ska göras?</label>
-              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all shadow-sm text-slate-800" required={!isLiveEvent} />
+              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="T.ex. Duscha..." className={inputClass} required={!isLiveEvent} />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Datum</label>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm" required />
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className={inputClass} required />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Tid</label>
-                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-black font-clock outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm" required />
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className={`${inputClass} font-clock`} required />
               </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Hur länge?</label>
-                <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm">
+                <select value={newDuration} onChange={e => setNewDuration(e.target.value)} className={inputClass}>
                   <option value="15">15 Minuter</option>
                   <option value="30">30 Minuter</option>
                   <option value="45">45 Minuter</option>
@@ -435,7 +440,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Förberedelsetid</label>
-                <select value={newPrepTime} onChange={e => setNewPrepTime(e.target.value)} className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-700 shadow-sm">
+                <select value={newPrepTime} onChange={e => setNewPrepTime(e.target.value)} className={inputClass}>
                   <option value="0">Inget larm innan</option>
                   <option value="5">Larma 5 min innan</option>
                   <option value="10">Larma 10 min innan</option>
@@ -444,44 +449,50 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
               </div>
             </div>
 
-            {/* Custom Checkboxes (Toggles) */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button type="button" onClick={() => setSaveAsFavorite(!saveAsFavorite)} className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors shadow-sm ${saveAsFavorite ? 'bg-indigo-50 border-indigo-200' : 'bg-white/80 border-slate-200 hover:bg-white'}`}>
-                    <span className={`font-black uppercase text-[10px] tracking-widest ${saveAsFavorite ? 'text-indigo-700' : 'text-slate-500'}`}>⭐ Spara som favorit</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${saveAsFavorite ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
-                        {saveAsFavorite && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                    </div>
-                </button>
+            {/* --- CHECKBOXAR I PREMIUM GLASSTIL --- */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <label className="flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer shadow-sm transition-colors border bg-white/90 border-slate-200 hover:bg-white">
+                    <span className="font-black uppercase text-[10px] tracking-widest text-slate-600">⭐ Spara som favorit</span>
+                    <input 
+                      type="checkbox" 
+                      checked={saveAsFavorite} 
+                      onChange={e => setSaveAsFavorite(e.target.checked)} 
+                      className="w-5 h-5 rounded-full border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                </label>
 
-                <button type="button" onClick={() => setIsLiveEvent(!isLiveEvent)} className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors shadow-sm ${isLiveEvent ? 'bg-blue-50 border-blue-200' : 'bg-white/80 border-slate-200 hover:bg-white'}`}>
-                    <span className={`font-black uppercase text-[10px] tracking-widest ${isLiveEvent ? 'text-blue-700' : 'text-slate-500'}`}>🚨 Steal a Brainroth</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isLiveEvent ? 'border-blue-600 bg-blue-600' : 'border-slate-300'}`}>
-                        {isLiveEvent && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                    </div>
-                </button>
+                <label className="flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer shadow-sm transition-colors border bg-white/90 border-slate-200 hover:bg-white">
+                    <span className="font-black uppercase text-[10px] tracking-widest text-slate-600">🚨 Steal a Brainroth</span>
+                    <input 
+                      type="checkbox" 
+                      checked={isLiveEvent} 
+                      onChange={e => setIsLiveEvent(e.target.checked)} 
+                      className="w-5 h-5 rounded-full border-2 border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                </label>
             </div>
             
-            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-md mt-4 border border-slate-700">
+            <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full bg-slate-800 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-lg mt-4 border border-slate-700 hover:bg-slate-700 transition-colors">
               {editingId ? 'Spara Ändringar' : 'Lägg till i schemat'}
             </motion.button>
           </form>
 
           {/* --- AKTUELLT SCHEMA LISTA --- */}
-          <div className="mt-10">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Inplanerat framöver</p>
+          <div className="mt-12 pt-6 border-t border-slate-300/50">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Inplanerat framöver</p>
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
               {activities.length === 0 && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 text-center border border-slate-100 shadow-sm">
-                  <span className="text-2xl mb-2 block">✨</span>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Schemat är tomt</p>
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 text-center border border-slate-200 shadow-sm">
+                  <span className="text-3xl mb-3 block opacity-80">✨</span>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schemat är tomt</p>
                 </div>
               )}
               
               {activities.filter(a => a.endTime > Date.now()).map(a => (
-                <div key={a.id} className="flex flex-col bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow gap-3">
+                <div key={a.id} className="flex flex-col bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow gap-3">
                   <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-black text-sm text-slate-800">{a.isLiveEvent ? '🚨 LIVE EVENT' : a.title}</p>
+                        <p className="font-black text-[15px] text-slate-800">{a.isLiveEvent ? '🚨 LIVE EVENT' : a.title}</p>
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                             {new Date(a.startTime).toLocaleString('sv-SE', {weekday:'short', hour:'2-digit', minute:'2-digit'})} • {a.duration} min
                         </p>
@@ -495,9 +506,9 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
                           </button>
                       </div>
                   </div>
-                  <div className="flex gap-2 pt-2 border-t border-slate-100/80">
-                      <button onClick={() => handleShift(a, -15)} className="flex-1 bg-white hover:bg-slate-50 text-slate-500 text-[10px] font-black uppercase py-2.5 rounded-xl border border-slate-200 shadow-sm transition-colors">-15 min</button>
-                      <button onClick={() => handleShift(a, 15)} className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-black uppercase py-2.5 rounded-xl border border-blue-200 shadow-sm transition-colors">+15 min</button>
+                  <div className="flex gap-2 pt-2 border-t border-slate-100">
+                      <button onClick={() => handleShift(a, -15)} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 text-[10px] font-black uppercase py-2.5 rounded-xl border border-slate-200 shadow-sm transition-colors">-15 min</button>
+                      <button onClick={() => handleShift(a, 15)} className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-black uppercase py-2.5 rounded-xl border border-blue-200 shadow-sm transition-colors">+15 min</button>
                   </div>
                 </div>
               ))}
@@ -511,17 +522,12 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         <motion.button 
           whileTap={{ scale: 0.98 }} 
           onClick={() => setIsUnlocked(false)} 
-          className="w-full bg-slate-900 text-white font-black uppercase tracking-widest py-5 rounded-[1.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.2)] border border-slate-700 flex items-center justify-center gap-3"
+          className="w-full bg-slate-900 text-white font-black uppercase tracking-widest py-5 rounded-[1.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.2)] border border-slate-700 flex items-center justify-center gap-3 transition-colors hover:bg-slate-800"
         >
           <span className="text-xl">🔒</span> Lås appen igen
         </motion.button>
       </div>
-      
-      {/* Scroll-hide hack */}
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+
     </motion.div>
   );
 };
