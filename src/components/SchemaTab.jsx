@@ -1,30 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-// --- PREMIUM VISUELL TIMER ---
-const PremiumTimer = ({ totalMs, remainingMs }) => {
+// --- PREMIUM 3D EMOJI KOMPONENT ---
+const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
+  <img 
+    src={`https://emojicdn.elk.sh/${emoji}?style=apple`} 
+    alt={emoji} 
+    className={`${className} drop-shadow-md select-none pointer-events-none`} 
+    draggable="false"
+  />
+);
+
+// --- PREMIUM VISUELL TIMER MED PULS ---
+const PremiumTimer = ({ totalMs, remainingMs, colorStop1 = "#fb7185", colorStop2 = "#e11d48", trackColor = "#f1f5f9" }) => {
   const percentage = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
   
   const radius = 36; 
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
+  // Räkna ut var den pulserande pricken ska vara (i grader)
+  const angle = (percentage / 100) * 360 - 90;
+  const dotX = 50 + radius * Math.cos((angle * Math.PI) / 180);
+  const dotY = 50 + radius * Math.sin((angle * Math.PI) / 180);
+
   return (
     <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
-      <div className="absolute inset-0 bg-rose-400/10 rounded-full blur-2xl"></div>
+      <div className="absolute inset-0 bg-white/20 rounded-full blur-xl"></div>
       
-      <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_4px_12px_rgba(225,29,72,0.2)]" viewBox="0 0 100 100">
+      <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_4px_12px_rgba(0,0,0,0.1)]" viewBox="0 0 100 100">
         <defs>
           <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fb7185" />
-            <stop offset="100%" stopColor="#e11d48" />
+            <stop offset="0%" stopColor={colorStop1} />
+            <stop offset="100%" stopColor={colorStop2} />
           </linearGradient>
+          
+          {/* Mjuk skugga för pricken */}
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
 
         <circle 
           cx="50" cy="50" r={radius} 
           fill="none" 
-          stroke="#f1f5f9" 
+          stroke={trackColor} 
           strokeWidth="16" 
         />
         
@@ -38,7 +62,41 @@ const PremiumTimer = ({ totalMs, remainingMs }) => {
           strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-linear"
         />
+
+        {/* Pulserande prick på slutet av mätaren för att visa riktning */}
+        {percentage > 0 && percentage < 100 && (
+          <circle 
+            cx={dotX} cy={dotY} r="3" 
+            fill="white" 
+            filter="url(#glow)"
+            className="animate-pulse origin-center transition-all duration-1000 ease-linear"
+            style={{ transform: 'rotate(90deg)', transformOrigin: '50px 50px' }} // SVGn är roterad -90deg, så pricken måste kompensera för skuggan (om man har drop-shadows) men här är det bara blur, så det är safe.
+          />
+        )}
       </svg>
+    </div>
+  );
+};
+
+// --- LITEN ANALOG KLOCKA (FÖR HERO-KORTET) ---
+const MiniAnalogClock = ({ date }) => {
+  const hDeg = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
+  const mDeg = date.getMinutes() * 6;
+
+  return (
+    <div className="w-16 h-16 rounded-full bg-white border-4 border-slate-100 shadow-inner relative flex items-center justify-center">
+      {/* Timvisare */}
+      <div 
+        className="absolute w-1 h-[25%] bg-slate-800 rounded-full origin-bottom -translate-y-full z-10" 
+        style={{ transform: `rotate(${hDeg}deg) translateY(-100%)`, top: '50%' }}
+      ></div>
+      {/* Minutvisare */}
+      <div 
+        className="absolute w-[2px] h-[35%] bg-blue-500 rounded-full origin-bottom -translate-y-full z-10" 
+        style={{ transform: `rotate(${mDeg}deg) translateY(-100%)`, top: '50%' }}
+      ></div>
+      {/* Centrum */}
+      <div className="absolute w-2 h-2 bg-slate-800 rounded-full z-20"></div>
     </div>
   );
 };
@@ -65,7 +123,6 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
       if (gapMs >= 5 * 60000) { 
         timeline.push({
           id: `gap-${currentEvent.id}`,
-          // HÄR ÄR ÄNDRINGEN: Uppdaterade namnet på luckan i listan!
           title: 'Välj ett uppdrag för att tjäna pengar',
           startTime: currentEvent.endTime,
           endTime: nextEvent.startTime,
@@ -123,71 +180,106 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
 
       {/* --- VAD HÄNDER JUST NU? --- */}
       {current ? (
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_12px_40px_rgba(0,0,0,0.04)] border border-slate-50 flex flex-col items-center relative z-20 w-full overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full opacity-50 pointer-events-none"></div>
+        <div className="bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-50 relative overflow-hidden flex flex-col items-center">
+          {/* Lyxig bakgrundsbild (Abstrakt, ljus, "gör saker"-känsla) */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-20 blur-[2px]" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&q=80&w=800')" }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-white"></div>
 
-          <div className="bg-blue-100 text-blue-600 px-5 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] mb-5 shadow-sm">
-            Händer just nu
-          </div>
-          
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-8 text-center leading-tight">
-            {current.title}
-          </h2>
-          
-          <div className="relative w-full flex flex-col items-center">
-            <PremiumTimer 
-              totalMs={current.duration * 60000} 
-              remainingMs={getRemMs(current.endTime)} 
-            />
+          <div className="relative z-10 w-full p-8 flex flex-col items-center">
             
-            <div className="mt-6 text-center">
-              <p className="text-slate-800 font-black text-xl sm:text-2xl mb-1">
-                {formatTimeLeft(current.endTime)}
-              </p>
-              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
-                Klar kl. {new Date(current.endTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
-              </p>
+            {/* Header: Etikett + Klocka */}
+            <div className="flex items-center justify-between w-full mb-6">
+              <div className="bg-blue-100 text-blue-700 px-5 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-sm backdrop-blur-md">
+                Händer just nu
+              </div>
+              <MiniAnalogClock date={currentTime} />
             </div>
+            
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-8 text-center leading-tight drop-shadow-sm">
+              {current.title}
+            </h2>
+            
+            <div className="relative w-full flex flex-col items-center">
+              <PremiumTimer 
+                totalMs={current.duration * 60000} 
+                remainingMs={getRemMs(current.endTime)} 
+                colorStop1="#fb7185" // Rosa/Röd
+                colorStop2="#e11d48"
+              />
+              
+              <div className="mt-6 text-center bg-white/60 backdrop-blur-md px-6 py-4 rounded-2xl shadow-sm border border-white">
+                <p className="text-slate-800 font-black text-xl sm:text-2xl mb-1">
+                  {formatTimeLeft(current.endTime)}
+                </p>
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">
+                  Klar kl. {new Date(current.endTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       ) : (
         /* --- LEDIG TID KORTET --- */
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_12px_40px_rgba(0,0,0,0.04)] border border-slate-50 flex flex-col items-center text-center">
-          <div className="w-20 h-20 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center mb-5 shadow-sm">
-            <span className="text-4xl">🎯</span>
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6">
-            Välj ett uppdrag för att tjäna pengar
-          </h2>
+        <div className="bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-50 relative overflow-hidden flex flex-col items-center text-center">
+          {/* Avslappnad bakgrundsbild (Mysig / Chill-känsla) */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-30" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&q=80&w=800')" }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/85 to-white/95"></div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onNavigateToEarn}
-            className="w-full bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2"
-          >
-            Visa uppdrag
-          </motion.button>
+          <div className="relative z-10 w-full p-8 flex flex-col items-center text-center">
+            
+            <div className="flex items-center justify-between w-full mb-6">
+              <div className="bg-emerald-100 text-emerald-700 px-5 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-sm backdrop-blur-md">
+                Ledig Tid
+              </div>
+              <MiniAnalogClock date={currentTime} />
+            </div>
 
-          {nextRealActivity && (
-            <div className="mt-10 pt-6 border-t border-slate-100 w-full">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4">Ditt nästa inplanerade pass</p>
-              
-              <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-5 border border-slate-100">
-                <div className="w-16 h-16 flex-shrink-0">
-                  <PremiumTimer 
-                    totalMs={(nextRealActivity.startTime - (current?.endTime || now)) || (60 * 60000)}
-                    remainingMs={getRemMs(nextRealActivity.startTime)} 
-                  />
-                </div>
-                <div className="text-left flex-1">
-                  <p className="text-lg font-black text-slate-800 mb-0.5">{nextRealActivity.title}</p>
-                  <p className="text-slate-500 font-bold text-xs">{formatTimeLeft(nextRealActivity.startTime)}</p>
+            <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mb-5 shadow-md border border-slate-100">
+              <span className="text-4xl">🎯</span>
+            </div>
+            
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6 drop-shadow-sm">
+              Välj ett uppdrag för att tjäna pengar
+            </h2>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onNavigateToEarn}
+              className="w-full bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_4px_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2"
+            >
+              Visa uppdrag
+            </motion.button>
+
+            {nextRealActivity && (
+              <div className="mt-10 pt-6 border-t border-slate-200/60 w-full">
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mb-4">Ditt nästa inplanerade pass</p>
+                
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 flex items-center gap-5 border border-white shadow-sm">
+                  <div className="w-16 h-16 flex-shrink-0">
+                    <PremiumTimer 
+                      totalMs={(nextRealActivity.startTime - (current?.endTime || now)) || (60 * 60000)}
+                      remainingMs={getRemMs(nextRealActivity.startTime)} 
+                      colorStop1="#60a5fa" // Blå/Cyan för nästa uppdrag
+                      colorStop2="#3b82f6"
+                      trackColor="#e2e8f0"
+                    />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-lg font-black text-slate-800 mb-0.5">{nextRealActivity.title}</p>
+                    <p className="text-slate-500 font-bold text-xs">{formatTimeLeft(nextRealActivity.startTime)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -212,7 +304,6 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
                   >
                     <div className="text-2xl ml-1">🎯</div>
                     <div className="flex-1">
-                      {/* Titeln ändrades högre upp i loopen! */}
                       <div className="font-black text-emerald-800 text-sm sm:text-base leading-tight">{a.title}</div>
                       <div className="font-bold text-emerald-600/80 text-[11px] mt-1">Cirka {formatDuration(a.duration)}</div>
                     </div>
