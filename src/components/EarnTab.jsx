@@ -19,7 +19,9 @@ const TimerRing = ({ percentage, color = "#3b82f6" }) => {
 
   return (
     <svg className="w-full h-full transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="12" />
+      {/* Bakgrundsspåret (Gjorde detta mörkare så man ser ringen även på 0%) */}
+      <circle cx="50" cy="50" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="12" />
+      {/* Den färgade tiden */}
       <circle
         cx="50" cy="50" r={radius}
         fill="none"
@@ -57,7 +59,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const [expandedQuest, setExpandedQuest] = useState(null);
   const [showReadPrompt, setShowReadPrompt] = useState(false);
 
-  // --- UPPDRAGSDATA (ALLA UPPDRAG ÅTERSTÄLLDA!) ---
+  // --- UPPDRAGSDATA ---
   const cleanTasks = [
     { id: 'c1', text: 'Plocka upp kläder', reward: 5 },
     { id: 'c2', text: 'Bädda sängen', reward: 5 }
@@ -143,7 +145,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
       {/* --- BANK HERO --- */}
       <div className="px-2 sm:px-4 pt-4">
-        <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2rem] p-6 sm:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.15)] relative overflow-hidden border border-slate-700/50">
+        <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2.5rem] p-6 sm:p-8 shadow-md relative overflow-hidden border border-slate-700/50">
           <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
             <PremiumEmoji emoji="💳" className="w-48 h-48" />
           </div>
@@ -154,11 +156,6 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md">
               {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
             </div>
-            {bankStreak > 0 && (
-              <div className="mt-4 bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full w-max shadow-sm backdrop-blur-sm flex items-center gap-1.5">
-                <span className="text-sm">🔥</span> {bankStreak} Dagars Streak
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -172,31 +169,31 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
       <div className="grid grid-cols-1 gap-4 px-2 sm:px-4">
         
         {/* --- LÄS-KORT (BOK-BAKGRUND) --- */}
-        <div className={`relative bg-white rounded-[2rem] border transition-all overflow-hidden ${isReading ? 'border-orange-300 ring-4 ring-orange-50 shadow-md' : 'border-slate-200 shadow-sm'}`}>
-          {/* Bakgrundsbild: Estetisk bok */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isReading ? 'border-blue-300 ring-4 ring-blue-50 shadow-md' : 'border-slate-100 shadow-sm'}`}>
+          {/* Snygg bild på högra halvan, tonar in mot vitt på vänstra halvan */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30" 
+            className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-right opacity-60" 
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800')" }}
           ></div>
-          {/* Gradient-overlay för att texten ska synas perfekt */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
 
           <div className="relative z-10 p-5">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 relative flex-shrink-0">
-                <TimerRing percentage={(readTime % 600) / 6} color="#f97316" />
+              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+                <TimerRing percentage={(readTime % 600) / 6} color="#3b82f6" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <PremiumEmoji emoji="📖" className="w-8 h-8" />
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-black text-slate-800 text-lg uppercase tracking-wide">Läs en bok</h3>
+                {/* Dyslexivänlig rubrik utan uppercase */}
+                <h3 className="font-black text-slate-800 text-xl tracking-tight">Läs en bok</h3>
                 <p className="text-slate-600 font-bold text-xs mt-0.5">10 kr per 10 minuter</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(readTime)}</div>
               </div>
               <button 
                 onClick={() => setIsReading(!isReading)}
-                className={`px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-blue-600 text-white active:scale-95'}`}
+                className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${isReading ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
               >
                 {isReading ? 'Pausa' : 'Starta'}
               </button>
@@ -205,7 +202,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             {/* Belöningsinfo för Läsning */}
             {readTime > 0 && (
               <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 bg-white/80 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
+                <div className="flex-1 bg-white/90 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Intjänat:</span>
                   <span className={`font-black text-sm ${readReward > 0 ? 'text-green-600' : 'text-slate-400'}`}>+{readReward} kr</span>
                 </div>
@@ -219,7 +216,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             
             {/* Påminnelse */}
             {showReadPrompt && (
-              <div className="mt-4 bg-yellow-100 p-4 rounded-xl border border-yellow-200 text-center animate-pulse">
+              <div className="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center animate-pulse">
                 <p className="font-black text-yellow-800 text-xs uppercase mb-2">Läser du fortfarande?</p>
                 <button onClick={() => setShowReadPrompt(false)} className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-black text-xs uppercase shadow-sm">Ja, jag läser!</button>
               </div>
@@ -228,30 +225,30 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
         </div>
 
         {/* --- GÅ-KORT (MIDSOMMARKRANSEN / PARK-BAKGRUND) --- */}
-        <div className={`relative bg-white rounded-[2rem] border transition-all overflow-hidden ${isWalking ? 'border-emerald-300 ring-4 ring-emerald-50 shadow-md' : 'border-slate-200 shadow-sm'}`}>
-          {/* Bakgrundsbild: Midsommarkransen / Lummig grön park */}
+        <div className={`relative bg-white rounded-[2.5rem] border transition-all overflow-hidden ${isWalking ? 'border-blue-300 ring-4 ring-blue-50 shadow-md' : 'border-slate-100 shadow-sm'}`}>
+          {/* Lummig park/sommarkänsla */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40" 
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1470071531523-2046890dd8fd?auto=format&fit=crop&q=80&w=800')" }}
+            className="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-60" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=800')" }}
           ></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent"></div>
 
           <div className="relative z-10 p-5">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 relative flex-shrink-0">
-                <TimerRing percentage={(walkTime % 60) * 1.66} color="#10b981" />
+              <div className="w-20 h-20 relative flex-shrink-0 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+                <TimerRing percentage={(walkTime % 60) * 1.66} color="#3b82f6" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <PremiumEmoji emoji="🏃‍♂️" className="w-8 h-8" />
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-black text-slate-800 text-lg uppercase tracking-wide">Ta en promenad</h3>
+                <h3 className="font-black text-slate-800 text-xl tracking-tight">Ta en promenad</h3>
                 <p className="text-slate-600 font-bold text-xs mt-0.5">1 kr per minut</p>
                 <div className="mt-1 text-2xl font-black text-slate-800 font-clock">{formatMinSec(walkTime)}</div>
               </div>
               <button 
                 onClick={() => setIsWalking(!isWalking)}
-                className={`px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm ${isWalking ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-blue-600 text-white active:scale-95'}`}
+                className={`px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm ${isWalking ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-blue-600 text-white active:scale-95'}`}
               >
                 {isWalking ? 'Pausa' : 'Starta'}
               </button>
@@ -260,7 +257,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
             {/* Belöningsinfo för Promenad */}
             {walkTime > 0 && (
               <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 bg-white/80 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
+                <div className="flex-1 bg-white/90 backdrop-blur-md rounded-xl p-3 border border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Intjänat:</span>
                   <span className={`font-black text-sm ${walkEarned > 0 ? 'text-green-600' : 'text-slate-400'}`}>+{walkEarned} kr</span>
                 </div>
@@ -296,7 +293,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                     <PremiumEmoji emoji={q.icon} className="w-10 h-10" />
                   </div>
                   <div className="flex flex-col">
-                    <h4 className={`font-black uppercase tracking-wide text-sm sm:text-base ${done ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
+                    <h4 className={`font-black tracking-wide text-sm sm:text-base ${done ? 'text-slate-400 line-through' : 'text-[#1E293B]'}`}>
                       {q.title}
                     </h4>
                     {q.type === 'checklist' && !done && (
@@ -337,7 +334,8 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
                         const tDone = isDone(t.id);
                         return (
                           <div key={t.id} className={`flex items-center justify-between p-3 rounded-2xl border transition-colors ${tDone ? 'bg-transparent border-transparent opacity-60' : 'bg-white border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]'}`}>
-                            <span className={`text-xs font-bold uppercase pl-1 ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
+                            {/* Inga versaler här heller för bättre ordbild */}
+                            <span className={`text-xs font-bold pl-1 ${tDone ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{t.text}</span>
                             <button 
                               disabled={tDone}
                               onClick={(e) => triggerReward(t.reward, e, t.id, t.text)}
