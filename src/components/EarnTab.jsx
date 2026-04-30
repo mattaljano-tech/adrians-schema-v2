@@ -53,17 +53,6 @@ const FlyingCoin = ({ coin }) => {
 const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
   const [flyingCoins, setFlyingCoins] = useState([]);
   
-  // ==========================================
-  // HÄR ÄR TILLÄGGET FÖR ATT TVINGA SCROLL UP
-  // ==========================================
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'auto' // 'auto' gör att den hoppar direkt utan fördröjning
-    });
-  }, []);
-  
   // States för Läsning & Promenad
   const [readTime, setReadTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
