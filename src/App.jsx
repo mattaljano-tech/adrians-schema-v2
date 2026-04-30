@@ -233,12 +233,18 @@ const App = () => {
 
   // --- SCROLLA TILL TOPPEN VID FLIKBYTE ---
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth' // Ändra till 'auto' om du vill ha ett omedelbart hopp utan animering
-    });
+    // Vi lägger in en liten fördröjning (250ms) för att låta 
+    // Framer Motions exit-animation (0.2s) bli helt klar först.
+    const timer = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'auto' // 'auto' är bäst här, annars kan scroll-animationen krocka visuellt med flik-animationen
+      });
+    }, 250); 
+
+    return () => clearTimeout(timer);
   }, [view]);
-  
+
   // =====================================================================
   // HÄR ÄR DEN NYA FUNKTIONEN FÖR FIREBASE-NOTISER MED VAPID-NYCKELN!
   // =====================================================================
