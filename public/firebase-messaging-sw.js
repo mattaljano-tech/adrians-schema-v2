@@ -11,3 +11,20 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+
+// Denna kod lyssnar efter meddelanden när appen ligger i bakgrunden eller är stängd
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Tog emot bakgrundsmeddelande: ', payload);
+
+  // Anpassa vad som ska stå i notisen
+  const notificationTitle = payload.notification.title || 'Nytt från Adrian!';
+  const notificationOptions = {
+    body: payload.notification.body || 'Dags att kolla schemat.',
+    icon: '/icon-270.png', // Här används din ikon!
+    badge: '/icon-270.png',
+    vibrate: [200, 100, 200]
+  };
+
+  // Skicka upp notisen på skärmen
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
