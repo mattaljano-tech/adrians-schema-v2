@@ -230,6 +230,15 @@ const App = () => {
     }
   };
 
+
+  // --- SCROLLA TILL TOPPEN VID FLIKBYTE ---
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // Ändra till 'auto' om du vill ha ett omedelbart hopp utan animering
+    });
+  }, [view]);
+  
   // =====================================================================
   // HÄR ÄR DEN NYA FUNKTIONEN FÖR FIREBASE-NOTISER MED VAPID-NYCKELN!
   // =====================================================================
