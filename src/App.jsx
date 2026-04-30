@@ -47,16 +47,30 @@ const getSwedishTimeWords = (date) => {
 const AnalogClock = ({ date, size = 150 }) => {
   const mDeg = date.getMinutes() * 6 + date.getSeconds() * 0.1;
   const hDeg = (date.getHours() % 12) * 30 + date.getMinutes() * 0.5;
+  
   return (
     <div style={{ width: size, height: size }} className="relative bg-[#1E293B] rounded-full border border-slate-700 shadow-2xl flex-shrink-0">
+      
+      {/* Siffrorna 1-12 */}
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
         <div key={num} className="absolute inset-0 p-2 text-center pointer-events-none" style={{ transform: `rotate(${num * 30}deg)` }}>
           <span className="inline-block text-[14px] font-black text-slate-500" style={{ transform: `rotate(-${num * 30}deg)` }}>{num}</span>
         </div>
       ))}
+      
+      {/* Mitten-pricken */}
       <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-slate-900 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 border-2 border-slate-600 shadow-sm"></div>
-      <div className="absolute top-1/2 left-1/2 w-2 h-[28%] bg-red-500 rounded-full origin-bottom -translate-x-1/2 -translate-y-full z-10" style={{ transform: `translateX(-50%) translateY(-100%) rotate(${hDeg}deg)` }}></div>
-      <div className="absolute top-1/2 left-1/2 w-1.5 h-[38%] bg-blue-500 rounded-full origin-bottom -translate-x-1/2 -translate-y-full z-10" style={{ transform: `translateX(-50%) translateY(-100%) rotate(${mDeg}deg)` }}></div>
+      
+      {/* Timvisare (Röd) */}
+      <div className="absolute inset-0 z-10 pointer-events-none" style={{ transform: `rotate(${hDeg}deg)` }}>
+        <div className="absolute bottom-1/2 left-1/2 w-2 h-[28%] bg-red-500 rounded-full -translate-x-1/2"></div>
+      </div>
+      
+      {/* Minutvisare (Blå) */}
+      <div className="absolute inset-0 z-10 pointer-events-none" style={{ transform: `rotate(${mDeg}deg)` }}>
+        <div className="absolute bottom-1/2 left-1/2 w-1.5 h-[38%] bg-blue-500 rounded-full -translate-x-1/2"></div>
+      </div>
+
     </div>
   );
 };
