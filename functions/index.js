@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const db = admin.firestore();
-const APP_ID = 'gaming-schema-app-light';
+const APP_ID = 'test-schema-v2';
 
 // ============================================================================
 // 🛠️ HJÄLPFUNKTION: Skickar notis till ALLA anslutna enheter
