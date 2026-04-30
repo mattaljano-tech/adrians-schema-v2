@@ -231,19 +231,7 @@ const App = () => {
   };
 
 
-  // --- SCROLLA TILL TOPPEN VID FLIKBYTE ---
-  useEffect(() => {
-    // Vi lägger in en liten fördröjning (250ms) för att låta 
-    // Framer Motions exit-animation (0.2s) bli helt klar först.
-    const timer = setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'auto' // 'auto' är bäst här, annars kan scroll-animationen krocka visuellt med flik-animationen
-      });
-    }, 250); 
-
-    return () => clearTimeout(timer);
-  }, [view]);
+ 
 
   // =====================================================================
   // HÄR ÄR DEN NYA FUNKTIONEN FÖR FIREBASE-NOTISER MED VAPID-NYCKELN!
@@ -388,7 +376,9 @@ const App = () => {
 
       {/* --- HUVUDINNEHÅLL --- */}
       <main className="max-w-md mx-auto px-4">
-        <AnimatePresence mode="wait">
+        
+        {/* HÄR ÄR TILLÄGGET: onExitComplete */}
+        <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo(0, 0)}>
           {view === 'schema' && (
             <motion.section key="schema" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
               <SchemaTab 
