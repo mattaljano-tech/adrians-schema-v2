@@ -1,82 +1,142 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const functionsV1 = require('firebase-functions/v1');
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const admin = require('firebase-admin');
 
-// Starta koppling till din databas
 admin.initializeApp();
 
-// Denna funktion körs automatiskt VARJE MINUT (* * * * *)
-exports.checkScheduleAndNotify = functions.pubsub
-  .schedule("* * * * *")
-  .timeZone("Europe/Stockholm")
-  .onRun(async (context) => {
-    const db = admin.firestore();
-    const now = Date.now();
+const db = admin.firestore();
+const APP_ID = 'gaming-schema-app-light';
 
-    // 1. Hämta Adrians specifika Android-token
-    const tokenDoc = await db.doc('artifacts/gaming-schema-app-light/public/data/device_tokens/adrians_telefon').get();
-    
-    if (!tokenDoc.exists) {
-      console.log("Hittade ingen sparad mobil (token).");
-      return null;
+// ============================================================================
+// 🛠️ HJÄLPFUNKTION: Skickar notis till ALLA anslutna enheter
+// ============================================================================
+async function sendToAdrian(title, body) {
+    try {
+        const tokenDoc = await db.doc(`artifacts/gaming-schema-app-light/public/data/device_tokens/adrians_telefon`).get();
+        
+        if (tokenDoc.exists) {
+            const data = tokenDoc.data();
+            const tokens = data.tokens; 
+
+            if (tokens && Array.isArray(tokens) && tokens.length > 0) {
+                console.log(`Försöker skicka till ${tokens.length} enheter...`);
+                
+                const messages = tokens.map(t => ({
+                    token: t,
+                    notification: { title: title, body: body },
+                    // VIKTIGT: Denna del väcker Android-telefonen när den ligger i fickan!
+                    android: {
+                        priority: 'high',
+                        notification: { sound: 'default' }
+                    },
+                    webpush: { notification: { icon: '/icon-270.png' } }
+                }));
+
+                const response = await admin.messaging().sendEach(messages);
+                console.log("Svar från Google Firebase:", JSON.stringify(response));
+                return response;
+            }
+        }
+        
+        console.log("Kunde inte skicka notis. Hittade ingen lista med tokens.");
+        return null;
+    } catch (error) {
+        console.error("Kritiskt fel vid skickande av notis:", error);
+        return null;
     }
-    
-    const tokens = tokenDoc.data().tokens;
-    if (!tokens || tokens.length === 0) return null;
-    const androidToken = tokens[tokens.length - 1]; // Tar den senast sparade tokenen
+}
 
-    // 2. Hämta schemat
-    const scheduleSnap = await db.collection('artifacts/test-schema-v2/public/data/schedule_items').get();
-    const notificationsToSend = [];
+// ============================================================================
+// 1. KLOCKAN: Kollar schemat varje minut och skickar larm (V2)
+// ============================================================================
+exports.checkScheduleAndNotify = onSchedule({
+  schedule: "* * * * *",
+  timeZone: "Europe/Stockholm"
+}, async (event) => {
+  const now = Date.now();
+  
+  // Hämtar schemat (använder test-schema-v2 precis som i din React-kod)
+  const scheduleSnap = await db.collection('artifacts/test-schema-v2/public/data/schedule_items').get();
+  const notificationsToSend = [];
 
-    scheduleSnap.forEach((doc) => {
-      const activity = doc.data();
-      if (!activity.startTime) return;
+  scheduleSnap.forEach((doc) => {
+    const activity = doc.data();
+    if (!activity.startTime) return;
 
-      const prepStart = activity.startTime - ((activity.prepTime || 0) * 60000);
-      
-      // Räkna ut hur många millisekunder det är kvar
-      const startDiff = activity.startTime - now;
-      const prepDiff = prepStart - now;
+    const prepStart = activity.startTime - ((activity.prepTime || 0) * 60000);
+    const startDiff = activity.startTime - now;
+    const prepDiff = prepStart - now;
 
-      // Eftersom funktionen körs varje minut, kollar vi om aktiviteten 
-      // startar inom de kommande 60 sekunderna.
-      const isStartTime = startDiff > 0 && startDiff <= 60000;
-      const isPrepTime = activity.prepTime > 0 && prepDiff > 0 && prepDiff <= 60000;
+    // Kollar om aktiviteten startar inom 60 sekunder
+    const isStartTime = startDiff > 0 && startDiff <= 60000;
+    const isPrepTime = activity.prepTime > 0 && prepDiff > 0 && prepDiff <= 60000;
 
-      if (isPrepTime) {
-        notificationsToSend.push({
-          title: "Snart dags! ⏳",
-          body: `Förbered dig för: ${activity.title}`
-        });
-      } else if (isStartTime) {
-        notificationsToSend.push({
-          title: "Dags nu! 🚨",
-          body: `Nu börjar: ${activity.title}`
-        });
-      }
+    if (isPrepTime) {
+      notificationsToSend.push({ title: "Snart dags! ⏳", body: `Förbered dig för: ${activity.title}` });
+    } else if (isStartTime) {
+      notificationsToSend.push({ title: "Dags nu! 🚨", body: `Nu börjar: ${activity.title}` });
+    }
+  });
+
+  // Skickar larmen med din egna hjälpfunktion!
+  for (const notif of notificationsToSend) {
+    await sendToAdrian(notif.title, notif.body); 
+  }
+
+  return null;
+});
+
+// ============================================================================
+// 2. DOPAMIN: Notis när ett NYTT UPPDRAG läggs till (V1)
+// ============================================================================
+exports.onNewTask = functionsV1.firestore
+    .document(`artifacts/${APP_ID}/public/data/schedule_items/{itemId}`)
+    .onCreate(async (snap, context) => {
+        const task = snap.data();
+        let title = "📅 Nytt uppdrag!";
+        let body = `Du har ett nytt uppdrag: ${task.title}. In och kika!`;
+
+        if (task.isLiveEvent) {
+            title = "🚨 LIVE EVENT ALERT!";
+            body = "Ett Steal a brainroth-event har dykt upp! Skynda dig in i appen!";
+        }
+        return sendToAdrian(title, body);
     });
 
-    // 3. Skicka iväg notiserna via Firebase Cloud Messaging
-    for (const notif of notificationsToSend) {
-      try {
-        await admin.messaging().send({
-          token: androidToken,
-          notification: {
-            title: notif.title,
-            body: notif.body,
-          },
-          android: {
-            priority: 'high', // Tvingar Android att vakna ur strömspar-läge
-            notification: {
-              sound: 'default'
-            }
-          }
-        });
-        console.log("Skickade push-notis:", notif.title);
-      } catch (error) {
-        console.error("Kunde inte skicka notis:", error);
-      }
-    }
+// ============================================================================
+// 3. KA-CHING: Notis när banken uppdateras (V1)
+// ============================================================================
+exports.onBankUpdate = functionsV1.firestore
+    .document(`artifacts/${APP_ID}/public/data/bank/adrian`)
+    .onUpdate(async (change, context) => {
+        const oldData = change.before.data();
+        const newData = change.after.data();
 
-    return null;
-  });
+        if (newData.balance > oldData.balance) {
+            const diff = newData.balance - oldData.balance;
+            return sendToAdrian(
+                "💰 Ka-ching! Ny insättning!", 
+                `Du fick precis +${diff} kr! Ditt nya saldo är ${newData.balance} kr.`
+            );
+        }
+
+        if (newData.dailyMessage && newData.dailyMessage !== oldData.dailyMessage) {
+            const adminName = newData.adminName || "Din kompis";
+            return sendToAdrian(
+                `💬 Meddelande från ${adminName}`, 
+                newData.dailyMessage
+            );
+        }
+        return null;
+    });
+
+// ============================================================================
+// 4. INBOX: Notis när Admin skickar vanligt meddelande (V1)
+// ============================================================================
+exports.onNewMessage = functionsV1.firestore
+    .document(`artifacts/${APP_ID}/public/data/messages/{msgId}`)
+    .onCreate(async (snap, context) => {
+        const msg = snap.data();
+        if (msg.text && msg.text.includes("har köpt:")) return null; 
+        return sendToAdrian("📬 Nytt meddelande!", msg.text);
+    });
