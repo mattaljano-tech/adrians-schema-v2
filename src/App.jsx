@@ -65,6 +65,7 @@ const App = () => {
   const [view, setView] = useState('schema'); 
   const [activeToast, setActiveToast] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const topRef = useRef(null);
 
   // Larm & Vila
   const [isIdle, setIsIdle] = useState(false);
@@ -276,6 +277,7 @@ const App = () => {
   return (
     // Den mjuka isblå/grå bakgrunden som gör att de vita korten "poppar"
     <div className="min-h-screen bg-[#f1f5f9] text-slate-900 pb-32 font-sans selection:bg-blue-500">
+      <div ref={topRef} />
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
 
       {/* --- STORT LARM FÖR FÖRBEREDELSE (Mjukare design) --- */}
@@ -378,7 +380,19 @@ const App = () => {
       <main className="max-w-md mx-auto px-4">
         
         {/* HÄR ÄR TILLÄGGET: onExitComplete */}
-        <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo(0, 0)}>
+        <AnimatePresence 
+          mode="wait" 
+          onExitComplete={() => {
+            // Vi väntar 10 millisekunder så webbläsaren hinner andas
+            setTimeout(() => {
+              if (topRef.current) {
+                topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
+              }
+              window.scrollTo(0, 0); // Kör denna som backup!
+            }, 10);
+          }}
+        >
+        
           {view === 'schema' && (
             <motion.section key="schema" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
               <SchemaTab 
