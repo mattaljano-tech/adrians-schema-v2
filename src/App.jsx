@@ -276,8 +276,8 @@ const App = () => {
 
   return (
     // Den mjuka isblå/grå bakgrunden som gör att de vita korten "poppar"
-    <div className="min-h-screen bg-[#f1f5f9] text-slate-900 pb-32 font-sans selection:bg-blue-500">
-      <div ref={topRef} />
+<div className="min-h-screen bg-red-500 text-slate-900 pb-32 font-sans">
+        <div ref={topRef} />
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
 
       {/* --- STORT LARM FÖR FÖRBEREDELSE (Mjukare design) --- */}
