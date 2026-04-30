@@ -54,6 +54,7 @@ const getSwedishAnalog = (date) => {
 const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
   const svgRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const prevAngleRef = useRef(null); // <-- NYTT: Håller koll på fingrets förra vinkel
 
   const getAngle = (clientX, clientY) => {
     if (!svgRef.current) return 0;
@@ -65,12 +66,40 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
     return angle;
   };
 
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    // Spara startvinkeln direkt när vi sätter ner fingret
+    prevAngleRef.current = getAngle(e.clientX, e.clientY);
+  };
+
   const handlePointerMove = (e) => {
     if (!isDragging) return;
     const angle = getAngle(e.clientX, e.clientY);
-    const totalMinutes = Math.round(angle / 6) % 60;
+    const currentMins = Math.round(angle / 6) % 60;
+    
+    let hourDelta = 0;
+    if (prevAngleRef.current !== null) {
+      const prev = prevAngleRef.current;
+      
+      // Om vi snurrar framåt förbi 12 (från en hög vinkel till en låg)
+      if (prev > 300 && angle < 60) {
+        hourDelta = 1;
+      } 
+      // Om vi snurrar bakåt förbi 12 (från en låg vinkel till en hög)
+      else if (prev < 60 && angle > 300) {
+        hourDelta = -1;
+      }
+    }
+    prevAngleRef.current = angle; // Uppdatera minnet inför nästa millisekund
+
     const date = new Date(simTimeMs);
-    date.setMinutes(totalMinutes);
+    
+    // Lägg till eller ta bort timmen om vi passerade 12
+    if (hourDelta !== 0) {
+      date.setHours(date.getHours() + hourDelta);
+    }
+    
+    date.setMinutes(currentMins);
     setSimTimeMs(date.getTime());
   };
 
@@ -95,7 +124,7 @@ const InteractiveClock = ({ simTimeMs, setSimTimeMs }) => {
         <svg 
           ref={svgRef}
           viewBox="0 0 280 280"
-          onPointerDown={() => setIsDragging(true)}
+          onPointerDown={handlePointerDown} // Använd den nya down-funktionen
           onPointerUp={() => setIsDragging(false)}
           onPointerMove={handlePointerMove}
           onDoubleClick={handleDoubleClick}
