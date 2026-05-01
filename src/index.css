@@ -6,3 +6,49 @@ body {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+/* =========================================
+   GAMER BORDER - Den animerade "ormen"
+   ========================================= */
+.gamer-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px; /* Rundade hörn på kortet */
+  padding: 4px; /* Hur tjock själva lysande ramen ska vara */
+  margin-bottom: 20px;
+}
+
+/* Det roterande ljuset i bakgrunden */
+.gamer-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  /* Byt ut färgerna här om du vill ha andra neonfärger! */
+  background: conic-gradient(
+    from 0deg,
+    transparent 70%,
+    #00f0ff 85%, /* Neonblå */
+    #ff00ff 100% /* Neonrosa */
+  );
+  animation: spin 3s linear infinite;
+  z-index: 0;
+}
+
+/* Själva bankkortet som ligger ovanpå ljuset */
+.gamer-card-content {
+  position: relative;
+  /* VIKTIGT: Byt denna till samma bakgrundsfärg som din app har! */
+  background-color: #1a1a1a; 
+  border-radius: 12px; /* Måste vara lite mindre än .gamer-card */
+  z-index: 1;
+  height: 100%;
+  padding: 20px;
+}
+
+/* Snurr-animationen */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

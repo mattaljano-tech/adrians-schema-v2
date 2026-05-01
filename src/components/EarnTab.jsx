@@ -192,27 +192,34 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
       {/* --- BANK HERO --- */}
       <div className="px-2 sm:px-4 pt-4">
-        <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2.5rem] p-6 sm:p-8 shadow-md relative overflow-hidden border border-slate-700/50">
-          <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
-            <PremiumEmoji emoji="💳" className="w-48 h-48" />
-          </div>
-          <div className="relative z-10 flex flex-col">
-            <div className="flex justify-between items-start mb-2">
-              <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm mt-1">Ditt saldo</h2>
-              {bankStreak > 0 && (
-                <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse border border-orange-400/50 flex items-center gap-1.5">
-                  <span className="drop-shadow-md text-sm">🔥</span>
-                  <span>{bankStreak} {bankStreak === 1 ? 'Dags' : 'Dagars'} Streak!</span>
-                </div>
-              )}
+        {/* HÄR BÖRJAR GAMER-RAMEN */}
+        <div className="gamer-card" style={{ borderRadius: '2.5rem' }}>
+          <div id="bank-hero" className="gamer-card-content bg-gradient-to-br from-[#1E293B] to-[#0f172a] p-6 sm:p-8 relative overflow-hidden" style={{ borderRadius: 'calc(2.5rem - 4px)' }}>
+            
+            <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
+              <PremiumEmoji emoji="💳" className="w-48 h-48" />
             </div>
-            <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md mt-1">
-              {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
+            
+            <div className="relative z-10 flex flex-col">
+              <div className="flex justify-between items-start mb-2">
+                <h2 className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs drop-shadow-sm mt-1">Ditt saldo</h2>
+                {bankStreak > 0 && (
+                  <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse border border-orange-400/50 flex items-center gap-1.5">
+                    <span className="drop-shadow-md text-sm">🔥</span>
+                    <span>{bankStreak} {bankStreak === 1 ? 'Dags' : 'Dagars'} Streak!</span>
+                  </div>
+                )}
+              </div>
+              <div className="text-5xl sm:text-6xl font-black text-white font-clock tabular-nums tracking-tight flex items-baseline gap-2 drop-shadow-md mt-1">
+                {bankBalance} <span className="text-xl sm:text-2xl text-slate-400 font-sans tracking-wide">kr</span>
+              </div>
             </div>
+
           </div>
         </div>
+        {/* HÄR SLUTAR GAMER-RAMEN */}
       </div>
-
+      
       <div className="flex items-center gap-2 pt-2 px-4 mb-2">
         <PremiumEmoji emoji="⏳" className="w-6 h-6" />
         <h3 className="text-[#8ba3b8] font-black uppercase tracking-[0.15em] text-[10px] sm:text-xs">Aktiva Uppdrag</h3>
