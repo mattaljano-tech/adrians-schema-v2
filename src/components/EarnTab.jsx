@@ -192,9 +192,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
 
       {/* --- BANK HERO --- */}
       <div className="px-2 sm:px-4 pt-4">
-        {/* HÄR BÖRJAR GAMER-RAMEN */}
-        <div className="gamer-card" style={{ borderRadius: '2.5rem' }}>
-          <div id="bank-hero" className="gamer-card-content bg-gradient-to-br from-[#1E293B] to-[#0f172a] p-6 sm:p-8 relative overflow-hidden" style={{ borderRadius: 'calc(2.5rem - 4px)' }}>
+        <div id="bank-hero" className="bg-gradient-to-br from-[#1E293B] to-[#0f172a] rounded-[2.5rem] p-6 sm:p-8 relative overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.15)] border border-slate-700/50">
             
             <div className="absolute -right-6 -top-10 opacity-10 pointer-events-none select-none blur-[1px] rotate-12">
               <PremiumEmoji emoji="💳" className="w-48 h-48" />
@@ -215,9 +213,7 @@ const EarnTab = ({ bankBalance, bankStreak, handleClaim, claimedQuests }) => {
               </div>
             </div>
 
-          </div>
         </div>
-        {/* HÄR SLUTAR GAMER-RAMEN */}
       </div>
       
       <div className="flex items-center gap-2 pt-2 px-4 mb-2">
