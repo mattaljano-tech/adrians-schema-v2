@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // --- PREMIUM 3D EMOJI KOMPONENT ---
@@ -210,13 +210,24 @@ const ClockGame = () => {
 
   const saveProgress = async (newLevel) => {
     try {
+      const today = new Date().setHours(0,0,0,0);
+      const docSnap = await getDoc(statsRef);
+      let newStreak = 1;
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.lastTrainingDate === today) newStreak = d.trainingStreak || 1;
+        else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
+      }
+
       await updateDoc(statsRef, {
         unlockedLevel: Math.max(unlockedLevel, newLevel),
-        totalPlayTime: totalSeconds + sessionSeconds
+        totalPlayTime: totalSeconds + sessionSeconds,
+        trainingStreak: newStreak,
+        lastTrainingDate: today
       });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
-    } catch (err) { console.error("Kunde inte spara:", err); }
+    } catch (err) { console.error(err); }
   };
 
   // Ljud-referenser
@@ -308,7 +319,9 @@ const ClockGame = () => {
         <div className="py-8">
           <PremiumEmoji emoji="🎮" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
           <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Klock-Mästaren</h2>
-          <p className="text-indigo-200 font-bold text-sm mb-8">Välj nivå för att börja träna!</p>
+          <p className="text-indigo-200 font-bold text-sm mb-8">
+            {unlockedLevel < 3 ? "Du måste träna på detta mer! Kör en stund varje dag." : "Snyggt jobbat! Men du måste spela för att hålla kunskapen vid liv."}
+          </p>
           
           <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
             {[1, 2, 3].map((lvl) => {
@@ -349,14 +362,19 @@ const ClockGame = () => {
               <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
             </div>
             
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔥</span>
-              <div className="flex gap-1">
-                {/* XP Mätare (10 pluttar) */}
-                {[...Array(10)].map((_, i) => (
-                  <div key={i} className={`w-3 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
-                ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔥</span>
+                <div className="flex gap-1 hidden sm:flex">
+                  {[...Array(10)].map((_, i) => (
+                    <div key={i} className={`w-2 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                  ))}
+                </div>
+                <span className="text-amber-400 font-black sm:hidden">{streak}/10</span>
               </div>
+              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+                Avbryt ✖
+              </button>
             </div>
           </div>
 
@@ -533,9 +551,20 @@ const MonthGame = () => {
 
   const saveProgress = async (newLevel) => {
     try {
+      const today = new Date().setHours(0,0,0,0);
+      const docSnap = await getDoc(statsRef);
+      let newStreak = 1;
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.lastTrainingDate === today) newStreak = d.trainingStreak || 1;
+        else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
+      }
+
       await updateDoc(statsRef, {
         unlockedMonthLevel: Math.max(unlockedLevel, newLevel),
-        totalMonthPlayTime: totalSeconds + sessionSeconds
+        totalMonthPlayTime: totalSeconds + sessionSeconds,
+        trainingStreak: newStreak,
+        lastTrainingDate: today
       });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
@@ -668,7 +697,9 @@ const MonthGame = () => {
         <div className="py-8 relative z-10">
           <PremiumEmoji emoji="🗓️" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
           <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Månads-Mästaren</h2>
-          <p className="text-emerald-200 font-bold text-sm mb-8">Lär dig årets alla månader!</p>
+          <p className="text-emerald-200 font-bold text-sm mb-8">
+            {unlockedLevel < 3 ? "Du måste träna på detta mer! Kör en stund varje dag." : "Snyggt jobbat! Men du måste spela för att hålla kunskapen vid liv."}
+          </p>
           
           <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
             {[1, 2, 3].map((lvl) => {
@@ -705,13 +736,19 @@ const MonthGame = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Level {level}</span>
               <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔥</span>
-              <div className="flex gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <div key={i} className={`w-3 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
-                ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔥</span>
+                <div className="flex gap-1 hidden sm:flex">
+                  {[...Array(10)].map((_, i) => (
+                    <div key={i} className={`w-2 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                  ))}
+                </div>
+                <span className="text-amber-400 font-black sm:hidden">{streak}/10</span>
               </div>
+              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+                Avbryt ✖
+              </button>
             </div>
           </div>
 
@@ -805,9 +842,20 @@ const WordGame = () => {
 
   const saveProgress = async (newLevel) => {
     try {
+      const today = new Date().setHours(0,0,0,0);
+      const docSnap = await getDoc(statsRef);
+      let newStreak = 1;
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.lastTrainingDate === today) newStreak = d.trainingStreak || 1;
+        else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
+      }
+
       await updateDoc(statsRef, {
         unlockedWordLevel: Math.max(unlockedLevel, newLevel),
-        totalWordPlayTime: totalSeconds + sessionSeconds
+        totalWordPlayTime: totalSeconds + sessionSeconds,
+        trainingStreak: newStreak,
+        lastTrainingDate: today
       });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
@@ -964,7 +1012,9 @@ const WordGame = () => {
         <div className="py-8 relative z-10">
           <PremiumEmoji emoji="🔍" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
           <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Ord-Detektiven</h2>
-          <p className="text-fuchsia-200 font-bold text-sm mb-8">Träna på bokstäver och ord!</p>
+          <p className="text-fuchsia-200 font-bold text-sm mb-8">
+            {unlockedLevel < 3 ? "Du måste träna på detta mer! Kör en stund varje dag." : "Snyggt jobbat! Men du måste spela för att hålla kunskapen vid liv."}
+          </p>
           
           <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
             {[1, 2, 3].map((lvl) => {
@@ -1002,13 +1052,19 @@ const WordGame = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-fuchsia-300">Level {level}</span>
               <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔥</span>
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
-                ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔥</span>
+                <div className="flex gap-1 hidden sm:flex">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                  ))}
+                </div>
+                <span className="text-amber-400 font-black sm:hidden">{streak}/5</span>
               </div>
+              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+                Avbryt ✖
+              </button>
             </div>
           </div>
 
@@ -1145,9 +1201,20 @@ const GrammarGame = () => {
 
   const saveProgress = async (newLevel) => {
     try {
+      const today = new Date().setHours(0,0,0,0);
+      const docSnap = await getDoc(statsRef);
+      let newStreak = 1;
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.lastTrainingDate === today) newStreak = d.trainingStreak || 1;
+        else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
+      }
+
       await updateDoc(statsRef, {
         unlockedGrammarLevel: Math.max(unlockedLevel, newLevel),
-        totalGrammarPlayTime: totalSeconds + sessionSeconds
+        totalGrammarPlayTime: totalSeconds + sessionSeconds,
+        trainingStreak: newStreak,
+        lastTrainingDate: today
       });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
@@ -1259,7 +1326,9 @@ const GrammarGame = () => {
         <div className="py-8 relative z-10">
           <PremiumEmoji emoji="🔧" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
           <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Mening-Fixaren</h2>
-          <p className="text-orange-200 font-bold text-sm mb-8">Hjälp till att bygga ihop meningarna!</p>
+          <p className="text-orange-200 font-bold text-sm mb-8">
+            {unlockedLevel < 3 ? "Du måste träna på detta mer! Kör en stund varje dag." : "Snyggt jobbat! Men du måste spela för att hålla kunskapen vid liv."}
+          </p>
           
           <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
             {[1, 2, 3].map((lvl) => {
@@ -1296,13 +1365,19 @@ const GrammarGame = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-orange-300">Level {level}</span>
               <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔥</span>
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
-                ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔥</span>
+                <div className="flex gap-1 hidden sm:flex">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                  ))}
+                </div>
+                <span className="text-amber-400 font-black sm:hidden">{streak}/5</span>
               </div>
+              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+                Avbryt ✖
+              </button>
             </div>
           </div>
 
@@ -1364,11 +1439,52 @@ const GrammarGame = () => {
   );
 };
 
+// --- TRÄNINGS-STREAK (Visas ovanför spelen) ---
+const TrainingStreakCard = () => {
+  const [streak, setStreak] = useState(0);
+  const [lastTrained, setLastTrained] = useState(0);
+
+  useEffect(() => {
+    const statsRef = doc(db, 'artifacts', 'test-schema-v2', 'public', 'data', 'bank', 'adrian');
+    const unsub = onSnapshot(statsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setStreak(docSnap.data().trainingStreak || 0);
+        setLastTrained(docSnap.data().lastTrainingDate || 0);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const today = new Date().setHours(0,0,0,0);
+  const isTrainedToday = lastTrained === today;
+
+  return (
+    <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-[2rem] p-5 shadow-[0_10px_30px_rgba(245,158,11,0.3)] flex items-center justify-between text-white mb-2 border border-amber-300/50">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl backdrop-blur-sm border border-white/30">
+          🔥
+        </div>
+        <div>
+          <h3 className="font-black uppercase tracking-widest text-sm drop-shadow-sm mb-0.5">Tränings-Streak</h3>
+          <p className="text-[11px] font-bold opacity-90 tracking-wide">
+            {isTrainedToday ? 'Grymt jobbat! Du har tränat idag.' : 'Du måste träna! Håll lågan vid liv.'}
+          </p>
+        </div>
+      </div>
+      <div className="text-3xl font-black bg-white text-orange-500 px-5 py-2 rounded-2xl shadow-inner">
+        {streak}
+      </div>
+    </div>
+  );
+};
+
 // --- HUVUDKOMPONENT ---
 const LearnTab = () => {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8 pb-12 pt-2">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8 pb-12 pt-2 px-2">
       
+      <TrainingStreakCard />
+
       {/* VÅRA SPEL LÄNGST UPP! */}
       <ClockGame />
       <MonthGame />

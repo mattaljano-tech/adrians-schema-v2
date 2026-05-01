@@ -296,6 +296,19 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
       showToast("Dagens uppdrag är nu upplåsta igen!");
   };
 
+  const resetGameLevels = async () => {
+      if(window.confirm("Vill du nollställa alla spelnivåer till Level 1? (Den totala speltiden sparas kvar!)")) {
+          const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+          await updateDoc(bankDoc, { 
+              unlockedLevel: 1, 
+              unlockedMonthLevel: 1, 
+              unlockedWordLevel: 1, 
+              unlockedGrammarLevel: 1 
+          });
+          showToast("Spelnivåerna är nu nollställda!");
+      }
+  };
+
   const handleSaveMessageAndSettings = async () => {
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     await updateDoc(bankDoc, { 
@@ -517,6 +530,12 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
              </motion.button>
              <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-colors">
                 Lås upp uppdrag
+             </motion.button>
+          </div>
+          
+          <div className="pt-4 mt-2 border-t border-slate-200/80">
+             <motion.button whileTap={{ scale: 0.98 }} onClick={resetGameLevels} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                <span>🔄</span> Nollställ alla spelnivåer till Level 1
              </motion.button>
           </div>
         </div>
