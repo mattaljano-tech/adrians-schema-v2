@@ -284,14 +284,23 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
       await updateDoc(bankDoc, { balance: 0 });
   };
 
-  const setStreakZero = async () => {
-      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
-      await updateDoc(bankDoc, { 
-          streak: 0,           // Nollar den gamla schemastraken
-          trainingStreak: 0,   // Nollar spelens tränings-streak
-          lastTrainingDate: 0  // Nollställer datumet så han kan starta en ny streak idag
-      });
-      showToast("Alla streaks är nu nollställda!");
+  const setBankStreakZero = async () => {
+      if(window.confirm("Vill du nollställa SCHEMA-streaken?")) {
+          const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+          await updateDoc(bankDoc, { streak: 0 });
+          showToast("Schema-streaken är nollställd!");
+      }
+  };
+
+  const setTrainingStreakZero = async () => {
+      if(window.confirm("Vill du nollställa TRÄNINGS-streaken (spelen)?")) {
+          const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+          await updateDoc(bankDoc, { 
+              trainingStreak: 0,   
+              lastTrainingDate: 0  
+          });
+          showToast("Tränings-streaken är nollställd!");
+      }
   };
 
   const resetDailyQuests = async () => {
@@ -518,22 +527,28 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-red-50 border border-red-200 text-red-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-red-100">- 50 kr</motion.button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 border-t border-slate-200/80">
              <motion.button 
                 whileTap={{ scale: 0.95 }} 
                 onClick={() => {
                     if(confirmReset) { setBankZero(); setConfirmReset(false); } 
                     else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); }
                 }} 
-                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-white/80 backdrop-blur-sm text-slate-500 border-slate-200 hover:bg-white'}`}
+                className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm transition-colors border ${confirmReset ? 'bg-red-600 text-white border-red-700' : 'bg-white/80 backdrop-blur-sm text-slate-500 border-slate-200 hover:bg-white'}`}
              >
-                {confirmReset ? "Tryck igen för att bekräfta!" : "Nolla Saldot"}
+                {confirmReset ? "Bekräfta Nollställning!" : "Nolla Saldot"}
              </motion.button>
-             <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-orange-100 transition-colors">
-                Nolla Streak
-             </motion.button>
-             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-colors">
+             
+             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="w-full py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-colors">
                 Lås upp uppdrag
+             </motion.button>
+
+             <motion.button whileTap={{ scale: 0.95 }} onClick={setBankStreakZero} className="w-full py-3.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-orange-100 transition-colors">
+                Nolla Schema-Streak
+             </motion.button>
+
+             <motion.button whileTap={{ scale: 0.95 }} onClick={setTrainingStreakZero} className="w-full py-3.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-amber-100 transition-colors">
+                Nolla Tränings-Streak
              </motion.button>
           </div>
           
