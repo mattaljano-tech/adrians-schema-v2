@@ -830,8 +830,10 @@ const WordGame = () => {
   const [streak, setStreak] = useState(0);
   const [shakeMap, setShakeMap] = useState({});
   
+  // NYTT: State för att pausa 
+  const [showExp, setShowExp] = useState(false);
   const [currentQ, setCurrentQ] = useState(null);
-  const [spelledLetters, setSpelledLetters] = useState([]); // För stavningsfrågor
+  const [spelledLetters, setSpelledLetters] = useState([]);
 
   const levelNames = ["Bokstavs-Jägaren", "Mening-Skaparen", "Ord-Bossen"];
   const appId = 'test-schema-v2';
@@ -854,9 +856,9 @@ const WordGame = () => {
 
   useEffect(() => {
     let interval;
-    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    if (gameState === 'playing' && !showExp) interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
     return () => clearInterval(interval);
-  }, [gameState]);
+  }, [gameState, showExp]);
 
   const saveProgress = async (newLevel) => {
     try {
@@ -880,9 +882,8 @@ const WordGame = () => {
     } catch (err) { console.error(err); }
   };
 
-  // --- MASSIV FRÅGEBANK FÖR ORD-DETEKTIVEN ---
   const questions = {
-    1: [ // NIVÅ 1: Stava korta ord (Ljudning/Fonologi) - Minst 4-5 bokstäver att välja på
+    1: [ 
       { type: 'spell', word: 'SOL', emoji: '☀️', options: ['S', 'O', 'L', 'M', 'A'] },
       { type: 'spell', word: 'KO', emoji: '🐄', options: ['K', 'O', 'B', 'A', 'P'] },
       { type: 'spell', word: 'BIL', emoji: '🚗', options: ['B', 'I', 'L', 'F', 'E'] },
@@ -904,7 +905,7 @@ const WordGame = () => {
       { type: 'spell', word: 'LÅS', emoji: '🔒', options: ['L', 'Å', 'S', 'K', 'O'] },
       { type: 'spell', word: 'OST', emoji: '🧀', options: ['O', 'S', 'T', 'A', 'F'] }
     ],
-    2: [ // NIVÅ 2: Konkreta ord och funktion (Fylla i luckan) - 4 svarsalternativ!
+    2: [ 
       { type: 'fill', text: 'För att klippa papper behöver man en...', answer: 'Sax', emoji: '✂️', options: [{w: 'Sax', e: '✂️'}, {w: 'Sked', e: '🥄'}, {w: 'Boll', e: '⚽'}, {w: 'Bok', e: '📖'}] },
       { type: 'fill', text: 'När det regnar kan man använda ett...', answer: 'Paraply', emoji: '☔', options: [{w: 'Bord', e: '🪑'}, {w: 'Paraply', e: '☔'}, {w: 'Äpple', e: '🍎'}, {w: 'Sol', e: '☀️'}] },
       { type: 'fill', text: 'För att låsa upp en dörr behöver man en...', answer: 'Nyckel', emoji: '🔑', options: [{w: 'Klocka', e: '⌚'}, {w: 'Banan', e: '🍌'}, {w: 'Nyckel', e: '🔑'}, {w: 'Boll', e: '🎾'}] },
@@ -926,7 +927,7 @@ const WordGame = () => {
       { type: 'fill', text: 'Vi tittar på barnprogram på vår...', answer: 'TV', emoji: '📺', options: [{w: 'Mikrovågsugn', e: '🎛️'}, {w: 'TV', e: '📺'}, {w: 'Radio', e: '📻'}, {w: 'Bok', e: '📖'}] },
       { type: 'fill', text: 'Innan man sväljer maten måste man...', answer: 'Tugga', emoji: '👄', options: [{w: 'Dricka', e: '🥤'}, {w: 'Tugga', e: '👄'}, {w: 'Sova', e: '😴'}, {w: 'Skrika', e: '🗣️'}] }
     ],
-    3: [ // NIVÅ 3: Kategorier, Djur och Logik (Lite svårare samband) - 4 svarsalternativ!
+    3: [ 
       { type: 'fill', text: 'Vilket av dessa djur kan flyga i luften?', answer: 'Fågel', emoji: '🦅', options: [{w: 'Hund', e: '🐕'}, {w: 'Fågel', e: '🦅'}, {w: 'Gris', e: '🐖'}, {w: 'Katt', e: '🐈'}] },
       { type: 'fill', text: 'Man sätter dem på fötterna innan man tar på skorna...', answer: 'Strumpor', emoji: '🧦', options: [{w: 'Mössa', e: '🧢'}, {w: 'Handskar', e: '🧤'}, {w: 'Strumpor', e: '🧦'}, {w: 'Byxor', e: '👖'}] },
       { type: 'fill', text: 'Vad är stort, grönt och växer i skogen?', answer: 'Träd', emoji: '🌲', options: [{w: 'Bil', e: '🚗'}, {w: 'Träd', e: '🌲'}, {w: 'Hus', e: '🏠'}, {w: 'Sten', e: '🪨'}] },
@@ -953,16 +954,12 @@ const WordGame = () => {
   const generateQuestion = (lvl) => {
     const list = questions[lvl];
     const q = list[Math.floor(Math.random() * list.length)];
-    // Blanda alternativen så svaret inte alltid är på samma plats
     const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
     setCurrentQ({ ...q, options: shuffledOptions });
-    setSpelledLetters([]); // Nollställ för stavning
+    setSpelledLetters([]);
     
-    if (q.type === 'spell') {
-      speakText(`Stava till ${q.word}`);
-    } else {
-      speakText(q.text);
-    }
+    if (q.type === 'spell') speakText(`Stava till ${q.word}`);
+    else speakText(q.text);
   };
 
   const startGame = (selectedLevel) => {
@@ -970,42 +967,53 @@ const WordGame = () => {
     setGameState('playing');
     setStreak(0);
     setSessionSeconds(0);
+    setShowExp(false);
     generateQuestion(selectedLevel);
   };
 
   const handleCorrect = () => {
     if (successAudio.current) successAudio.current.play().catch(()=>{});
+    setShowExp(true);
+    
+    // Läs upp det färdiga resultatet!
+    if (currentQ.type === 'spell') {
+      speakText(`Bra! Du stavade till ${currentQ.word}`);
+    } else {
+      speakText(`${currentQ.text} En ${currentQ.answer}.`);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    setShowExp(false);
     const newStreak = streak + 1;
     setStreak(newStreak);
-    if (newStreak >= 5) { // Bara 5 rätt behövs för att levla upp här (lättare att klara!)
+    if (newStreak >= 5) {
       if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
       setGameState('levelup');
     } else {
-      setTimeout(() => generateQuestion(level), 1000); // Liten paus innan nästa
+      generateQuestion(level);
     }
   };
 
   const handleWrong = (idx) => {
+    if (showExp) return;
     if (failAudio.current) failAudio.current.play().catch(()=>{});
     setShakeMap({ [idx]: true });
     setTimeout(() => setShakeMap({}), 500);
-    // INGET STRAFF! Vi tog bort setStreak(0)
+    // Inget straff!
     speakText("Prova igen!");
   };
 
   const handleSpellClick = (letter, idx) => {
+    if (showExp) return;
     const nextLetterIndex = spelledLetters.length;
     const correctLetter = currentQ.word[nextLetterIndex];
 
     if (letter === correctLetter) {
-      // Rätt bokstav klickad!
       const newSpelled = [...spelledLetters, letter];
       setSpelledLetters(newSpelled);
-      speakText(letter); // Bekräfta bokstaven med ljud
-      
-      // Har han stavat hela ordet?
+      speakText(letter); 
       if (newSpelled.join('') === currentQ.word) {
-        speakText(currentQ.word); // Säg hela ordet!
         handleCorrect();
       }
     } else {
@@ -1014,8 +1022,8 @@ const WordGame = () => {
   };
 
   const handleFillClick = (option, idx) => {
+    if (showExp) return;
     if (option.w === currentQ.answer) {
-      speakText(option.w);
       handleCorrect();
     } else {
       handleWrong(idx);
@@ -1025,7 +1033,6 @@ const WordGame = () => {
   return (
     <div className="relative bg-gradient-to-br from-[#701a75] via-[#86198f] to-[#a21caf] rounded-[2.5rem] p-6 sm:p-8 shadow-[0_15px_50px_rgba(134,25,143,0.4)] border border-fuchsia-400/30 overflow-hidden text-center mb-8">
       
-      {/* START SKÄRM */}
       {gameState === 'start' && (
         <div className="py-8 relative z-10">
           <PremiumEmoji emoji="🔍" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
@@ -1062,7 +1069,6 @@ const WordGame = () => {
         </div>
       )}
 
-      {/* SPEL SKÄRM */}
       {gameState === 'playing' && currentQ && (
         <div className="relative z-10">
           <div className="flex items-center justify-between bg-black/20 rounded-2xl p-3 mb-6 border border-white/10">
@@ -1086,73 +1092,95 @@ const WordGame = () => {
             </div>
           </div>
 
-          {/* SPEL-LOGIK FÖR NIVÅ 1 (STAVA) */}
-          {currentQ.type === 'spell' && (
-            <div className="flex flex-col items-center">
-              <button onClick={() => speakText(currentQ.word)} className="active:scale-95 transition-transform mb-6">
-                <PremiumEmoji emoji={currentQ.emoji.replace(/[^a-zA-Z0-9\p{Emoji}]/gu, '') || "❓"} className="w-32 h-32 mx-auto drop-shadow-xl mb-4" />
-                <div className="flex gap-2">
-                  {currentQ.word.split('').map((letter, i) => (
-                    <div key={i} className="w-16 h-20 bg-white/10 border-2 border-dashed border-fuchsia-300/50 rounded-2xl flex items-center justify-center text-4xl font-black text-white shadow-inner">
-                      {spelledLetters[i] || ""}
-                    </div>
+          {showExp ? (
+            // VISA FÄRDIGT ORD / MENING OCH NÄSTA-KNAPP
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center bg-fuchsia-900/60 border-4 border-fuchsia-400 p-6 rounded-3xl mb-6 shadow-inner backdrop-blur-md w-full">
+              {currentQ.type === 'spell' ? (
+                <>
+                  <PremiumEmoji emoji={currentQ.emoji.replace(/[^a-zA-Z0-9\p{Emoji}]/gu, '') || "❓"} className="w-32 h-32 mx-auto drop-shadow-xl mb-6" />
+                  <h3 className="text-4xl font-black text-white uppercase tracking-widest mb-8">{currentQ.word}</h3>
+                </>
+              ) : (
+                <>
+                  <PremiumEmoji emoji={currentQ.emoji} className="w-24 h-24 mx-auto drop-shadow-xl mb-4" />
+                  <p className="text-2xl font-black text-white leading-relaxed drop-shadow-md mb-8 text-center">
+                    {currentQ.text} <span className="text-fuchsia-300 underline decoration-4 underline-offset-4">{currentQ.answer}</span>.
+                  </p>
+                </>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={handleNextQuestion}
+                className="bg-white text-fuchsia-900 px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center gap-2"
+              >
+                Nästa fråga ➡️
+              </motion.button>
+            </motion.div>
+          ) : (
+            // VISA VALEN
+            currentQ.type === 'spell' ? (
+              <div className="flex flex-col items-center">
+                <button onClick={() => speakText(currentQ.word)} className="active:scale-95 transition-transform mb-6">
+                  <PremiumEmoji emoji={currentQ.emoji.replace(/[^a-zA-Z0-9\p{Emoji}]/gu, '') || "❓"} className="w-32 h-32 mx-auto drop-shadow-xl mb-4" />
+                  <div className="flex gap-2">
+                    {currentQ.word.split('').map((letter, i) => (
+                      <div key={i} className="w-16 h-20 bg-white/10 border-2 border-dashed border-fuchsia-300/50 rounded-2xl flex items-center justify-center text-4xl font-black text-white shadow-inner">
+                        {spelledLetters[i] || ""}
+                      </div>
+                    ))}
+                  </div>
+                </button>
+                
+                <div className="flex flex-wrap justify-center gap-3 w-full">
+                  {currentQ.options.map((letter, idx) => (
+                    <motion.button
+                      key={idx}
+                      animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSpellClick(letter, idx)}
+                      disabled={spelledLetters.includes(letter) && currentQ.word.split('').filter(l => l === letter).length <= spelledLetters.filter(l => l === letter).length}
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl font-black text-3xl shadow-md border disabled:opacity-30 disabled:scale-90 transition-all ${
+                        shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-purple-900 border-fuchsia-100 hover:bg-fuchsia-50'
+                      }`}
+                    >
+                      {letter}
+                    </motion.button>
                   ))}
                 </div>
-              </button>
-              
-              <div className="flex flex-wrap justify-center gap-3 w-full">
-                {currentQ.options.map((letter, idx) => (
-                  <motion.button
-                    key={idx}
-                    animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSpellClick(letter, idx)}
-                    disabled={spelledLetters.includes(letter) && currentQ.word.split('').filter(l => l === letter).length <= spelledLetters.filter(l => l === letter).length}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl font-black text-3xl shadow-md border disabled:opacity-30 disabled:scale-90 transition-all ${
-                      shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-purple-900 border-fuchsia-100 hover:bg-fuchsia-50'
-                    }`}
-                  >
-                    {letter}
-                  </motion.button>
-                ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center w-full">
+                <button onClick={() => speakText(currentQ.text)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
+                  <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">{currentQ.text}</span>
+                  <span className="text-3xl">🔊</span>
+                </button>
 
-          {/* SPEL-LOGIK FÖR NIVÅ 2 & 3 (MENINGAR) */}
-          {currentQ.type === 'fill' && (
-            <div className="flex flex-col items-center w-full">
-              <button onClick={() => speakText(currentQ.text)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
-                <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">{currentQ.text}</span>
-                <span className="text-3xl">🔊</span>
-              </button>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full">
-                {currentQ.options.map((opt, idx) => (
-                  <motion.button
-                    key={idx}
-                    animate={shakeMap[idx] ? { x: [-8, 8, -8, 8, 0] } : {}}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleFillClick(opt, idx)}
-                    className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
-                      shakeMap[idx] ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-fuchsia-200 hover:border-fuchsia-400'
-                    }`}
-                  >
-                    <span className="text-5xl mb-3">{opt.e}</span>
-                    <span className={`text-xl font-black uppercase tracking-wider ${shakeMap[idx] ? 'text-white' : 'text-slate-800'}`}>{opt.w}</span>
-                  </motion.button>
-                ))}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full">
+                  {currentQ.options.map((opt, idx) => (
+                    <motion.button
+                      key={idx}
+                      animate={shakeMap[idx] ? { x: [-8, 8, -8, 8, 0] } : {}}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleFillClick(opt, idx)}
+                      className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
+                        shakeMap[idx] ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-fuchsia-200 hover:border-fuchsia-400'
+                      }`}
+                    >
+                      <span className="text-5xl mb-3">{opt.e}</span>
+                      <span className={`text-lg sm:text-xl font-black uppercase tracking-wider ${shakeMap[idx] ? 'text-white' : 'text-slate-800'}`}>{opt.w}</span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )
           )}
         </div>
       )}
 
-      {/* LEVEL UP SKÄRM */}
       {gameState === 'levelup' && (
         <div className="py-8 relative z-10">
           <ConfettiRain />
@@ -1179,7 +1207,6 @@ const WordGame = () => {
     </div>
   );
 };
-
 // --- MINI-SPELET: MENING-FIXAREN (Grammatik & Dåtid) ---
 const GrammarGame = () => {
   const [gameState, setGameState] = useState('start');
@@ -1190,6 +1217,8 @@ const GrammarGame = () => {
   const [streak, setStreak] = useState(0);
   const [shakeIdx, setShakeIdx] = useState(null);
   
+  // NYTT: State för att pausa och visa hela meningen
+  const [showExp, setShowExp] = useState(false);
   const [currentQ, setCurrentQ] = useState(null);
 
   const levelNames = ["Dåtids-Fixaren", "Svåra Orden", "Grammatik-Bossen"];
@@ -1213,9 +1242,9 @@ const GrammarGame = () => {
 
   useEffect(() => {
     let interval;
-    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    if (gameState === 'playing' && !showExp) interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
     return () => clearInterval(interval);
-  }, [gameState]);
+  }, [gameState, showExp]);
 
   const saveProgress = async (newLevel) => {
     try {
@@ -1239,26 +1268,25 @@ const GrammarGame = () => {
     } catch (err) { console.error(err); }
   };
 
-  // Expanderad Frågebank för Mening-Fixaren!
   const questions = {
-    1: [ // NIVÅ 1: Mycket vanliga oregelbundna verb i dåtid (Fokus: "-de" övergeneralisering)
+    1: [ 
       { part1: 'Igår', part2: 'jag mig i sängen.', answer: 'la', wrong: 'läggde', emoji: '🛏️' },
       { part1: 'Han', part2: 'till skolan imorse.', answer: 'gick', wrong: 'gådde', emoji: '🚶' },
       { part1: 'Vi', part2: 'en stor fågel i skogen.', answer: 'såg', wrong: 'sågde', emoji: '🦅' },
       { part1: 'På kalaset', part2: 'vi tårta.', answer: 'åt', wrong: 'ätade', emoji: '🎂' },
       { part1: 'Jag', part2: 'hela natten.', answer: 'sov', wrong: 'sovde', emoji: '😴' },
       { part1: 'Hon', part2: 'en bok innan hon somnade.', answer: 'läste', wrong: 'läsade', emoji: '📖' },
-      { part1: 'Vi', part2: 'ett stort hus på kullen.', answer: 'fann', wrong: 'finnade', emoji: '🏠' }, // Eller hittade
-      { part1: 'Hunden', part2: 'över staketet.', answer: 'hoppade', wrong: 'hoppde', emoji: '🐕' }, // Här är -de rätt, bra för att testa om han bara memorerat "undvik -de"
+      { part1: 'Vi', part2: 'ett stort hus på kullen.', answer: 'fann', wrong: 'finnade', emoji: '🏠' },
+      { part1: 'Hunden', part2: 'över staketet.', answer: 'hoppade', wrong: 'hoppde', emoji: '🐕' },
       { part1: 'Katten', part2: 'musen.', answer: 'tog', wrong: 'tagade', emoji: '🐈' },
       { part1: 'Jag', part2: 'vatten ur glaset.', answer: 'drack', wrong: 'drickte', emoji: '🥛' },
-      { part1: 'Mamma', part2: 'mat i köket.', answer: 'lagade', wrong: 'lagde', emoji: '🍳' }, // Igen, testa om han fattar när det FAKTISKT ska vara -de/-ade
+      { part1: 'Mamma', part2: 'mat i köket.', answer: 'lagade', wrong: 'lagde', emoji: '🍳' },
       { part1: 'Han', part2: 'ett brev till mormor.', answer: 'skrev', wrong: 'skrivde', emoji: '✉️' },
       { part1: 'Bollen', part2: 'ner i vattnet.', answer: 'föll', wrong: 'fallade', emoji: '⚽' },
       { part1: 'Vi', part2: 'på en stol.', answer: 'satt', wrong: 'sittade', emoji: '🪑' },
-      { part1: 'Jag', part2: 'en tröja på mig.', answer: 'hade', wrong: 'hadde', emoji: '👕' } // Klassiskt felstavnings/uttalsfel
+      { part1: 'Jag', part2: 'en tröja på mig.', answer: 'hade', wrong: 'hadde', emoji: '👕' }
     ],
-    2: [ // NIVÅ 2: Fler och lite klurigare verb (Tempus-blandning och fler fel-mönster)
+    2: [ 
       { part1: 'Fågeln', part2: 'högt upp i luften.', answer: 'flög', wrong: 'flygde', emoji: '☁️' },
       { part1: 'Jag', part2: 'glaset på bordet.', answer: 'ställde', wrong: 'stådde', emoji: '🥤' },
       { part1: 'Han', part2: 'och väntade länge.', answer: 'stod', wrong: 'stådde', emoji: '🧍' },
@@ -1275,34 +1303,32 @@ const GrammarGame = () => {
       { part1: 'Vi', part2: 'en stor grop.', answer: 'grävde', wrong: 'grävade', emoji: '🕳️' },
       { part1: 'Isen', part2: 'i värmen.', answer: 'smälte', wrong: 'smältade', emoji: '🧊' }
     ],
-    3: [ // NIVÅ 3: Fokus på Plural (En/Flera) av svåra och "oregelbundna" substantiv
+    3: [ 
       { part1: 'I huset fanns det tre små', part2: '.', answer: 'möss', wrong: 'mössar', emoji: '🐁' },
       { part1: 'Människan har två', part2: '.', answer: 'fötter', wrong: 'föttar', emoji: '👣' },
       { part1: 'I boken fanns det många', part2: '.', answer: 'böcker', wrong: 'bokar', emoji: '📚' },
       { part1: 'På gården stod två', part2: '.', answer: 'män', wrong: 'mannar', emoji: '👨' },
       { part1: 'Jag borstade mina', part2: '.', answer: 'tänder', wrong: 'tandrar', emoji: '🦷' },
-      { part1: 'I skogen växte många', part2: '.', answer: 'träd', wrong: 'trädar', emoji: '🌲' }, // Nollplural
-      { part1: 'Vi har tre', part2: 'hemma.', answer: 'barn', wrong: 'barnar', emoji: '🧒' },   // Nollplural
+      { part1: 'I skogen växte många', part2: '.', answer: 'träd', wrong: 'trädar', emoji: '🌲' },
+      { part1: 'Vi har tre', part2: 'hemma.', answer: 'barn', wrong: 'barnar', emoji: '🧒' }, 
       { part1: 'Hon köpte fyra', part2: 'i affären.', answer: 'äpplen', wrong: 'äpplar', emoji: '🍎' },
-      { part1: 'Hönan lade fem', part2: 'igår.', answer: 'ägg', wrong: 'äggar', emoji: '🥚' },   // Nollplural
-      { part1: 'Vi såg många', part2: 'på himlen.', answer: 'moln', wrong: 'molnar', emoji: '☁️' }, // Nollplural
-      { part1: 'Gårdens', part2: 'åt gräs.', answer: 'får', wrong: 'fårar', emoji: '🐑' },       // Nollplural
+      { part1: 'Hönan lade fem', part2: 'igår.', answer: 'ägg', wrong: 'äggar', emoji: '🥚' },
+      { part1: 'Vi såg många', part2: 'på himlen.', answer: 'moln', wrong: 'molnar', emoji: '☁️' }, 
+      { part1: 'Gårdens', part2: 'åt gräs.', answer: 'får', wrong: 'fårar', emoji: '🐑' },
       { part1: 'Båda mina', part2: 'är kalla.', answer: 'händer', wrong: 'handar', emoji: '🖐️' },
-      { part1: 'Vi plockade många', part2: '.', answer: 'bär', wrong: 'bärar', emoji: '🍓' },     // Nollplural
+      { part1: 'Vi plockade många', part2: '.', answer: 'bär', wrong: 'bärar', emoji: '🍓' },
       { part1: 'I sjön simmade tre', part2: '.', answer: 'gäss', wrong: 'gåsar', emoji: '🦢' },
       { part1: 'Jag ritade två', part2: '.', answer: 'ögon', wrong: 'ögor', emoji: '👀' }
     ]
   };
+
   const generateQuestion = (lvl) => {
     const list = questions[lvl];
     const q = list[Math.floor(Math.random() * list.length)];
-    // Blanda om "rätt" och "fel" ligger till vänster eller höger
     const isAnswerFirst = Math.random() > 0.5;
     const options = isAnswerFirst ? [q.answer, q.wrong] : [q.wrong, q.answer];
     
     setCurrentQ({ ...q, options, correctIdx: isAnswerFirst ? 0 : 1 });
-    
-    // Läs upp meningen med ett litet "Hmm" där ordet saknas
     speakText(`${q.part1} ... ${q.part2}`);
   };
 
@@ -1311,29 +1337,35 @@ const GrammarGame = () => {
     setGameState('playing');
     setStreak(0);
     setSessionSeconds(0);
+    setShowExp(false);
     generateQuestion(selectedLevel);
   };
 
   const handleCorrect = () => {
     if (successAudio.current) successAudio.current.play().catch(()=>{});
-    // Läs upp hela den rätta meningen så han hör hur den ska låta!
+    // PAUSA OCH VISA HELA MENINGEN!
+    setShowExp(true);
     speakText(`${currentQ.part1} ${currentQ.answer} ${currentQ.part2}`);
-    
+  };
+
+  const handleNextQuestion = () => {
+    setShowExp(false);
     const newStreak = streak + 1;
     setStreak(newStreak);
-    if (newStreak >= 5) { // 5 rätt för level up
+    if (newStreak >= 5) { 
       if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
       setGameState('levelup');
     } else {
-      setTimeout(() => generateQuestion(level), 1500); // Vänta lite längre så han hinner höra meningen
+      generateQuestion(level);
     }
   };
 
   const handleWrong = (idx) => {
+    if (showExp) return;
     if (failAudio.current) failAudio.current.play().catch(()=>{});
     setShakeIdx(idx);
     setTimeout(() => setShakeIdx(null), 500);
-    // INGET STRAFF!
+    // Inget straff!
     speakText("Prova det andra ordet!");
   };
 
@@ -1402,30 +1434,50 @@ const GrammarGame = () => {
           <div className="flex flex-col items-center w-full">
             <PremiumEmoji emoji={currentQ.emoji} className="w-24 h-24 mb-4 drop-shadow-lg" />
             
-            <button onClick={() => speakText(`${currentQ.part1} ... ${currentQ.part2}`)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
-              <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">
-                {currentQ.part1} <span className="inline-block w-16 border-b-4 border-dashed border-orange-300 mx-2"></span> {currentQ.part2}
-              </span>
-              <span className="text-3xl mt-2">🔊</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-4 w-full">
-              {currentQ.options.map((opt, idx) => (
+            {showExp ? (
+              // VISAR DEN KORREKTA MENINGEN OCH NÄSTA-KNAPPEN
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center bg-orange-900/60 border-4 border-orange-300 p-6 rounded-3xl w-full shadow-inner backdrop-blur-md">
+                <button onClick={() => speakText(`${currentQ.part1} ${currentQ.answer} ${currentQ.part2}`)} className="text-2xl sm:text-3xl font-black text-white leading-relaxed drop-shadow-md mb-6 active:scale-95 transition-all text-center">
+                  {currentQ.part1} <span className="text-amber-300 underline decoration-4 underline-offset-4">{currentQ.answer}</span> {currentQ.part2}
+                  <span className="text-3xl ml-2 inline-block align-middle">🔊</span>
+                </button>
                 <motion.button
-                  key={idx}
-                  animate={shakeIdx === idx ? { x: [-8, 8, -8, 8, 0] } : {}}
-                  transition={{ duration: 0.3 }}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => idx === currentQ.correctIdx ? handleCorrect() : handleWrong(idx)}
-                  className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
-                    shakeIdx === idx ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-orange-200 hover:border-orange-400'
-                  }`}
+                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={handleNextQuestion}
+                  className="bg-white text-orange-900 px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center gap-2"
                 >
-                  <span className={`text-2xl font-black uppercase tracking-wider ${shakeIdx === idx ? 'text-white' : 'text-slate-800'}`}>{opt}</span>
+                  Nästa fråga ➡️
                 </motion.button>
-              ))}
-            </div>
+              </motion.div>
+            ) : (
+              // VISAR VALEN
+              <>
+                <button onClick={() => speakText(`${currentQ.part1} ... ${currentQ.part2}`)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
+                  <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">
+                    {currentQ.part1} <span className="inline-block w-16 border-b-4 border-dashed border-orange-300 mx-2"></span> {currentQ.part2}
+                  </span>
+                  <span className="text-3xl mt-2">🔊</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  {currentQ.options.map((opt, idx) => (
+                    <motion.button
+                      key={idx}
+                      animate={shakeIdx === idx ? { x: [-8, 8, -8, 8, 0] } : {}}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => idx === currentQ.correctIdx ? handleCorrect() : handleWrong(idx)}
+                      className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
+                        shakeIdx === idx ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-orange-200 hover:border-orange-400'
+                      }`}
+                    >
+                      <span className={`text-2xl font-black uppercase tracking-wider ${shakeIdx === idx ? 'text-white' : 'text-slate-800'}`}>{opt}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
