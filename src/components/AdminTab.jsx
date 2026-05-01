@@ -286,8 +286,12 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
 
   const setStreakZero = async () => {
       const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
-      await updateDoc(bankDoc, { streak: 0 });
-      showToast("Streaken är nu nollställd!");
+      await updateDoc(bankDoc, { 
+          streak: 0,           // Nollar den gamla schemastraken
+          trainingStreak: 0,   // Nollar spelens tränings-streak
+          lastTrainingDate: 0  // Nollställer datumet så han kan starta en ny streak idag
+      });
+      showToast("Alla streaks är nu nollställda!");
   };
 
   const resetDailyQuests = async () => {
