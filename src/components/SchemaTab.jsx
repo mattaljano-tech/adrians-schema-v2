@@ -203,12 +203,20 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
           {/* Roblox/Gamer Bakgrunds-effekt om det är Live Event */}
           {current.isLiveEvent && (
             <>
-              {/* SKIMRANDE NEON-RAM (Istället för saftblandare) */}
+              {/* MAXAD NEON-RAM */}
               <motion.div 
-                animate={{ opacity: [0.3, 1, 0.3], boxShadow: ['inset 0 0 10px rgba(239,68,68,0.1)', 'inset 0 0 40px rgba(239,68,68,0.5)', 'inset 0 0 10px rgba(239,68,68,0.1)'] }}
+                animate={{ 
+                  opacity: [0.6, 1, 0.6], 
+                  boxShadow: [
+                    '0 0 15px rgba(239,68,68,0.4), inset 0 0 15px rgba(239,68,68,0.4)', 
+                    '0 0 60px rgba(255,0,0,0.9), inset 0 0 40px rgba(255,0,0,0.7)', 
+                    '0 0 15px rgba(239,68,68,0.4), inset 0 0 15px rgba(239,68,68,0.4)'
+                  ] 
+                }}
                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="absolute inset-0 border-[3px] border-red-500 rounded-[2.5rem] pointer-events-none z-20"
+                className="absolute inset-0 border-[4px] border-red-500 rounded-[2.5rem] pointer-events-none z-20 mix-blend-screen"
               />
+              <div className="absolute inset-0 border-[2px] border-white/50 rounded-[2.5rem] pointer-events-none z-30 opacity-50"></div> {/* En tunn vit kärna i neonen */}
               
               {/* Prickig bakgrund */}
               <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: 'radial-gradient(#ef4444 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
@@ -335,12 +343,20 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
                   {/* Glänsande effekt för framtida Live Events också! */}
                   {a.isLiveEvent && (
                     <>
-                      {/* SKIMRANDE NEON-RAM */}
+                      {/* MAXAD NEON-RAM */}
                       <motion.div 
-                        animate={{ opacity: [0.3, 0.8, 0.3] }}
+                        animate={{ 
+                          opacity: [0.5, 1, 0.5],
+                          boxShadow: [
+                            '0 0 10px rgba(239,68,68,0.3), inset 0 0 10px rgba(239,68,68,0.3)',
+                            '0 0 35px rgba(255,0,0,0.8), inset 0 0 20px rgba(255,0,0,0.6)',
+                            '0 0 10px rgba(239,68,68,0.3), inset 0 0 10px rgba(239,68,68,0.3)'
+                          ]
+                        }}
                         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                        className="absolute inset-0 border-[2px] border-red-500 rounded-[1.5rem] pointer-events-none z-20"
+                        className="absolute inset-0 border-[3px] border-red-500 rounded-[1.5rem] pointer-events-none z-20 mix-blend-screen"
                       />
+                      <div className="absolute inset-0 border border-white/40 rounded-[1.5rem] pointer-events-none z-30 opacity-50"></div> {/* Vit kärna */}
                       <div className="absolute inset-0 opacity-[0.1]" style={{ backgroundImage: 'radial-gradient(#ef4444 2px, transparent 2px)', backgroundSize: '10px 10px' }}></div>
                       <motion.div 
                         animate={{ x: ['-200%', '200%'] }} 
