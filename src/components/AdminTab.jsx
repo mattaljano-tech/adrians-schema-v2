@@ -15,6 +15,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
 
 const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime, childName, showToast }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [clockStats, setClockStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
   
@@ -33,19 +34,33 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
 
   const [favorites, setFavorites] = useState([]);
   
-  // Nya states för inställningar (inklusive barnets namn och custom saldo)
+  // States för inställningar
   const [localMessage, setLocalMessage] = useState(dailyMessage || '');
   const [localName, setLocalName] = useState(adminName || 'Din kompis');
   const [localChildName, setLocalChildName] = useState(childName || 'Adrian');
   const [localBedtime, setLocalBedtime] = useState(bedtime || '22:00');
   const [confirmReset, setConfirmReset] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
 
-  // Uppdatera localChildName om childName laddas in lite senare från databasen
+  // Uppdatera namnet om det laddas in från databasen efteråt
   useEffect(() => {
     if (childName) setLocalChildName(childName);
   }, [childName]);
+
+  // Hämta klock-statistik
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+    const unsub = onSnapshot(statsRef, (d) => {
+      if (d.exists()) {
+        setClockStats({
+          unlockedLevel: d.data().unlockedLevel || 1,
+          totalPlayTime: d.data().totalPlayTime || 0
+        });
+      }
+    });
+    return () => unsub();
+  }, [isUnlocked]);
 
   // --- HÄMTA FAVORITER FRÅN FIREBASE ---
   useEffect(() => {
@@ -270,7 +285,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     await updateDoc(bankDoc, { 
         adminName: localName, 
-        childName: localChildName, // Spara barnets namn till databasen!
+        childName: localChildName, 
         dailyMessage: localMessage,
         bedtime: localBedtime
     });
@@ -280,46 +295,28 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
       
-      {/* --- TOP HEADER: BARNETS NAMN (NYTT!) --- */}
-      <div className="flex items-center justify-center pt-2 mb-2">
-        {isEditingName ? (
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center gap-2 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-blue-200">
-            <input 
-              type="text" 
-              value={localChildName} 
-              onChange={e => setLocalChildName(e.target.value)} 
-              className="bg-transparent font-black text-2xl text-slate-800 outline-none text-center w-36"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setIsEditingName(false);
-                  handleSaveMessageAndSettings();
-                }
-              }}
-            />
-            <button 
-              onClick={() => {
-                setIsEditingName(false);
-                handleSaveMessageAndSettings();
-              }}
-              className="w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-xl shadow-sm active:scale-95"
-            >
-              ✅
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center gap-3">
-            <h2 className="text-3xl font-black text-slate-800 drop-shadow-sm tracking-tight uppercase">
-              {localChildName}
-            </h2>
-            <button 
-              onClick={() => setIsEditingName(true)}
-              className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-full shadow-sm hover:bg-slate-50 transition-all active:scale-95 text-lg"
-            >
-              ✏️
-            </button>
-          </motion.div>
-        )}
+      {/* --- 0. TRÄNINGS-STATISTIK --- */}
+      <div className="relative bg-gradient-to-br from-indigo-600 to-violet-700 p-6 sm:p-8 rounded-[2.5rem] shadow-xl overflow-hidden border border-indigo-400/30">
+        <div className="absolute top-0 right-0 p-4 opacity-20">
+          <PremiumEmoji emoji="🏆" className="w-32 h-32" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <PremiumEmoji emoji="📊" className="w-8 h-8" />
+            <h3 className="font-black uppercase tracking-widest text-white text-sm drop-shadow-sm">Tränings-Statistik</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Högsta Nivå</span>
+              <div className="text-3xl font-black text-white">Lvl {clockStats.unlockedLevel}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Total Tid</span>
+              <div className="text-3xl font-black text-white">{Math.floor(clockStats.totalPlayTime / 60)} <span className="text-sm">min</span></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* --- 1. INSTÄLLNINGAR & DAGENS MEDDELANDE --- */}
@@ -396,7 +393,6 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance || 0} kr</div>
           </div>
 
-          {/* Valfritt belopp */}
           <div className="flex gap-3 mb-4">
             <input 
               type="number" 
@@ -420,7 +416,6 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             </motion.button>
           </div>
 
-          {/* Snabbknappar */}
           <div className="grid grid-cols-3 gap-2 mb-6">
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(5)} className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-emerald-100">+ 5 kr</motion.button>
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(10)} className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-emerald-100">+ 10 kr</motion.button>
@@ -526,7 +521,6 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
               </div>
             </div>
 
-            {/* Custom Checkboxes (Toggles) */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button type="button" onClick={() => setSaveAsFavorite(!saveAsFavorite)} className={`flex-1 flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-colors shadow-sm ${saveAsFavorite ? 'bg-indigo-50 border-indigo-200' : 'bg-white/80 border-slate-200 hover:bg-white'}`}>
                     <span className={`font-black uppercase text-[10px] tracking-widest ${saveAsFavorite ? 'text-indigo-700' : 'text-slate-500'}`}>⭐ Spara som favorit</span>
@@ -588,7 +582,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         </div>
       </div>
 
-      {/* --- 5. LÅS APPEN IGEN (LÄNGST NER) --- */}
+      {/* --- 5. LÅS APPEN IGEN --- */}
       <div className="pt-8 pb-4">
         <motion.button 
           whileTap={{ scale: 0.98 }} 

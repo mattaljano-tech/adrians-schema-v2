@@ -107,8 +107,20 @@ const App = () => {
   const [activities, setActivities] = useState([]); 
   const [adminName, setAdminName] = useState(''); 
   const [dailyMessage, setDailyMessage] = useState(''); 
+  const [childName, setChildName] = useState('Adrian');
+  
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [localChildName, setLocalChildName] = useState('');
 
   const appId = 'test-schema-v2';
+
+  const handleSaveName = async () => {
+    try {
+      const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+      await updateDoc(bankDoc, { childName: localChildName });
+      setIsEditingName(false);
+    } catch(e) { console.error(e); }
+  };
 
   // --- 0. TYST INLOGGNING (SÄKERHET) ---
   useEffect(() => {
@@ -205,7 +217,8 @@ const App = () => {
         setBedtime(data.bedtime || '22:00');
         setClaimedQuests(data.claimedQuests || {});
         setAdminName(data.adminName || 'Din kompis'); 
-        setDailyMessage(data.dailyMessage || ''); 
+        setChildName(data.childName || 'Adrian');
+        setDailyMessage(data.dailyMessage || '');
       }
     });
     const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'schedule_items');
@@ -369,8 +382,34 @@ const App = () => {
       </AnimatePresence>
       
       {/* --- HEADER (Exakt som din skärmdump) --- */}
+      {/* --- HEADER (Exakt som din skärmdump) --- */}
       <header className="pt-12 pb-6 px-6 flex flex-col items-center">
-        <h1 className="text-4xl sm:text-5xl font-black text-[#1E293B] uppercase tracking-tight leading-none mb-1">Adrian</h1>
+        
+        {view === 'admin' && isEditingName ? (
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center gap-2 bg-white/90 backdrop-blur-md p-1 px-3 rounded-2xl shadow-sm border border-blue-200 mb-1 z-50">
+            <input 
+              type="text" 
+              value={localChildName} 
+              onChange={e => setLocalChildName(e.target.value)} 
+              className="bg-transparent font-black text-4xl sm:text-5xl text-slate-800 outline-none text-center w-48 uppercase tracking-tight"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+            />
+            <button onClick={handleSaveName} className="w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-xl shadow-sm active:scale-95 text-xl">
+              ✅
+            </button>
+          </motion.div>
+        ) : (
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-4xl sm:text-5xl font-black text-[#1E293B] uppercase tracking-tight leading-none">{childName}</h1>
+            {view === 'admin' && (
+              <button onClick={() => { setLocalChildName(childName); setIsEditingName(true); }} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-full shadow-sm hover:bg-slate-50 transition-all active:scale-95 text-sm">
+                ✏️
+              </button>
+            )}
+          </div>
+        )}
+
         <div onClick={handleSecretUnlock} className="text-xl sm:text-2xl font-black text-[#3b82f6] font-clock tabular-nums tracking-widest cursor-pointer select-none">
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
@@ -441,6 +480,7 @@ const App = () => {
                 bankStreak={bankStreak} 
                 dailyMessage={dailyMessage} 
                 adminName={adminName}
+                childName={childName} // <--- NY RAD! Skickar in namnet till Admin-panelen!
                 bedtime={bedtime}
                 showToast={showToast}
               />
