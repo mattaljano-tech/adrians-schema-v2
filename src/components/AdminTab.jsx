@@ -40,6 +40,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   const [localBedtime, setLocalBedtime] = useState(bedtime || '22:00');
   const [confirmReset, setConfirmReset] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
 
   // Uppdatera localChildName om childName laddas in lite senare från databasen
   useEffect(() => {
@@ -293,15 +294,15 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
           <div className="space-y-4">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
+              <div className="flex flex-col justify-end h-full space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Barnets namn</label>
                 <input type="text" value={localChildName} onChange={e => setLocalChildName(e.target.value)} placeholder="T.ex. Adrian..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
               </div>
-              <div className="space-y-1">
+              <div className="flex flex-col justify-end h-full space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Ditt namn (Avsändare)</label>
                 <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="T.ex. Pappa..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
               </div>
-            </div>
+            </div>npm 
             
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Dagens Meddelande</label>
