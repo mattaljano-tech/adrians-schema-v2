@@ -140,3 +140,65 @@ exports.onNewMessage = functionsV1.firestore
         if (msg.text && msg.text.includes("har köpt:")) return null; 
         return sendToAdrian("📬 Nytt meddelande!", msg.text);
     });
+    // ============================================================================
+// 5. TRÄNINGSPÅMINNELSE: Skickas varje eftermiddag (kl 15:30)
+// ============================================================================
+exports.dailyTrainingReminder = onSchedule({
+  schedule: "30 15 * * *", // Körs 15:30 varje dag
+  timeZone: "Europe/Stockholm"
+}, async (event) => {
+  
+  // Vi lägger in flera olika texter så det inte blir tjatigt!
+  const titles = ["Dags att levla upp! 🚀", "Hjärngympa! 🧠", "Speldags! 🎮", "W Rizz väntar! 😎"];
+  const bodies = [
+    "Hoppa in och testa ett spel och pröva dina färdigheter!",
+    "Dina badges väntar på dig! In och kör lite Ord-Detektiv eller Mening-Fixare.",
+    "Har du hållit din tränings-streak vid liv idag? Gå in och kör en runda!",
+    "Dags för lite AFK-träning. Visa vem som är bossen över månaderna!"
+  ];
+  
+  // Välj en slumpmässig text
+  const randomIdx = Math.floor(Math.random() * titles.length);
+  
+  console.log("Skickar daglig träningspåminnelse...");
+  return sendToAdrian(titles[randomIdx], bodies[randomIdx]);
+});
+
+// ============================================================================
+// 6. SMART STREAK-RÄDDARE: Kollar kl 19:00 om han glömt träna
+// ============================================================================
+exports.smartStreakReminder = onSchedule({
+  schedule: "0 19 * * *", // Körs 19:00 varje dag
+  timeZone: "Europe/Stockholm"
+}, async (event) => {
+  try {
+    const bankDoc = await db.doc(`artifacts/${APP_ID}/public/data/bank/adrian`).get();
+    
+    if (bankDoc.exists) {
+      const data = bankDoc.data();
+      
+      // Eftersom React-klienten sparar datumet som midnatt (lokal tid)
+      // skapar vi samma tidsstämpel här för att jämföra.
+      const now = new Date();
+      // Konvertera till svensk tidszon för säkerhets skull
+      const swedishTimeStr = now.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" });
+      const swedishDate = new Date(swedishTimeStr);
+      swedishDate.setHours(0, 0, 0, 0);
+      const todayMs = swedishDate.getTime();
+      
+      // Om hans senast sparade träningstid INTE är idag...
+      if (data.lastTrainingDate !== todayMs && data.trainingStreak > 0) {
+        console.log("Adrian har inte tränat idag! Skickar streak-varning.");
+        return sendToAdrian(
+          "⚠️ Rädda din Streak!", 
+          `Din streak på ${data.trainingStreak} 🔥 håller på att brytas! Gå in och kör en snabb runda innan dagen är slut.`
+        );
+      } else {
+        console.log("Adrian har redan tränat idag. Skickar ingen varning.");
+      }
+    }
+  } catch (error) {
+    console.error("Fel vid smart streak reminder:", error);
+  }
+  return null;
+});

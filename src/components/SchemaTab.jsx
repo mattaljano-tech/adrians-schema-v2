@@ -192,31 +192,67 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
         </div>
       )}
 
-      {/* --- VAD HÄNDER JUST NU? (Clean White Card) --- */}
+      {/* --- VAD HÄNDER JUST NU? --- */}
       {current ? (
-        <div className="bg-white rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-50 flex flex-col items-center p-8 w-full">
+        <div className={`rounded-[2.5rem] flex flex-col items-center p-8 w-full relative overflow-hidden transition-all duration-500 ${
+          current.isLiveEvent 
+          ? 'bg-[#0f1115] shadow-[0_0_40px_rgba(239,68,68,0.4)]' 
+          : 'bg-white shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-50'
+        }`}>
           
-          <div className="bg-blue-50 text-blue-600 px-5 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] shadow-sm mb-6 border border-blue-100">
-            Händer just nu
+          {/* Roblox/Gamer Bakgrunds-effekt om det är Live Event */}
+          {current.isLiveEvent && (
+            <>
+              {/* SKIMRANDE NEON-RAM (Istället för saftblandare) */}
+              <motion.div 
+                animate={{ opacity: [0.3, 1, 0.3], boxShadow: ['inset 0 0 10px rgba(239,68,68,0.1)', 'inset 0 0 40px rgba(239,68,68,0.5)', 'inset 0 0 10px rgba(239,68,68,0.1)'] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="absolute inset-0 border-[3px] border-red-500 rounded-[2.5rem] pointer-events-none z-20"
+              />
+              
+              {/* Prickig bakgrund */}
+              <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: 'radial-gradient(#ef4444 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
+              {/* Neon glow i hörnen */}
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-600/20 blur-[50px] rounded-full pointer-events-none"></div>
+              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none"></div>
+              {/* Shine effekt som sveper över skärmen */}
+              <motion.div 
+                animate={{ x: ['-200%', '200%'] }} 
+                transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 0.5 }}
+                className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none"
+              />
+            </>
+          )}
+
+          <div className={`px-5 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] shadow-sm mb-6 border relative z-10 ${
+            current.isLiveEvent ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-blue-50 text-blue-600 border-blue-100'
+          }`}>
+            {current.isLiveEvent ? 'LIVE EVENT AKTIVT' : 'Händer just nu'}
           </div>
           
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-8 text-center leading-tight">
+          <h2 className={`text-3xl sm:text-4xl font-black mb-8 text-center leading-tight relative z-10 ${
+            current.isLiveEvent ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-slate-800'
+          }`}>
             {current.title}
           </h2>
           
-          <div className="w-full flex flex-col items-center">
+          <div className="w-full flex flex-col items-center relative z-10">
+            {/* Ändra timerns färg om det är Live event */}
             <PremiumTimer 
               totalMs={current.duration * 60000} 
               remainingMs={getRemMs(current.endTime)} 
-              colorStop1="#fb7185" 
-              colorStop2="#e11d48"
+              colorStop1={current.isLiveEvent ? "#f87171" : "#fb7185"} 
+              colorStop2={current.isLiveEvent ? "#b91c1c" : "#e11d48"}
+              trackColor={current.isLiveEvent ? "#1f2937" : "#f1f5f9"}
             />
             
-            <div className="mt-8 text-center bg-slate-50 px-8 py-4 rounded-2xl border border-slate-100 w-full sm:w-auto">
-              <p className="text-slate-800 font-black text-xl sm:text-2xl mb-1">
+            <div className={`mt-8 text-center px-8 py-4 rounded-2xl border w-full sm:w-auto ${
+              current.isLiveEvent ? 'bg-black/50 border-red-500/30 backdrop-blur-md' : 'bg-slate-50 border-slate-100'
+            }`}>
+              <p className={`font-black text-xl sm:text-2xl mb-1 ${current.isLiveEvent ? 'text-red-400 drop-shadow-md' : 'text-slate-800'}`}>
                 {formatTimeLeft(current.endTime)}
               </p>
-              <p className="text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+              <p className={`font-bold text-[11px] uppercase tracking-widest ${current.isLiveEvent ? 'text-slate-400' : 'text-slate-400'}`}>
                 Klar kl. {new Date(current.endTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
               </p>
             </div>
@@ -290,18 +326,42 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
               }
 
               return (
-                <div key={a.id} className="bg-white rounded-[1.5rem] border border-slate-100 p-4 sm:p-5 flex items-center shadow-[0_4px_15px_rgba(0,0,0,0.02)]">
-                  <div className="flex flex-col items-center justify-center min-w-[70px] border-r border-slate-100 pr-5 mr-5">
-                    <span className="font-black text-[20px] text-slate-800 leading-none">
+                <div key={a.id} className={`rounded-[1.5rem] p-4 sm:p-5 flex items-center relative overflow-hidden transition-all ${
+                  a.isLiveEvent 
+                  ? 'bg-[#0f1115] shadow-[0_0_20px_rgba(239,68,68,0.3)]' 
+                  : 'bg-white border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.02)]'
+                }`}>
+                  
+                  {/* Glänsande effekt för framtida Live Events också! */}
+                  {a.isLiveEvent && (
+                    <>
+                      {/* SKIMRANDE NEON-RAM */}
+                      <motion.div 
+                        animate={{ opacity: [0.3, 0.8, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                        className="absolute inset-0 border-[2px] border-red-500 rounded-[1.5rem] pointer-events-none z-20"
+                      />
+                      <div className="absolute inset-0 opacity-[0.1]" style={{ backgroundImage: 'radial-gradient(#ef4444 2px, transparent 2px)', backgroundSize: '10px 10px' }}></div>
+                      <motion.div 
+                        animate={{ x: ['-200%', '200%'] }} 
+                        transition={{ repeat: Infinity, duration: 3, ease: "linear", repeatDelay: 1.5 }}
+                        className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
+                      />
+                    </>
+                  )}
+
+                  <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-5 mr-5 relative z-10 ${a.isLiveEvent ? 'border-red-500/30' : 'border-slate-100'}`}>
+                    <span className={`font-black text-[20px] leading-none ${a.isLiveEvent ? 'text-red-400' : 'text-slate-800'}`}>
                       {new Date(a.startTime).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}
                     </span>
-                    <span className="font-bold text-[10px] uppercase tracking-widest text-slate-400 mt-1.5">
+                    <span className={`font-bold text-[10px] uppercase tracking-widest mt-1.5 ${a.isLiveEvent ? 'text-slate-500' : 'text-slate-400'}`}>
                       {formatDuration(a.duration)}
                     </span>
                   </div>
                   
-                  <div className="flex-1">
-                    <span className="font-black text-[16px] text-slate-800">
+                  <div className="flex-1 relative z-10">
+                    <span className={`font-black text-[16px] ${a.isLiveEvent ? 'text-white drop-shadow-md flex items-center gap-2' : 'text-slate-800'}`}>
+                      {a.isLiveEvent && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-md tracking-widest">LIVE</span>}
                       {a.title}
                     </span>
                   </div>
