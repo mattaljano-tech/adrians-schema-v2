@@ -292,8 +292,8 @@ const ClockGame = () => {
       if (failAudio.current) failAudio.current.play().catch(()=>{});
       setShake(true);
       setTimeout(() => setShake(false), 500);
-      setStreak(0); // Ajaj, nollställs!
-      speakText("Hoppsan, försök igen!");
+      // INGET STRAFF LÄNGRE!
+      speakText("Nästan! Snurra visarna lite till.");
     }
   };
 
@@ -511,16 +511,19 @@ const CalendarCard = () => {
   );
 };
 
-// --- MINI-SPELET: MÅNADS-MÄSTAREN ---
+// --- MINI-SPELET: MÅNADS-MÄSTAREN (Uppdaterad med förklaringar och eget tempo) ---
 const MonthGame = () => {
-  const [gameState, setGameState] = useState('start'); // start, playing, levelup
+  const [gameState, setGameState] = useState('start');
   const [level, setLevel] = useState(1);
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [question, setQuestion] = useState({ text: '', answerIndex: 0, spoken: '' });
-  const [shakeMap, setShakeMap] = useState({}); // Håller koll på vilka knappar som skakar
+  const [shakeMap, setShakeMap] = useState({});
+  
+  // NYTT: State för att hålla koll på om vi ska visa förklarings-rutan
+  const [showExp, setShowExp] = useState(false);
+  const [question, setQuestion] = useState({ text: '', answerIndex: 0, spoken: '', exp: '' });
 
   const months = ["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"];
   const levelNames = ["Månads-Jägaren", "Tidsresenären", "Årstids-Bossen"];
@@ -545,9 +548,11 @@ const MonthGame = () => {
 
   useEffect(() => {
     let interval;
-    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    if (gameState === 'playing' && !showExp) {
+      interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    }
     return () => clearInterval(interval);
-  }, [gameState]);
+  }, [gameState, showExp]);
 
   const saveProgress = async (newLevel) => {
     try {
@@ -575,6 +580,8 @@ const MonthGame = () => {
     let qText = "";
     let qSpoken = "";
     let ansIdx = 0;
+    let explanation = "";
+
     const targetIdx = Math.floor(Math.random() * 12);
 
     if (currentLevel === 1) {
@@ -587,68 +594,56 @@ const MonthGame = () => {
         qSpoken = qText;
         ansIdx = targetIdx;
       }
+      explanation = `Helt rätt! ${months[ansIdx]} är månad nummer ${ansIdx + 1}.`;
     } else if (currentLevel === 2) {
       const isAfter = Math.random() > 0.5;
       const refIdx = Math.floor(Math.random() * 12);
       if (isAfter) {
         ansIdx = (refIdx + 1) % 12;
         qText = `Vilken månad kommer efter ${months[refIdx]}?`;
+        explanation = `Snyggt! Efter ${months[refIdx]} kommer ${months[ansIdx]}.`;
       } else {
         ansIdx = (refIdx - 1 + 12) % 12;
         qText = `Vilken månad kommer före ${months[refIdx]}?`;
+        explanation = `Grymt! Innan ${months[refIdx]} kommer ${months[ansIdx]}.`;
       }
       qSpoken = qText;
     } else {
-      // Level 3 Boss frågor - MASSIV UPPDATERING!
-      // Index är månadens nummer minus 1 (Jan = 0, Dec = 11)
+      // Level 3 Boss frågor MED FÖRKLARINGAR
       const trivia = [
-        // Årets struktur
-        { q: "Vilken är årets första månad?", a: 0 }, 
-        { q: "Vilken är årets sista månad?", a: 11 },
-        { q: "Vilken månad är årets kortaste?", a: 1 }, 
-        { q: "Vilken är årets sjätte månad?", a: 5 },
-        { q: "Vilken månad kommer precis före halva året har gått?", a: 5 },
+        { q: "Vilken är årets första månad?", a: 0, exp: "Januari är årets allra första månad." },
+        { q: "Vilken är årets sista månad?", a: 11, exp: "December är den 12:e och allra sista månaden på året." },
+        { q: "Vilken månad är årets kortaste?", a: 1, exp: "Februari har oftast bara 28 dagar, vilket gör den kortast." },
+        { q: "Vilken är årets sjätte månad?", a: 5, exp: "Juni är månad nummer 6, precis i mitten av året." },
         
-        // Vinter
-        { q: "I vilken månad firar vi oftast Lucia?", a: 11 },
-        { q: "I vilken månad är det Julafton?", a: 11 },
-        { q: "I vilken månad firar vi Nyårsafton (sista dagen på året)?", a: 11 },
-        { q: "Vilken månad brukar anses vara den kallaste och mörkaste mitt i vintern?", a: 0 },
-        { q: "I vilken månad är det Alla Hjärtans Dag?", a: 1 },
-        { q: "När har vi oftast Sportlov?", a: 1 },
+        { q: "I vilken månad firar vi oftast Lucia?", a: 11, exp: "Lucia firas den 13:e December varje år." },
+        { q: "I vilken månad är det Julafton?", a: 11, exp: "Julafton firas alltid den 24:e December." },
+        { q: "Vilken månad anses vara den kallaste och mörkaste?", a: 0, exp: "Januari brukar vara den kallaste vintermånaden i Sverige." },
+        { q: "I vilken månad är det Alla Hjärtans Dag?", a: 1, exp: "Alla Hjärtans Dag firas den 14:e Februari." },
+        { q: "När har vi oftast Sportlov?", a: 1, exp: "Sportlovet brukar vara i Februari när det förhoppningsvis finns snö." },
 
-        // Vår
-        { q: "I vilken vårmånad firar vi ofta Våffeldagen?", a: 2 },
-        { q: "Vilken är den första riktiga vårmånaden?", a: 2 },
-        { q: "I vilken månad lurar vi varandra med 'April, april'?", a: 3 },
-        { q: "I slutet av vilken månad tänder vi Majbrasor (Valborg)?", a: 3 },
-        { q: "Vilken månad kallas ibland för 'Sköna...'?", a: 4 },
-        
-        // Sommar
-        { q: "I vilken månad slutar skolan och sommarlovet börjar?", a: 5 },
-        { q: "I vilken månad är det Sveriges Nationaldag?", a: 5 },
-        { q: "I vilken månad firar vi Midsommar och dansar runt stången?", a: 5 },
-        { q: "Vilken brukar vara den varmaste semestermånaden?", a: 6 },
-        { q: "I vilken sommar-månad börjar skolan ofta igen?", a: 7 },
-        { q: "Vilken är sommarens sista månad?", a: 7 },
+        { q: "I vilken vårmånad firar vi ofta Våffeldagen?", a: 2, exp: "Våffeldagen är den 25:e Mars." },
+        { q: "Vilken är den första riktiga vårmånaden?", a: 2, exp: "Mars brukar räknas som den allra första vårmånaden." },
+        { q: "I vilken månad lurar vi varandra med 'April, april'?", a: 3, exp: "Den första April får man luras!" },
+        { q: "I slutet av vilken månad tänder vi Majbrasor (Valborg)?", a: 3, exp: "Valborgsmässoafton firas sista dagen i April." },
 
-        // Höst
-        { q: "Vilken är höstens första månad?", a: 8 },
-        { q: "I vilken höstmånad börjar löven oftast bli gula och röda?", a: 8 },
-        { q: "I vilken månad brukar vi fira Kanelbullens dag?", a: 9 },
-        { q: "I slutet av vilken månad firar många Halloween?", a: 9 },
-        { q: "Vilken är den mörka höstmånaden precis före julmånaden?", a: 10 },
-        { q: "När har vi oftast Läslov (Höstlov)?", a: 10 },
+        { q: "I vilken månad slutar skolan och sommarlovet börjar?", a: 5, exp: "I Juni får vi äntligen sommarlov!" },
+        { q: "I vilken månad är det Sveriges Nationaldag?", a: 5, exp: "Sveriges nationaldag är den 6:e Juni." },
+        { q: "I vilken månad firar vi Midsommar och dansar runt stången?", a: 5, exp: "Midsommar firas alltid i slutet av Juni." },
+        { q: "Vilken brukar vara den varmaste semestermånaden?", a: 6, exp: "Juli är mitten av högsommaren och oftast varmast." },
+        { q: "I vilken sommar-månad börjar skolan ofta igen?", a: 7, exp: "I slutet av Augusti brukar sommarlovet vara slut." },
 
-        // Bokstäver
-        { q: "Vilken är den enda månaden som börjar på bokstaven 'F'?", a: 1 },
-        { q: "Vilken är den enda månaden som börjar på bokstaven 'O'?", a: 9 }
+        { q: "Vilken är höstens första månad?", a: 8, exp: "September är månaden då hösten brukar börja." },
+        { q: "I vilken höstmånad börjar löven oftast bli gula och röda?", a: 8, exp: "I September brukar träden ändra färg." },
+        { q: "I vilken månad brukar vi fira Kanelbullens dag?", a: 9, exp: "Kanelbullens dag är i Oktober." },
+        { q: "I slutet av vilken månad firar Halloween?", a: 9, exp: "Halloween firas allra sista dagen i Oktober." },
+        { q: "När har vi oftast Läslov (Höstlov)?", a: 10, exp: "Läslovet (Höstlovet) brukar vara i början av November." }
       ];
       const t = trivia[Math.floor(Math.random() * trivia.length)];
-      qText = t.q; qSpoken = t.q; ansIdx = t.a;
+      qText = t.q; qSpoken = t.q; ansIdx = t.a; explanation = t.exp;
     }
 
-    setQuestion({ text: qText, answerIndex: ansIdx, spoken: qSpoken });
+    setQuestion({ text: qText, answerIndex: ansIdx, spoken: qSpoken, exp: explanation });
     speakText(qSpoken);
   };
 
@@ -657,36 +652,36 @@ const MonthGame = () => {
     setGameState('playing');
     setStreak(0);
     setSessionSeconds(0);
+    setShowExp(false);
     generateQuestion(selectedLevel);
   };
 
-  const nextLevel = () => {
-    const nextLvl = level < 3 ? level + 1 : 3;
-    saveProgress(nextLvl);
-    setLevel(nextLvl);
-    setGameState('playing');
-    setStreak(0);
-    setSessionSeconds(0);
-    generateQuestion(nextLvl);
+  const handleNextQuestion = () => {
+    setShowExp(false);
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    if (newStreak >= 10) {
+      if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
+      setGameState('levelup');
+    } else {
+      generateQuestion(level);
+    }
   };
 
   const handleAnswer = (idx) => {
+    if (showExp) return; // Blockera klick medan förklaringen visas
+
     if (idx === question.answerIndex) {
       if (successAudio.current) successAudio.current.play().catch(()=>{});
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      if (newStreak >= 10) {
-        if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
-        setGameState('levelup');
-      } else {
-        generateQuestion(level);
-      }
+      // Visa förklaringen istället för att byta direkt!
+      setShowExp(true);
+      speakText(question.exp);
     } else {
       if (failAudio.current) failAudio.current.play().catch(()=>{});
       setShakeMap({ ...shakeMap, [idx]: true });
       setTimeout(() => setShakeMap(prev => ({ ...prev, [idx]: false })), 500);
-      setStreak(0);
-      speakText("Hoppsan, försök igen!");
+      // INGET STRAFF!
+      speakText("Hoppsan, prova igen!");
     }
   };
 
@@ -752,31 +747,49 @@ const MonthGame = () => {
             </div>
           </div>
 
-          <button onClick={() => speakText(question.spoken)} className="mb-6 flex flex-col items-center justify-center w-full active:scale-95 transition-transform">
-             <span className="text-[11px] font-black text-emerald-300 uppercase tracking-[0.2em] mb-1">Uppdrag:</span>
-             <div className="bg-white/10 px-6 py-4 rounded-2xl border border-white/20 flex items-center gap-3 w-full justify-center shadow-inner">
-               <span className="text-lg sm:text-xl font-black text-white uppercase tracking-wide drop-shadow-md">{question.text}</span>
-               <span className="text-2xl">🔊</span>
-             </div>
-          </button>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
-            {months.map((m, idx) => (
+          {/* FÖRKLARINGS-RUTAN SOM VISAS VID RÄTT SVAR */}
+          {showExp ? (
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center bg-emerald-900/60 border-4 border-emerald-400 p-6 rounded-3xl mb-6 shadow-inner backdrop-blur-md">
+              <span className="text-5xl mb-4 drop-shadow-md">🌟</span>
+              <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">Snyggt jobbat!</h3>
+              <p className="text-emerald-100 font-bold text-lg mb-8 leading-relaxed max-w-sm">{question.exp}</p>
               <motion.button
-                key={m}
-                animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
-                transition={{ duration: 0.3 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleAnswer(idx)}
-                className={`py-3 sm:py-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider shadow-md border ${
-                  shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-emerald-900 border-emerald-100 hover:bg-emerald-50'
-                }`}
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={handleNextQuestion}
+                className="bg-white text-emerald-900 px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center gap-2"
               >
-                {m.substring(0, 3)}
+                Nästa fråga ➡️
               </motion.button>
-            ))}
-          </div>
+            </motion.div>
+          ) : (
+            <>
+              <button onClick={() => speakText(question.spoken)} className="mb-6 flex flex-col items-center justify-center w-full active:scale-95 transition-transform">
+                 <span className="text-[11px] font-black text-emerald-300 uppercase tracking-[0.2em] mb-1">Uppdrag:</span>
+                 <div className="bg-white/10 px-6 py-4 rounded-2xl border border-white/20 flex items-center gap-3 w-full justify-center shadow-inner">
+                   <span className="text-lg sm:text-xl font-black text-white uppercase tracking-wide drop-shadow-md">{question.text}</span>
+                   <span className="text-2xl">🔊</span>
+                 </div>
+              </button>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+                {months.map((m, idx) => (
+                  <motion.button
+                    key={m}
+                    animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleAnswer(idx)}
+                    className={`py-3 sm:py-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider shadow-md border ${
+                      shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-emerald-900 border-emerald-100 hover:bg-emerald-50'
+                    }`}
+                  >
+                    {m.substring(0, 3)}
+                  </motion.button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -791,10 +804,15 @@ const MonthGame = () => {
           
           <motion.button 
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={nextLevel}
+            onClick={() => {
+              const nextLvl = level < 3 ? level + 1 : 3;
+              saveProgress(nextLvl);
+              setLevel(nextLvl);
+              setGameState('start');
+            }}
             className="bg-white text-emerald-900 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest shadow-[0_0_25px_rgba(255,255,255,0.4)]"
           >
-            {level < 3 ? 'Nästa Nivå ➡️' : 'Spela igen! 🔄'}
+            Fortsätt
           </motion.button>
         </div>
       )}
@@ -971,7 +989,7 @@ const WordGame = () => {
     if (failAudio.current) failAudio.current.play().catch(()=>{});
     setShakeMap({ [idx]: true });
     setTimeout(() => setShakeMap({}), 500);
-    setStreak(0);
+    // INGET STRAFF! Vi tog bort setStreak(0)
     speakText("Prova igen!");
   };
 
@@ -1315,7 +1333,7 @@ const GrammarGame = () => {
     if (failAudio.current) failAudio.current.play().catch(()=>{});
     setShakeIdx(idx);
     setTimeout(() => setShakeIdx(null), 500);
-    setStreak(0);
+    // INGET STRAFF!
     speakText("Prova det andra ordet!");
   };
 
