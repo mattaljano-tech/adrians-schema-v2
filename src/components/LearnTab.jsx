@@ -570,14 +570,50 @@ const MonthGame = () => {
       }
       qSpoken = qText;
     } else {
-      // Level 3 Boss frågor
+      // Level 3 Boss frågor - MASSIV UPPDATERING!
+      // Index är månadens nummer minus 1 (Jan = 0, Dec = 11)
       const trivia = [
-        { q: "I vilken månad är det Julafton?", a: 11 }, // Dec
-        { q: "I vilken månad är det Sveriges Nationaldag?", a: 5 }, // Juni
-        { q: "Vilken är årets första månad?", a: 0 }, // Jan
-        { q: "Vilken är årets sista månad?", a: 11 }, // Dec
-        { q: "I vilken månad är det Alla Hjärtans Dag?", a: 1 }, // Feb
-        { q: "Vilken månad är årets kortaste?", a: 1 } // Feb
+        // Årets struktur
+        { q: "Vilken är årets första månad?", a: 0 }, 
+        { q: "Vilken är årets sista månad?", a: 11 },
+        { q: "Vilken månad är årets kortaste?", a: 1 }, 
+        { q: "Vilken är årets sjätte månad?", a: 5 },
+        { q: "Vilken månad kommer precis före halva året har gått?", a: 5 },
+        
+        // Vinter
+        { q: "I vilken månad firar vi oftast Lucia?", a: 11 },
+        { q: "I vilken månad är det Julafton?", a: 11 },
+        { q: "I vilken månad firar vi Nyårsafton (sista dagen på året)?", a: 11 },
+        { q: "Vilken månad brukar anses vara den kallaste och mörkaste mitt i vintern?", a: 0 },
+        { q: "I vilken månad är det Alla Hjärtans Dag?", a: 1 },
+        { q: "När har vi oftast Sportlov?", a: 1 },
+
+        // Vår
+        { q: "I vilken vårmånad firar vi ofta Våffeldagen?", a: 2 },
+        { q: "Vilken är den första riktiga vårmånaden?", a: 2 },
+        { q: "I vilken månad lurar vi varandra med 'April, april'?", a: 3 },
+        { q: "I slutet av vilken månad tänder vi Majbrasor (Valborg)?", a: 3 },
+        { q: "Vilken månad kallas ibland för 'Sköna...'?", a: 4 },
+        
+        // Sommar
+        { q: "I vilken månad slutar skolan och sommarlovet börjar?", a: 5 },
+        { q: "I vilken månad är det Sveriges Nationaldag?", a: 5 },
+        { q: "I vilken månad firar vi Midsommar och dansar runt stången?", a: 5 },
+        { q: "Vilken brukar vara den varmaste semestermånaden?", a: 6 },
+        { q: "I vilken sommar-månad börjar skolan ofta igen?", a: 7 },
+        { q: "Vilken är sommarens sista månad?", a: 7 },
+
+        // Höst
+        { q: "Vilken är höstens första månad?", a: 8 },
+        { q: "I vilken höstmånad börjar löven oftast bli gula och röda?", a: 8 },
+        { q: "I vilken månad brukar vi fira Kanelbullens dag?", a: 9 },
+        { q: "I slutet av vilken månad firar många Halloween?", a: 9 },
+        { q: "Vilken är den mörka höstmånaden precis före julmånaden?", a: 10 },
+        { q: "När har vi oftast Läslov (Höstlov)?", a: 10 },
+
+        // Bokstäver
+        { q: "Vilken är den enda månaden som börjar på bokstaven 'F'?", a: 1 },
+        { q: "Vilken är den enda månaden som börjar på bokstaven 'O'?", a: 9 }
       ];
       const t = trivia[Math.floor(Math.random() * trivia.length)];
       qText = t.q; qSpoken = t.q; ansIdx = t.a;
@@ -778,24 +814,73 @@ const WordGame = () => {
     } catch (err) { console.error(err); }
   };
 
-  // Fråge-banken!
+  // --- MASSIV FRÅGEBANK FÖR ORD-DETEKTIVEN ---
   const questions = {
-    1: [ // Stava korta ljudenliga ord (CVC)
-      { type: 'spell', word: 'SOL', emoji: '☀️', options: ['S', 'O', 'L', 'M'] },
-      { type: 'spell', word: 'KO', emoji: '🐄', options: ['K', 'O', 'B', 'A'] },
-      { type: 'spell', word: 'BIL', emoji: '🚗', options: ['B', 'I', 'L', 'F'] },
-      { type: 'spell', word: 'TÅG', emoji: '🚂', options: ['T', 'Å', 'G', 'S'] },
-      { type: 'spell', word: 'HUS', emoji: '🏠', options: ['H', 'U', 'S', 'R'] }
+    1: [ // NIVÅ 1: Stava korta ord (Ljudning/Fonologi) - Minst 4-5 bokstäver att välja på
+      { type: 'spell', word: 'SOL', emoji: '☀️', options: ['S', 'O', 'L', 'M', 'A'] },
+      { type: 'spell', word: 'KO', emoji: '🐄', options: ['K', 'O', 'B', 'A', 'P'] },
+      { type: 'spell', word: 'BIL', emoji: '🚗', options: ['B', 'I', 'L', 'F', 'E'] },
+      { type: 'spell', word: 'TÅG', emoji: '🚂', options: ['T', 'Å', 'G', 'S', 'M'] },
+      { type: 'spell', word: 'HUS', emoji: '🏠', options: ['H', 'U', 'S', 'R', 'O'] },
+      { type: 'spell', word: 'BÅT', emoji: '⛵', options: ['B', 'Å', 'T', 'M', 'S'] },
+      { type: 'spell', word: 'BOK', emoji: '📖', options: ['B', 'O', 'K', 'L', 'A'] },
+      { type: 'spell', word: 'FOT', emoji: '🦶', options: ['F', 'O', 'T', 'D', 'R'] },
+      { type: 'spell', word: 'MAT', emoji: '🍽️', options: ['M', 'A', 'T', 'N', 'S'] },
+      { type: 'spell', word: 'ORM', emoji: '🐍', options: ['O', 'R', 'M', 'N', 'A'] },
+      { type: 'spell', word: 'NOS', emoji: '🐕', options: ['N', 'O', 'S', 'M', 'E'] },
+      { type: 'spell', word: 'BEN', emoji: '🦴', options: ['B', 'E', 'N', 'D', 'L'] },
+      { type: 'spell', word: 'MUS', emoji: '🐁', options: ['M', 'U', 'S', 'L', 'O'] },
+      { type: 'spell', word: 'RÄV', emoji: '🦊', options: ['R', 'Ä', 'V', 'F', 'S'] },
+      { type: 'spell', word: 'SÄL', emoji: '🦭', options: ['S', 'Ä', 'L', 'V', 'K'] },
+      { type: 'spell', word: 'TIO', emoji: '🔟', options: ['T', 'I', 'O', 'E', 'P'] },
+      { type: 'spell', word: 'TVÅ', emoji: '2️⃣', options: ['T', 'V', 'Å', 'O', 'M'] },
+      { type: 'spell', word: 'BÄR', emoji: '🍓', options: ['B', 'Ä', 'R', 'P', 'S'] },
+      { type: 'spell', word: 'LÅS', emoji: '🔒', options: ['L', 'Å', 'S', 'K', 'O'] },
+      { type: 'spell', word: 'OST', emoji: '🧀', options: ['O', 'S', 'T', 'A', 'F'] }
     ],
-    2: [ // Fylla i luckan (Konkret ordförråd)
-      { type: 'fill', text: 'För att klippa papper behöver man en...', answer: 'Sax', emoji: '✂️', options: [{w: 'Sax', e: '✂️'}, {w: 'Sked', e: '🥄'}, {w: 'Boll', e: '⚽'}] },
-      { type: 'fill', text: 'När det regnar kan man använda ett...', answer: 'Paraply', emoji: '☔', options: [{w: 'Bord', e: '🪑'}, {w: 'Paraply', e: '☔'}, {w: 'Äpple', e: '🍎'}] },
-      { type: 'fill', text: 'För att låsa upp en dörr behöver man en...', answer: 'Nyckel', emoji: '🔑', options: [{w: 'Klocka', e: '⌚'}, {w: 'Banan', e: '🍌'}, {w: 'Nyckel', e: '🔑'}] }
+    2: [ // NIVÅ 2: Konkreta ord och funktion (Fylla i luckan) - 4 svarsalternativ!
+      { type: 'fill', text: 'För att klippa papper behöver man en...', answer: 'Sax', emoji: '✂️', options: [{w: 'Sax', e: '✂️'}, {w: 'Sked', e: '🥄'}, {w: 'Boll', e: '⚽'}, {w: 'Bok', e: '📖'}] },
+      { type: 'fill', text: 'När det regnar kan man använda ett...', answer: 'Paraply', emoji: '☔', options: [{w: 'Bord', e: '🪑'}, {w: 'Paraply', e: '☔'}, {w: 'Äpple', e: '🍎'}, {w: 'Sol', e: '☀️'}] },
+      { type: 'fill', text: 'För att låsa upp en dörr behöver man en...', answer: 'Nyckel', emoji: '🔑', options: [{w: 'Klocka', e: '⌚'}, {w: 'Banan', e: '🍌'}, {w: 'Nyckel', e: '🔑'}, {w: 'Boll', e: '🎾'}] },
+      { type: 'fill', text: 'Man äter soppa med en...', answer: 'Sked', emoji: '🥄', options: [{w: 'Gaffel', e: '🍴'}, {w: 'Sked', e: '🥄'}, {w: 'Kniv', e: '🔪'}, {w: 'Sax', e: '✂️'}] },
+      { type: 'fill', text: 'När man är trött går man och lägger sig i en...', answer: 'Säng', emoji: '🛏️', options: [{w: 'Stol', e: '🪑'}, {w: 'Säng', e: '🛏️'}, {w: 'Bord', e: '🪵'}, {w: 'Bil', e: '🚗'}] },
+      { type: 'fill', text: 'Man ritar och målar med en...', answer: 'Penna', emoji: '✏️', options: [{w: 'Penna', e: '✏️'}, {w: 'Bok', e: '📖'}, {w: 'Sudd', e: '🧽'}, {w: 'Nyckel', e: '🔑'}] },
+      { type: 'fill', text: 'När man är törstig dricker man ur ett...', answer: 'Glas', emoji: '🥛', options: [{w: 'Tallrik', e: '🍽️'}, {w: 'Glas', e: '🥛'}, {w: 'Gryta', e: '🍲'}, {w: 'Sked', e: '🥄'}] },
+      { type: 'fill', text: 'Man kör på vägen med en...', answer: 'Bil', emoji: '🚗', options: [{w: 'Båt', e: '⛵'}, {w: 'Flygplan', e: '✈️'}, {w: 'Bil', e: '🚗'}, {w: 'Tåg', e: '🚂'}] },
+      { type: 'fill', text: 'När det är kallt har man på huvudet en...', answer: 'Mössa', emoji: '🧢', options: [{w: 'Vante', e: '🧤'}, {w: 'Mössa', e: '🧢'}, {w: 'Strumpa', e: '🧦'}, {w: 'Sko', e: '👟'}] },
+      { type: 'fill', text: 'Efter man badat torkar man sig med en...', answer: 'Handduk', emoji: '🧖', options: [{w: 'Kudde', e: '🛌'}, {w: 'Handduk', e: '🧖'}, {w: 'Matta', e: '🧶'}, {w: 'Tröja', e: '👕'}] },
+      { type: 'fill', text: 'Den lyser gult på himlen på dagen...', answer: 'Sol', emoji: '☀️', options: [{w: 'Måne', e: '🌙'}, {w: 'Stjärna', e: '⭐'}, {w: 'Sol', e: '☀️'}, {w: 'Moln', e: '☁️'}] },
+      { type: 'fill', text: 'Man tvättar händerna med vatten och...', answer: 'Tvål', emoji: '🧼', options: [{w: 'Schampo', e: '🧴'}, {w: 'Tvål', e: '🧼'}, {w: 'Tandkräm', e: '🪥'}, {w: 'Kräm', e: '🧴'}] },
+      { type: 'fill', text: 'När man vill prata med någon långt borta använder man en...', answer: 'Telefon', emoji: '📱', options: [{w: 'Dator', e: '💻'}, {w: 'Bok', e: '📖'}, {w: 'Telefon', e: '📱'}, {w: 'Klocka', e: '⌚'}] },
+      { type: 'fill', text: 'Till skolan bär man sina böcker i en...', answer: 'Ryggsäck', emoji: '🎒', options: [{w: 'Påse', e: '🛍️'}, {w: 'Korg', e: '🧺'}, {w: 'Ryggsäck', e: '🎒'}, {w: 'Kudde', e: '🛌'}] },
+      { type: 'fill', text: 'Hunden gillar att fånga en kastad...', answer: 'Boll', emoji: '🎾', options: [{w: 'Sten', e: '🪨'}, {w: 'Boll', e: '🎾'}, {w: 'Sko', e: '👞'}, {w: 'Katt', e: '🐈'}] },
+      { type: 'fill', text: 'När det är mörkt tänder man en...', answer: 'Lampa', emoji: '💡', options: [{w: 'Lampa', e: '💡'}, {w: 'Fönster', e: '🪟'}, {w: 'Spegel', e: '🪞'}, {w: 'Tavla', e: '🖼️'}] },
+      { type: 'fill', text: 'När fötterna fryser inomhus tar man på sig...', answer: 'Tofflor', emoji: '🩴', options: [{w: 'Stövlar', e: '👢'}, {w: 'Tofflor', e: '🩴'}, {w: 'Vantar', e: '🧤'}, {w: 'Halsduk', e: '🧣'}] },
+      { type: 'fill', text: 'Man skär bröd med en...', answer: 'Kniv', emoji: '🔪', options: [{w: 'Sked', e: '🥄'}, {w: 'Gaffel', e: '🍴'}, {w: 'Kniv', e: '🔪'}, {w: 'Tallrik', e: '🍽️'}] },
+      { type: 'fill', text: 'Vi tittar på barnprogram på vår...', answer: 'TV', emoji: '📺', options: [{w: 'Mikrovågsugn', e: '🎛️'}, {w: 'TV', e: '📺'}, {w: 'Radio', e: '📻'}, {w: 'Bok', e: '📖'}] },
+      { type: 'fill', text: 'Innan man sväljer maten måste man...', answer: 'Tugga', emoji: '👄', options: [{w: 'Dricka', e: '🥤'}, {w: 'Tugga', e: '👄'}, {w: 'Sova', e: '😴'}, {w: 'Skrika', e: '🗣️'}] }
     ],
-    3: [ // Lite svårare kategorier och logik
-      { type: 'fill', text: 'Vilket av dessa djur kan flyga?', answer: 'Fågel', emoji: '🦅', options: [{w: 'Hund', e: '🐕'}, {w: 'Fågel', e: '🦅'}, {w: 'Gris', e: '🐖'}] },
-      { type: 'fill', text: 'På fötterna innanför skorna har man...', answer: 'Strumpor', emoji: '🧦', options: [{w: 'Mössa', e: '🧢'}, {w: 'Handskar', e: '🧤'}, {w: 'Strumpor', e: '🧦'}] },
-      { type: 'fill', text: 'Man dricker vatten ur ett...', answer: 'Glas', emoji: '🥛', options: [{w: 'Glas', e: '🥛'}, {w: 'Hus', e: '🏠'}, {w: 'Bok', e: '📖'}] }
+    3: [ // NIVÅ 3: Kategorier, Djur och Logik (Lite svårare samband) - 4 svarsalternativ!
+      { type: 'fill', text: 'Vilket av dessa djur kan flyga i luften?', answer: 'Fågel', emoji: '🦅', options: [{w: 'Hund', e: '🐕'}, {w: 'Fågel', e: '🦅'}, {w: 'Gris', e: '🐖'}, {w: 'Katt', e: '🐈'}] },
+      { type: 'fill', text: 'Man sätter dem på fötterna innan man tar på skorna...', answer: 'Strumpor', emoji: '🧦', options: [{w: 'Mössa', e: '🧢'}, {w: 'Handskar', e: '🧤'}, {w: 'Strumpor', e: '🧦'}, {w: 'Byxor', e: '👖'}] },
+      { type: 'fill', text: 'Vad är stort, grönt och växer i skogen?', answer: 'Träd', emoji: '🌲', options: [{w: 'Bil', e: '🚗'}, {w: 'Träd', e: '🌲'}, {w: 'Hus', e: '🏠'}, {w: 'Sten', e: '🪨'}] },
+      { type: 'fill', text: 'Vilket stort djur ger oss mjölk att dricka?', answer: 'Ko', emoji: '🐄', options: [{w: 'Ko', e: '🐄'}, {w: 'Häst', e: '🐎'}, {w: 'Höna', e: '🐔'}, {w: 'Gris', e: '🐖'}] },
+      { type: 'fill', text: 'Vilken frukt är gul, böjd och god att skala?', answer: 'Banan', emoji: '🍌', options: [{w: 'Äpple', e: '🍎'}, {w: 'Banan', e: '🍌'}, {w: 'Päron', e: '🍐'}, {w: 'Apelsin', e: '🍊'}] },
+      { type: 'fill', text: 'Vad tittar man på för att veta vilken tid det är?', answer: 'Klocka', emoji: '⌚', options: [{w: 'Klocka', e: '⌚'}, {w: 'Bok', e: '📖'}, {w: 'Karta', e: '🗺️'}, {w: 'Radio', e: '📻'}] },
+      { type: 'fill', text: 'Vilket husdjur brukar jama och säga mjau?', answer: 'Katt', emoji: '🐈', options: [{w: 'Katt', e: '🐈'}, {w: 'Hund', e: '🐕'}, {w: 'Får', e: '🐑'}, {w: 'Gris', e: '🐖'}] },
+      { type: 'fill', text: 'Den har många sidor med text och bilder...', answer: 'Bok', emoji: '📖', options: [{w: 'Kudde', e: '🛌'}, {w: 'Bok', e: '📖'}, {w: 'Tallrik', e: '🍽️'}, {w: 'Tavla', e: '🖼️'}] },
+      { type: 'fill', text: 'Ett långt fordon som åker på järnvägsspår...', answer: 'Tåg', emoji: '🚂', options: [{w: 'Tåg', e: '🚂'}, {w: 'Buss', e: '🚌'}, {w: 'Cykel', e: '🚲'}, {w: 'Flygplan', e: '✈️'}] },
+      { type: 'fill', text: 'När detta blir jättekallt fryser det till is...', answer: 'Vatten', emoji: '💧', options: [{w: 'Mjölk', e: '🥛'}, {w: 'Vatten', e: '💧'}, {w: 'Saft', e: '🧃'}, {w: 'Sand', e: '🏖️'}] },
+      { type: 'fill', text: 'Något man brukar ha sina pengar i...', answer: 'Plånbok', emoji: '👛', options: [{w: 'Väska', e: '🎒'}, {w: 'Plånbok', e: '👛'}, {w: 'Skokartong', e: '📦'}, {w: 'Ficka', e: '👖'}] },
+      { type: 'fill', text: 'Ett djur som lever och simmar under vattnet...', answer: 'Fisk', emoji: '🐟', options: [{w: 'Fisk', e: '🐟'}, {w: 'Groda', e: '🐸'}, {w: 'Anka', e: '🦆'}, {w: 'Katt', e: '🐈'}] },
+      { type: 'fill', text: 'Man drar det över sig i sängen för att inte frysa...', answer: 'Täcke', emoji: '🛌', options: [{w: 'Handduk', e: '🧖'}, {w: 'Täcke', e: '🛌'}, {w: 'Matta', e: '🧶'}, {w: 'Gardin', e: '🪟'}] },
+      { type: 'fill', text: 'Vad behöver en blomma för att växa och inte vissna?', answer: 'Vatten', emoji: '🌧️', options: [{w: 'Godis', e: '🍬'}, {w: 'Vatten', e: '🌧️'}, {w: 'Stenar', e: '🪨'}, {w: 'Mjölk', e: '🥛'}] },
+      { type: 'fill', text: 'Vilken färg har oftast en brandbil?', answer: 'Röd', emoji: '🚒', options: [{w: 'Blå', e: '🟦'}, {w: 'Grön', e: '🟩'}, {w: 'Röd', e: '🟥'}, {w: 'Svart', e: '⬛'}] },
+      { type: 'fill', text: 'Något man ofta ställer i ett fönster...', answer: 'Blomma', emoji: '🪴', options: [{w: 'Soffa', e: '🛋️'}, {w: 'Blomma', e: '🪴'}, {w: 'Kylskåp', e: '🧊'}, {w: 'Cykel', e: '🚲'}] },
+      { type: 'fill', text: 'Vad sätter man över ett litet sår?', answer: 'Plåster', emoji: '🩹', options: [{w: 'Tejp', e: '📼'}, {w: 'Plåster', e: '🩹'}, {w: 'Papper', e: '📄'}, {w: 'Snöre', e: '🧶'}] },
+      { type: 'fill', text: 'Ett stort, gult djur med extremt lång hals...', answer: 'Giraff', emoji: '🦒', options: [{w: 'Elefant', e: '🐘'}, {w: 'Giraff', e: '🦒'}, {w: 'Zebra', e: '🦓'}, {w: 'Lejon', e: '🦁'}] },
+      { type: 'fill', text: 'Vad tittar man i för att se sig själv?', answer: 'Spegel', emoji: '🪞', options: [{w: 'Tavla', e: '🖼️'}, {w: 'Spegel', e: '🪞'}, {w: 'Fönster', e: '🪟'}, {w: 'Bok', e: '📖'}] },
+      { type: 'fill', text: 'I vilket rum hemma lagar man maten?', answer: 'Köket', emoji: '🍳', options: [{w: 'Köket', e: '🍳'}, {w: 'Badrummet', e: '🛁'}, {w: 'Sovrummet', e: '🛏️'}, {w: 'Hallen', e: '🚪'}] }
     ]
   };
 
@@ -970,7 +1055,7 @@ const WordGame = () => {
                 <span className="text-3xl">🔊</span>
               </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full">
                 {currentQ.options.map((opt, idx) => (
                   <motion.button
                     key={idx}
@@ -1021,6 +1106,264 @@ const WordGame = () => {
   );
 };
 
+// --- MINI-SPELET: MENING-FIXAREN (Grammatik & Dåtid) ---
+const GrammarGame = () => {
+  const [gameState, setGameState] = useState('start');
+  const [level, setLevel] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(1);
+  const [totalSeconds, setTotalSeconds] = useState(0);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [shakeIdx, setShakeIdx] = useState(null);
+  
+  const [currentQ, setCurrentQ] = useState(null);
+
+  const levelNames = ["Dåtids-Fixaren", "Svåra Orden", "Grammatik-Bossen"];
+  const appId = 'test-schema-v2';
+  const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+
+  const successAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3') : null);
+  const failAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3') : null);
+  const levelUpAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') : null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(statsRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setUnlockedLevel(data.unlockedGrammarLevel || 1);
+        setTotalSeconds(data.totalGrammarPlayTime || 0);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    let interval;
+    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [gameState]);
+
+  const saveProgress = async (newLevel) => {
+    try {
+      await updateDoc(statsRef, {
+        unlockedGrammarLevel: Math.max(unlockedLevel, newLevel),
+        totalGrammarPlayTime: totalSeconds + sessionSeconds
+      });
+      setTotalSeconds(prev => prev + sessionSeconds);
+      setSessionSeconds(0);
+    } catch (err) { console.error(err); }
+  };
+
+  // Expanderad Frågebank för Mening-Fixaren!
+  const questions = {
+    1: [ // NIVÅ 1: Mycket vanliga oregelbundna verb i dåtid (Fokus: "-de" övergeneralisering)
+      { part1: 'Igår', part2: 'jag mig i sängen.', answer: 'la', wrong: 'läggde', emoji: '🛏️' },
+      { part1: 'Han', part2: 'till skolan imorse.', answer: 'gick', wrong: 'gådde', emoji: '🚶' },
+      { part1: 'Vi', part2: 'en stor fågel i skogen.', answer: 'såg', wrong: 'sågde', emoji: '🦅' },
+      { part1: 'På kalaset', part2: 'vi tårta.', answer: 'åt', wrong: 'ätade', emoji: '🎂' },
+      { part1: 'Jag', part2: 'hela natten.', answer: 'sov', wrong: 'sovde', emoji: '😴' },
+      { part1: 'Hon', part2: 'en bok innan hon somnade.', answer: 'läste', wrong: 'läsade', emoji: '📖' },
+      { part1: 'Vi', part2: 'ett stort hus på kullen.', answer: 'fann', wrong: 'finnade', emoji: '🏠' }, // Eller hittade
+      { part1: 'Hunden', part2: 'över staketet.', answer: 'hoppade', wrong: 'hoppde', emoji: '🐕' }, // Här är -de rätt, bra för att testa om han bara memorerat "undvik -de"
+      { part1: 'Katten', part2: 'musen.', answer: 'tog', wrong: 'tagade', emoji: '🐈' },
+      { part1: 'Jag', part2: 'vatten ur glaset.', answer: 'drack', wrong: 'drickte', emoji: '🥛' },
+      { part1: 'Mamma', part2: 'mat i köket.', answer: 'lagade', wrong: 'lagde', emoji: '🍳' }, // Igen, testa om han fattar när det FAKTISKT ska vara -de/-ade
+      { part1: 'Han', part2: 'ett brev till mormor.', answer: 'skrev', wrong: 'skrivde', emoji: '✉️' },
+      { part1: 'Bollen', part2: 'ner i vattnet.', answer: 'föll', wrong: 'fallade', emoji: '⚽' },
+      { part1: 'Vi', part2: 'på en stol.', answer: 'satt', wrong: 'sittade', emoji: '🪑' },
+      { part1: 'Jag', part2: 'en tröja på mig.', answer: 'hade', wrong: 'hadde', emoji: '👕' } // Klassiskt felstavnings/uttalsfel
+    ],
+    2: [ // NIVÅ 2: Fler och lite klurigare verb (Tempus-blandning och fler fel-mönster)
+      { part1: 'Fågeln', part2: 'högt upp i luften.', answer: 'flög', wrong: 'flygde', emoji: '☁️' },
+      { part1: 'Jag', part2: 'glaset på bordet.', answer: 'ställde', wrong: 'stådde', emoji: '🥤' },
+      { part1: 'Han', part2: 'och väntade länge.', answer: 'stod', wrong: 'stådde', emoji: '🧍' },
+      { part1: 'Vi', part2: 'runt i en ring.', answer: 'sprang', wrong: 'springde', emoji: '🏃' },
+      { part1: 'Solen', part2: 'starkt igår.', answer: 'sken', wrong: 'skinade', emoji: '☀️' },
+      { part1: 'Kompisen', part2: 'över en sten.', answer: 'snubblade', wrong: 'snubblde', emoji: '🤕' },
+      { part1: 'Jag', part2: 'om en mardröm.', answer: 'drömde', wrong: 'drömmade', emoji: '💭' },
+      { part1: 'Han', part2: 'hela vägen hem.', answer: 'grät', wrong: 'gråtade', emoji: '😢' },
+      { part1: 'Pappa', part2: 'nycklarna.', answer: 'tappade', wrong: 'tappde', emoji: '🔑' },
+      { part1: 'Bilen', part2: 'väldigt snabbt.', answer: 'körde', wrong: 'kördade', emoji: '🏎️' },
+      { part1: 'Trädet', part2: 'i vinden.', answer: 'vajade', wrong: 'vajde', emoji: '🌳' },
+      { part1: 'Vi', part2: 'högt av skämtet.', answer: 'skrattade', wrong: 'skrattde', emoji: '😂' },
+      { part1: 'Han', part2: 'att det var sant.', answer: 'ljög', wrong: 'ljugade', emoji: '🤥' },
+      { part1: 'Vi', part2: 'en stor grop.', answer: 'grävde', wrong: 'grävade', emoji: '🕳️' },
+      { part1: 'Isen', part2: 'i värmen.', answer: 'smälte', wrong: 'smältade', emoji: '🧊' }
+    ],
+    3: [ // NIVÅ 3: Fokus på Plural (En/Flera) av svåra och "oregelbundna" substantiv
+      { part1: 'I huset fanns det tre små', part2: '.', answer: 'möss', wrong: 'mössar', emoji: '🐁' },
+      { part1: 'Människan har två', part2: '.', answer: 'fötter', wrong: 'föttar', emoji: '👣' },
+      { part1: 'I boken fanns det många', part2: '.', answer: 'böcker', wrong: 'bokar', emoji: '📚' },
+      { part1: 'På gården stod två', part2: '.', answer: 'män', wrong: 'mannar', emoji: '👨' },
+      { part1: 'Jag borstade mina', part2: '.', answer: 'tänder', wrong: 'tandrar', emoji: '🦷' },
+      { part1: 'I skogen växte många', part2: '.', answer: 'träd', wrong: 'trädar', emoji: '🌲' }, // Nollplural
+      { part1: 'Vi har tre', part2: 'hemma.', answer: 'barn', wrong: 'barnar', emoji: '🧒' },   // Nollplural
+      { part1: 'Hon köpte fyra', part2: 'i affären.', answer: 'äpplen', wrong: 'äpplar', emoji: '🍎' },
+      { part1: 'Hönan lade fem', part2: 'igår.', answer: 'ägg', wrong: 'äggar', emoji: '🥚' },   // Nollplural
+      { part1: 'Vi såg många', part2: 'på himlen.', answer: 'moln', wrong: 'molnar', emoji: '☁️' }, // Nollplural
+      { part1: 'Gårdens', part2: 'åt gräs.', answer: 'får', wrong: 'fårar', emoji: '🐑' },       // Nollplural
+      { part1: 'Båda mina', part2: 'är kalla.', answer: 'händer', wrong: 'handar', emoji: '🖐️' },
+      { part1: 'Vi plockade många', part2: '.', answer: 'bär', wrong: 'bärar', emoji: '🍓' },     // Nollplural
+      { part1: 'I sjön simmade tre', part2: '.', answer: 'gäss', wrong: 'gåsar', emoji: '🦢' },
+      { part1: 'Jag ritade två', part2: '.', answer: 'ögon', wrong: 'ögor', emoji: '👀' }
+    ]
+  };
+  const generateQuestion = (lvl) => {
+    const list = questions[lvl];
+    const q = list[Math.floor(Math.random() * list.length)];
+    // Blanda om "rätt" och "fel" ligger till vänster eller höger
+    const isAnswerFirst = Math.random() > 0.5;
+    const options = isAnswerFirst ? [q.answer, q.wrong] : [q.wrong, q.answer];
+    
+    setCurrentQ({ ...q, options, correctIdx: isAnswerFirst ? 0 : 1 });
+    
+    // Läs upp meningen med ett litet "Hmm" där ordet saknas
+    speakText(`${q.part1} ... ${q.part2}`);
+  };
+
+  const startGame = (selectedLevel) => {
+    setLevel(selectedLevel);
+    setGameState('playing');
+    setStreak(0);
+    setSessionSeconds(0);
+    generateQuestion(selectedLevel);
+  };
+
+  const handleCorrect = () => {
+    if (successAudio.current) successAudio.current.play().catch(()=>{});
+    // Läs upp hela den rätta meningen så han hör hur den ska låta!
+    speakText(`${currentQ.part1} ${currentQ.answer} ${currentQ.part2}`);
+    
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    if (newStreak >= 5) { // 5 rätt för level up
+      if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
+      setGameState('levelup');
+    } else {
+      setTimeout(() => generateQuestion(level), 1500); // Vänta lite längre så han hinner höra meningen
+    }
+  };
+
+  const handleWrong = (idx) => {
+    if (failAudio.current) failAudio.current.play().catch(()=>{});
+    setShakeIdx(idx);
+    setTimeout(() => setShakeIdx(null), 500);
+    setStreak(0);
+    speakText("Prova det andra ordet!");
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-[#9a3412] via-[#c2410c] to-[#ea580c] rounded-[2.5rem] p-6 sm:p-8 shadow-[0_15px_50px_rgba(194,65,12,0.4)] border border-orange-400/30 overflow-hidden text-center mb-8">
+      
+      {gameState === 'start' && (
+        <div className="py-8 relative z-10">
+          <PremiumEmoji emoji="🔧" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+          <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Mening-Fixaren</h2>
+          <p className="text-orange-200 font-bold text-sm mb-8">Hjälp till att bygga ihop meningarna!</p>
+          
+          <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
+            {[1, 2, 3].map((lvl) => {
+              const isLocked = lvl > unlockedLevel;
+              return (
+                <motion.button
+                  key={lvl}
+                  whileHover={!isLocked ? { scale: 1.02 } : {}}
+                  whileTap={!isLocked ? { scale: 0.98 } : {}}
+                  disabled={isLocked}
+                  onClick={() => startGame(lvl)}
+                  className={`flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest border transition-all ${
+                    isLocked 
+                    ? 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' 
+                    : 'bg-gradient-to-r from-orange-500 to-amber-600 border-orange-400 text-white shadow-lg'
+                  }`}
+                >
+                  <span>Level {lvl}</span>
+                  {isLocked ? <span>🔒</span> : <span className="text-[10px] bg-white/20 px-2 py-1 rounded-md">{levelNames[lvl-1]}</span>}
+                </motion.button>
+              );
+            })}
+          </div>
+          <div className="text-orange-300 text-[10px] font-black uppercase tracking-tighter">
+            Total träningstid: {Math.floor(totalSeconds / 60)} minuter
+          </div>
+        </div>
+      )}
+
+      {gameState === 'playing' && currentQ && (
+        <div className="relative z-10">
+          <div className="flex items-center justify-between bg-black/20 rounded-2xl p-3 mb-6 border border-white/10">
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-black uppercase tracking-widest text-orange-300">Level {level}</span>
+              <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🔥</span>
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center w-full">
+            <PremiumEmoji emoji={currentQ.emoji} className="w-24 h-24 mb-4 drop-shadow-lg" />
+            
+            <button onClick={() => speakText(`${currentQ.part1} ... ${currentQ.part2}`)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
+              <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">
+                {currentQ.part1} <span className="inline-block w-16 border-b-4 border-dashed border-orange-300 mx-2"></span> {currentQ.part2}
+              </span>
+              <span className="text-3xl mt-2">🔊</span>
+            </button>
+
+            <div className="grid grid-cols-2 gap-4 w-full">
+              {currentQ.options.map((opt, idx) => (
+                <motion.button
+                  key={idx}
+                  animate={shakeIdx === idx ? { x: [-8, 8, -8, 8, 0] } : {}}
+                  transition={{ duration: 0.3 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => idx === currentQ.correctIdx ? handleCorrect() : handleWrong(idx)}
+                  className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
+                    shakeIdx === idx ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-orange-200 hover:border-orange-400'
+                  }`}
+                >
+                  <span className={`text-2xl font-black uppercase tracking-wider ${shakeIdx === idx ? 'text-white' : 'text-slate-800'}`}>{opt}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {gameState === 'levelup' && (
+        <div className="py-8 relative z-10">
+          <ConfettiRain />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }}>
+            <PremiumEmoji emoji="🏆" className="w-28 h-28 mx-auto mb-4 drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]" />
+          </motion.div>
+          <h2 className="text-4xl font-black text-white uppercase tracking-widest mb-2 text-shadow-md animate-pulse">Level Up!</h2>
+          <p className="text-orange-200 font-bold mb-10 text-lg">Du är en riktig Mening-Fixare!</p>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              const nextLvl = level < 3 ? level + 1 : 3;
+              saveProgress(nextLvl);
+              setLevel(nextLvl);
+              setGameState('start');
+            }}
+            className="bg-white text-orange-900 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest shadow-[0_0_25px_rgba(255,255,255,0.4)]"
+          >
+            Fortsätt
+          </motion.button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- HUVUDKOMPONENT ---
 const LearnTab = () => {
   return (
@@ -1030,6 +1373,7 @@ const LearnTab = () => {
       <ClockGame />
       <MonthGame />
       <WordGame />
+      <GrammarGame />
       
       {/* KALENDERN LIGGER KVAR SNYGGT DÄR UNDER */}
       <CalendarCard />

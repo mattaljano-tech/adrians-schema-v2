@@ -18,6 +18,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   const [clockStats, setClockStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
   const [monthStats, setMonthStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
   const [wordStats, setWordStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
+  const [grammarStats, setGrammarStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
   
@@ -66,6 +67,10 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         setWordStats({
           unlockedLevel: d.data().unlockedWordLevel || 1,
           totalPlayTime: d.data().totalWordPlayTime || 0
+        });
+        setGrammarStats({
+          unlockedLevel: d.data().unlockedGrammarLevel || 1,
+          totalPlayTime: d.data().totalGrammarPlayTime || 0
         });
       }
     });
@@ -306,7 +311,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
       
       {/* --- 0. TRÄNINGS-STATISTIK --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Klock-statistik */}
         <div className="relative bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-[2rem] shadow-lg overflow-hidden border border-indigo-400/30">
           <div className="absolute -top-4 -right-4 opacity-20">
@@ -366,6 +371,27 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             </div>
           </div>
         </div>
+
+        {/* Grammatik-statistik */}
+        <div className="relative bg-gradient-to-br from-orange-600 to-amber-700 p-6 rounded-[2rem] shadow-lg overflow-hidden border border-orange-400/30">
+          <div className="absolute -top-4 -right-4 opacity-20">
+            <PremiumEmoji emoji="🔧" className="w-32 h-32" />
+          </div>
+          <div className="relative z-10">
+            <h3 className="font-black uppercase tracking-widest text-white text-xs drop-shadow-sm mb-4">Mening-Fixaren</h3>
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-[9px] font-black text-orange-200 uppercase tracking-widest block mb-1">Högsta Nivå</span>
+                <div className="text-2xl font-black text-white">Lvl {grammarStats.unlockedLevel}</div>
+              </div>
+              <div className="text-right">
+                <span className="text-[9px] font-black text-orange-200 uppercase tracking-widest block mb-1">Träningstid</span>
+                <div className="text-2xl font-black text-white">{Math.floor(grammarStats.totalPlayTime / 60)} <span className="text-xs">min</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* --- 1. INSTÄLLNINGAR & DAGENS MEDDELANDE --- */}
