@@ -13,7 +13,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
   />
 );
 
-const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime, showToast }) => {
+const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime, childName, showToast }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
@@ -32,10 +32,19 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
 
   const [favorites, setFavorites] = useState([]);
+  
+  // Nya states för inställningar (inklusive barnets namn och custom saldo)
   const [localMessage, setLocalMessage] = useState(dailyMessage || '');
   const [localName, setLocalName] = useState(adminName || 'Din kompis');
+  const [localChildName, setLocalChildName] = useState(childName || 'Adrian');
   const [localBedtime, setLocalBedtime] = useState(bedtime || '22:00');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
+
+  // Uppdatera localChildName om childName laddas in lite senare från databasen
+  useEffect(() => {
+    if (childName) setLocalChildName(childName);
+  }, [childName]);
 
   // --- HÄMTA FAVORITER FRÅN FIREBASE ---
   useEffect(() => {
@@ -260,35 +269,43 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     const bankDoc = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
     await updateDoc(bankDoc, { 
         adminName: localName, 
+        childName: localChildName, // Spara barnets namn till databasen!
         dailyMessage: localMessage,
         bedtime: localBedtime
     });
-    showToast("Meddelande och inställningar sparade!");
+    showToast("Inställningar sparade!");
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
       
-      {/* --- 1. DAGENS MEDDELANDE (Nu högst upp!) --- */}
+      {/* --- 1. INSTÄLLNINGAR & DAGENS MEDDELANDE --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-slate-100">
         <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=800')" }}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/40"></div>
         
         <div className="relative z-10 flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
-            <PremiumEmoji emoji="💬" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Dagens Meddelande</h3>
+            <PremiumEmoji emoji="⚙️" className="w-8 h-8" />
+            <h3 className="font-black uppercase tracking-widest text-slate-800 text-sm drop-shadow-sm">Inställningar</h3>
           </div>
           
           <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Avsändare</label>
-              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="Ditt namn..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Barnets namn</label>
+                <input type="text" value={localChildName} onChange={e => setLocalChildName(e.target.value)} placeholder="T.ex. Adrian..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Ditt namn (Avsändare)</label>
+                <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="T.ex. Pappa..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+              </div>
             </div>
             
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Meddelande</label>
-              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all min-h-[120px] resize-none text-slate-800 leading-relaxed shadow-sm" />
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Dagens Meddelande</label>
+              <textarea value={localMessage} onChange={e => setLocalMessage(e.target.value)} placeholder="Skriv något peppande..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all min-h-[100px] resize-none text-slate-800 leading-relaxed shadow-sm" />
             </div>
 
             <div className="space-y-1 pt-2">
@@ -297,7 +314,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             </div>
             
             <motion.button whileTap={{ scale: 0.98 }} onClick={handleSaveMessageAndSettings} className="w-full bg-blue-600 text-white font-black uppercase tracking-widest p-4 rounded-xl shadow-lg mt-2 border border-blue-700">
-              Spara Uppgifter
+              Spara Ändringar
             </motion.button>
           </div>
         </div>
@@ -342,11 +359,39 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
             <div className="text-4xl font-black text-slate-800 font-clock">{bankBalance || 0} kr</div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 50 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-100)} className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">- 100 kr</motion.button>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(100)} className="bg-white/90 backdrop-blur-sm border border-emerald-200 text-emerald-600 py-3 rounded-xl font-black text-sm shadow-sm hover:bg-white">+ 100 kr</motion.button>
+          {/* Valfritt belopp */}
+          <div className="flex gap-3 mb-4">
+            <input 
+              type="number" 
+              value={customAmount} 
+              onChange={e => setCustomAmount(e.target.value)} 
+              placeholder="Skriv valfritt belopp..." 
+              className="flex-1 bg-white/90 backdrop-blur-md border border-slate-200 p-3 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm"
+            />
+            <motion.button 
+              whileTap={{ scale: 0.95 }} 
+              onClick={() => {
+                if(customAmount && !isNaN(customAmount)) {
+                  handleUpdateBank(Number(customAmount));
+                  setCustomAmount('');
+                  showToast(`Saldot uppdaterades!`);
+                }
+              }} 
+              className="bg-slate-800 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-700"
+            >
+              Lägg till
+            </motion.button>
+          </div>
+
+          {/* Snabbknappar */}
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(5)} className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-emerald-100">+ 5 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(10)} className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-emerald-100">+ 10 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(50)} className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-emerald-100">+ 50 kr</motion.button>
+            
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-5)} className="bg-red-50 border border-red-200 text-red-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-red-100">- 5 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-10)} className="bg-red-50 border border-red-200 text-red-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-red-100">- 10 kr</motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleUpdateBank(-50)} className="bg-red-50 border border-red-200 text-red-700 py-3 rounded-xl font-black text-xs sm:text-sm shadow-sm hover:bg-red-100">- 50 kr</motion.button>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200/80">
@@ -363,7 +408,7 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
              <motion.button whileTap={{ scale: 0.95 }} onClick={setStreakZero} className="flex-1 py-3.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-orange-100 transition-colors">
                 Nolla Streak
              </motion.button>
-             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-colors">
+             <motion.button whileTap={{ scale: 0.95 }} onClick={resetDailyQuests} className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-colors">
                 Lås upp uppdrag
              </motion.button>
           </div>
