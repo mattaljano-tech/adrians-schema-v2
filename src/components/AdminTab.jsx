@@ -280,6 +280,48 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
       
+      {/* --- TOP HEADER: BARNETS NAMN (NYTT!) --- */}
+      <div className="flex items-center justify-center pt-2 mb-2">
+        {isEditingName ? (
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center gap-2 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-blue-200">
+            <input 
+              type="text" 
+              value={localChildName} 
+              onChange={e => setLocalChildName(e.target.value)} 
+              className="bg-transparent font-black text-2xl text-slate-800 outline-none text-center w-36"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditingName(false);
+                  handleSaveMessageAndSettings();
+                }
+              }}
+            />
+            <button 
+              onClick={() => {
+                setIsEditingName(false);
+                handleSaveMessageAndSettings();
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-xl shadow-sm active:scale-95"
+            >
+              ✅
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center gap-3">
+            <h2 className="text-3xl font-black text-slate-800 drop-shadow-sm tracking-tight uppercase">
+              {localChildName}
+            </h2>
+            <button 
+              onClick={() => setIsEditingName(true)}
+              className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-full shadow-sm hover:bg-slate-50 transition-all active:scale-95 text-lg"
+            >
+              ✏️
+            </button>
+          </motion.div>
+        )}
+      </div>
+
       {/* --- 1. INSTÄLLNINGAR & DAGENS MEDDELANDE --- */}
       <div className="relative bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-slate-100">
         <div className="absolute inset-y-0 right-0 w-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=800')" }}></div>
@@ -293,16 +335,10 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
           
           <div className="space-y-4">
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col justify-end h-full space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Barnets namn</label>
-                <input type="text" value={localChildName} onChange={e => setLocalChildName(e.target.value)} placeholder="T.ex. Adrian..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
-              </div>
-              <div className="flex flex-col justify-end h-full space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Ditt namn (Avsändare)</label>
-                <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="T.ex. Pappa..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
-              </div>
-            </div>npm 
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Ditt namn (Avsändare)</label>
+              <input type="text" value={localName} onChange={e => setLocalName(e.target.value)} placeholder="T.ex. Pappa..." className="w-full bg-white/90 backdrop-blur-md border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all text-slate-800 shadow-sm" />
+            </div>
             
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Dagens Meddelande</label>
