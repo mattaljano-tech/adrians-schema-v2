@@ -729,6 +729,298 @@ const MonthGame = () => {
   );
 };
 
+// --- MINI-SPELET: ORD-DETEKTIVEN (Läsning & Ordförråd) ---
+const WordGame = () => {
+  const [gameState, setGameState] = useState('start');
+  const [level, setLevel] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(1);
+  const [totalSeconds, setTotalSeconds] = useState(0);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [shakeMap, setShakeMap] = useState({});
+  
+  const [currentQ, setCurrentQ] = useState(null);
+  const [spelledLetters, setSpelledLetters] = useState([]); // För stavningsfrågor
+
+  const levelNames = ["Bokstavs-Jägaren", "Mening-Skaparen", "Ord-Bossen"];
+  const appId = 'test-schema-v2';
+  const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+
+  const successAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3') : null);
+  const failAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3') : null);
+  const levelUpAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') : null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(statsRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setUnlockedLevel(data.unlockedWordLevel || 1);
+        setTotalSeconds(data.totalWordPlayTime || 0);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    let interval;
+    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [gameState]);
+
+  const saveProgress = async (newLevel) => {
+    try {
+      await updateDoc(statsRef, {
+        unlockedWordLevel: Math.max(unlockedLevel, newLevel),
+        totalWordPlayTime: totalSeconds + sessionSeconds
+      });
+      setTotalSeconds(prev => prev + sessionSeconds);
+      setSessionSeconds(0);
+    } catch (err) { console.error(err); }
+  };
+
+  // Fråge-banken!
+  const questions = {
+    1: [ // Stava korta ljudenliga ord (CVC)
+      { type: 'spell', word: 'SOL', emoji: '☀️', options: ['S', 'O', 'L', 'M'] },
+      { type: 'spell', word: 'KO', emoji: '🐄', options: ['K', 'O', 'B', 'A'] },
+      { type: 'spell', word: 'BIL', emoji: '🚗', options: ['B', 'I', 'L', 'F'] },
+      { type: 'spell', word: 'TÅG', emoji: '🚂', options: ['T', 'Å', 'G', 'S'] },
+      { type: 'spell', word: 'HUS', emoji: '🏠', options: ['H', 'U', 'S', 'R'] }
+    ],
+    2: [ // Fylla i luckan (Konkret ordförråd)
+      { type: 'fill', text: 'För att klippa papper behöver man en...', answer: 'Sax', emoji: '✂️', options: [{w: 'Sax', e: '✂️'}, {w: 'Sked', e: '🥄'}, {w: 'Boll', e: '⚽'}] },
+      { type: 'fill', text: 'När det regnar kan man använda ett...', answer: 'Paraply', emoji: '☔', options: [{w: 'Bord', e: '🪑'}, {w: 'Paraply', e: '☔'}, {w: 'Äpple', e: '🍎'}] },
+      { type: 'fill', text: 'För att låsa upp en dörr behöver man en...', answer: 'Nyckel', emoji: '🔑', options: [{w: 'Klocka', e: '⌚'}, {w: 'Banan', e: '🍌'}, {w: 'Nyckel', e: '🔑'}] }
+    ],
+    3: [ // Lite svårare kategorier och logik
+      { type: 'fill', text: 'Vilket av dessa djur kan flyga?', answer: 'Fågel', emoji: '🦅', options: [{w: 'Hund', e: '🐕'}, {w: 'Fågel', e: '🦅'}, {w: 'Gris', e: '🐖'}] },
+      { type: 'fill', text: 'På fötterna innanför skorna har man...', answer: 'Strumpor', emoji: '🧦', options: [{w: 'Mössa', e: '🧢'}, {w: 'Handskar', e: '🧤'}, {w: 'Strumpor', e: '🧦'}] },
+      { type: 'fill', text: 'Man dricker vatten ur ett...', answer: 'Glas', emoji: '🥛', options: [{w: 'Glas', e: '🥛'}, {w: 'Hus', e: '🏠'}, {w: 'Bok', e: '📖'}] }
+    ]
+  };
+
+  const generateQuestion = (lvl) => {
+    const list = questions[lvl];
+    const q = list[Math.floor(Math.random() * list.length)];
+    // Blanda alternativen så svaret inte alltid är på samma plats
+    const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+    setCurrentQ({ ...q, options: shuffledOptions });
+    setSpelledLetters([]); // Nollställ för stavning
+    
+    if (q.type === 'spell') {
+      speakText(`Stava till ${q.word}`);
+    } else {
+      speakText(q.text);
+    }
+  };
+
+  const startGame = (selectedLevel) => {
+    setLevel(selectedLevel);
+    setGameState('playing');
+    setStreak(0);
+    setSessionSeconds(0);
+    generateQuestion(selectedLevel);
+  };
+
+  const handleCorrect = () => {
+    if (successAudio.current) successAudio.current.play().catch(()=>{});
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    if (newStreak >= 5) { // Bara 5 rätt behövs för att levla upp här (lättare att klara!)
+      if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
+      setGameState('levelup');
+    } else {
+      setTimeout(() => generateQuestion(level), 1000); // Liten paus innan nästa
+    }
+  };
+
+  const handleWrong = (idx) => {
+    if (failAudio.current) failAudio.current.play().catch(()=>{});
+    setShakeMap({ [idx]: true });
+    setTimeout(() => setShakeMap({}), 500);
+    setStreak(0);
+    speakText("Prova igen!");
+  };
+
+  const handleSpellClick = (letter, idx) => {
+    const nextLetterIndex = spelledLetters.length;
+    const correctLetter = currentQ.word[nextLetterIndex];
+
+    if (letter === correctLetter) {
+      // Rätt bokstav klickad!
+      const newSpelled = [...spelledLetters, letter];
+      setSpelledLetters(newSpelled);
+      speakText(letter); // Bekräfta bokstaven med ljud
+      
+      // Har han stavat hela ordet?
+      if (newSpelled.join('') === currentQ.word) {
+        speakText(currentQ.word); // Säg hela ordet!
+        handleCorrect();
+      }
+    } else {
+      handleWrong(idx);
+    }
+  };
+
+  const handleFillClick = (option, idx) => {
+    if (option.w === currentQ.answer) {
+      speakText(option.w);
+      handleCorrect();
+    } else {
+      handleWrong(idx);
+    }
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-[#701a75] via-[#86198f] to-[#a21caf] rounded-[2.5rem] p-6 sm:p-8 shadow-[0_15px_50px_rgba(134,25,143,0.4)] border border-fuchsia-400/30 overflow-hidden text-center mb-8">
+      
+      {/* START SKÄRM */}
+      {gameState === 'start' && (
+        <div className="py-8 relative z-10">
+          <PremiumEmoji emoji="🔍" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+          <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Ord-Detektiven</h2>
+          <p className="text-fuchsia-200 font-bold text-sm mb-8">Träna på bokstäver och ord!</p>
+          
+          <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
+            {[1, 2, 3].map((lvl) => {
+              const isLocked = lvl > unlockedLevel;
+              return (
+                <motion.button
+                  key={lvl}
+                  whileHover={!isLocked ? { scale: 1.02 } : {}}
+                  whileTap={!isLocked ? { scale: 0.98 } : {}}
+                  disabled={isLocked}
+                  onClick={() => startGame(lvl)}
+                  className={`flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest border transition-all ${
+                    isLocked 
+                    ? 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' 
+                    : 'bg-gradient-to-r from-fuchsia-500 to-purple-600 border-fuchsia-400 text-white shadow-lg'
+                  }`}
+                >
+                  <span>Level {lvl}</span>
+                  {isLocked ? <span>🔒</span> : <span className="text-[10px] bg-white/20 px-2 py-1 rounded-md">{levelNames[lvl-1]}</span>}
+                </motion.button>
+              );
+            })}
+          </div>
+          <div className="text-fuchsia-300 text-[10px] font-black uppercase tracking-tighter">
+            Total träningstid: {Math.floor(totalSeconds / 60)} minuter
+          </div>
+        </div>
+      )}
+
+      {/* SPEL SKÄRM */}
+      {gameState === 'playing' && currentQ && (
+        <div className="relative z-10">
+          <div className="flex items-center justify-between bg-black/20 rounded-2xl p-3 mb-6 border border-white/10">
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-black uppercase tracking-widest text-fuchsia-300">Level {level}</span>
+              <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🔥</span>
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`w-4 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* SPEL-LOGIK FÖR NIVÅ 1 (STAVA) */}
+          {currentQ.type === 'spell' && (
+            <div className="flex flex-col items-center">
+              <button onClick={() => speakText(currentQ.word)} className="active:scale-95 transition-transform mb-6">
+                <PremiumEmoji emoji={currentQ.emoji.replace(/[^a-zA-Z0-9\p{Emoji}]/gu, '') || "❓"} className="w-32 h-32 mx-auto drop-shadow-xl mb-4" />
+                <div className="flex gap-2">
+                  {currentQ.word.split('').map((letter, i) => (
+                    <div key={i} className="w-16 h-20 bg-white/10 border-2 border-dashed border-fuchsia-300/50 rounded-2xl flex items-center justify-center text-4xl font-black text-white shadow-inner">
+                      {spelledLetters[i] || ""}
+                    </div>
+                  ))}
+                </div>
+              </button>
+              
+              <div className="flex flex-wrap justify-center gap-3 w-full">
+                {currentQ.options.map((letter, idx) => (
+                  <motion.button
+                    key={idx}
+                    animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleSpellClick(letter, idx)}
+                    disabled={spelledLetters.includes(letter) && currentQ.word.split('').filter(l => l === letter).length <= spelledLetters.filter(l => l === letter).length}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl font-black text-3xl shadow-md border disabled:opacity-30 disabled:scale-90 transition-all ${
+                      shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-purple-900 border-fuchsia-100 hover:bg-fuchsia-50'
+                    }`}
+                  >
+                    {letter}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SPEL-LOGIK FÖR NIVÅ 2 & 3 (MENINGAR) */}
+          {currentQ.type === 'fill' && (
+            <div className="flex flex-col items-center w-full">
+              <button onClick={() => speakText(currentQ.text)} className="w-full bg-white/10 px-6 py-6 rounded-3xl border border-white/20 mb-8 active:scale-95 transition-transform shadow-inner flex flex-col items-center">
+                <span className="text-xl sm:text-2xl font-black text-white leading-relaxed drop-shadow-md mb-2">{currentQ.text}</span>
+                <span className="text-3xl">🔊</span>
+              </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                {currentQ.options.map((opt, idx) => (
+                  <motion.button
+                    key={idx}
+                    animate={shakeMap[idx] ? { x: [-8, 8, -8, 8, 0] } : {}}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleFillClick(opt, idx)}
+                    className={`flex flex-col items-center justify-center py-6 rounded-2xl border-4 shadow-lg transition-all ${
+                      shakeMap[idx] ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-fuchsia-200 hover:border-fuchsia-400'
+                    }`}
+                  >
+                    <span className="text-5xl mb-3">{opt.e}</span>
+                    <span className={`text-xl font-black uppercase tracking-wider ${shakeMap[idx] ? 'text-white' : 'text-slate-800'}`}>{opt.w}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* LEVEL UP SKÄRM */}
+      {gameState === 'levelup' && (
+        <div className="py-8 relative z-10">
+          <ConfettiRain />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }}>
+            <PremiumEmoji emoji="🎉" className="w-28 h-28 mx-auto mb-4 drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]" />
+          </motion.div>
+          <h2 className="text-4xl font-black text-white uppercase tracking-widest mb-2 text-shadow-md animate-pulse">Level Up!</h2>
+          <p className="text-fuchsia-200 font-bold mb-10 text-lg">Helt otroligt bra! Du klarade Level {level}.</p>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              const nextLvl = level < 3 ? level + 1 : 3;
+              saveProgress(nextLvl);
+              setLevel(nextLvl);
+              setGameState('start');
+            }}
+            className="bg-white text-purple-900 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest shadow-[0_0_25px_rgba(255,255,255,0.4)]"
+          >
+            Fortsätt
+          </motion.button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- HUVUDKOMPONENT ---
 const LearnTab = () => {
   return (
@@ -737,6 +1029,7 @@ const LearnTab = () => {
       {/* VÅRA SPEL LÄNGST UPP! */}
       <ClockGame />
       <MonthGame />
+      <WordGame />
       
       {/* KALENDERN LIGGER KVAR SNYGGT DÄR UNDER */}
       <CalendarCard />
