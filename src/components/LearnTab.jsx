@@ -493,13 +493,250 @@ const CalendarCard = () => {
   );
 };
 
+// --- MINI-SPELET: MÅNADS-MÄSTAREN ---
+const MonthGame = () => {
+  const [gameState, setGameState] = useState('start'); // start, playing, levelup
+  const [level, setLevel] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(1);
+  const [totalSeconds, setTotalSeconds] = useState(0);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [question, setQuestion] = useState({ text: '', answerIndex: 0, spoken: '' });
+  const [shakeMap, setShakeMap] = useState({}); // Håller koll på vilka knappar som skakar
+
+  const months = ["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"];
+  const levelNames = ["Månads-Jägaren", "Tidsresenären", "Årstids-Bossen"];
+
+  const appId = 'test-schema-v2';
+  const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'bank', 'adrian');
+
+  const successAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3') : null);
+  const failAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3') : null);
+  const levelUpAudio = useRef(typeof Audio !== "undefined" ? new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') : null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(statsRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setUnlockedLevel(data.unlockedMonthLevel || 1);
+        setTotalSeconds(data.totalMonthPlayTime || 0);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    let interval;
+    if (gameState === 'playing') interval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [gameState]);
+
+  const saveProgress = async (newLevel) => {
+    try {
+      await updateDoc(statsRef, {
+        unlockedMonthLevel: Math.max(unlockedLevel, newLevel),
+        totalMonthPlayTime: totalSeconds + sessionSeconds
+      });
+      setTotalSeconds(prev => prev + sessionSeconds);
+      setSessionSeconds(0);
+    } catch (err) { console.error(err); }
+  };
+
+  const generateQuestion = (currentLevel) => {
+    let qText = "";
+    let qSpoken = "";
+    let ansIdx = 0;
+    const targetIdx = Math.floor(Math.random() * 12);
+
+    if (currentLevel === 1) {
+      if (Math.random() > 0.5) {
+        qText = `Hitta ${months[targetIdx]}`;
+        qSpoken = `Var är ${months[targetIdx]}?`;
+        ansIdx = targetIdx;
+      } else {
+        qText = `Vilken är månad nummer ${targetIdx + 1}?`;
+        qSpoken = qText;
+        ansIdx = targetIdx;
+      }
+    } else if (currentLevel === 2) {
+      const isAfter = Math.random() > 0.5;
+      const refIdx = Math.floor(Math.random() * 12);
+      if (isAfter) {
+        ansIdx = (refIdx + 1) % 12;
+        qText = `Vilken månad kommer efter ${months[refIdx]}?`;
+      } else {
+        ansIdx = (refIdx - 1 + 12) % 12;
+        qText = `Vilken månad kommer före ${months[refIdx]}?`;
+      }
+      qSpoken = qText;
+    } else {
+      // Level 3 Boss frågor
+      const trivia = [
+        { q: "I vilken månad är det Julafton?", a: 11 }, // Dec
+        { q: "I vilken månad är det Sveriges Nationaldag?", a: 5 }, // Juni
+        { q: "Vilken är årets första månad?", a: 0 }, // Jan
+        { q: "Vilken är årets sista månad?", a: 11 }, // Dec
+        { q: "I vilken månad är det Alla Hjärtans Dag?", a: 1 }, // Feb
+        { q: "Vilken månad är årets kortaste?", a: 1 } // Feb
+      ];
+      const t = trivia[Math.floor(Math.random() * trivia.length)];
+      qText = t.q; qSpoken = t.q; ansIdx = t.a;
+    }
+
+    setQuestion({ text: qText, answerIndex: ansIdx, spoken: qSpoken });
+    speakText(qSpoken);
+  };
+
+  const startGame = (selectedLevel) => {
+    setLevel(selectedLevel);
+    setGameState('playing');
+    setStreak(0);
+    setSessionSeconds(0);
+    generateQuestion(selectedLevel);
+  };
+
+  const nextLevel = () => {
+    const nextLvl = level < 3 ? level + 1 : 3;
+    saveProgress(nextLvl);
+    setLevel(nextLvl);
+    setGameState('playing');
+    setStreak(0);
+    setSessionSeconds(0);
+    generateQuestion(nextLvl);
+  };
+
+  const handleAnswer = (idx) => {
+    if (idx === question.answerIndex) {
+      if (successAudio.current) successAudio.current.play().catch(()=>{});
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak >= 10) {
+        if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
+        setGameState('levelup');
+      } else {
+        generateQuestion(level);
+      }
+    } else {
+      if (failAudio.current) failAudio.current.play().catch(()=>{});
+      setShakeMap({ ...shakeMap, [idx]: true });
+      setTimeout(() => setShakeMap(prev => ({ ...prev, [idx]: false })), 500);
+      setStreak(0);
+      speakText("Hoppsan, försök igen!");
+    }
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#059669] rounded-[2.5rem] p-6 sm:p-8 shadow-[0_15px_50px_rgba(4,120,87,0.4)] border border-emerald-400/30 overflow-hidden text-center mb-8">
+      
+      {gameState === 'start' && (
+        <div className="py-8 relative z-10">
+          <PremiumEmoji emoji="🗓️" className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+          <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2 text-shadow-sm">Månads-Mästaren</h2>
+          <p className="text-emerald-200 font-bold text-sm mb-8">Lär dig årets alla månader!</p>
+          
+          <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
+            {[1, 2, 3].map((lvl) => {
+              const isLocked = lvl > unlockedLevel;
+              return (
+                <motion.button
+                  key={lvl}
+                  whileHover={!isLocked ? { scale: 1.02 } : {}}
+                  whileTap={!isLocked ? { scale: 0.98 } : {}}
+                  disabled={isLocked}
+                  onClick={() => startGame(lvl)}
+                  className={`flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest border transition-all ${
+                    isLocked 
+                    ? 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' 
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 border-emerald-400 text-white shadow-lg'
+                  }`}
+                >
+                  <span>Level {lvl}</span>
+                  {isLocked ? <span>🔒</span> : <span className="text-[10px] bg-white/20 px-2 py-1 rounded-md">{levelNames[lvl-1]}</span>}
+                </motion.button>
+              );
+            })}
+          </div>
+          <div className="text-emerald-300 text-[10px] font-black uppercase tracking-tighter">
+            Total träningstid: {Math.floor(totalSeconds / 60)} minuter
+          </div>
+        </div>
+      )}
+
+      {gameState === 'playing' && (
+        <div className="relative z-10">
+          <div className="flex items-center justify-between bg-black/20 rounded-2xl p-3 mb-6 border border-white/10">
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Level {level}</span>
+              <span className="text-sm font-black text-white">{levelNames[level-1]}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🔥</span>
+              <div className="flex gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className={`w-3 h-4 rounded-sm ${i < streak ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button onClick={() => speakText(question.spoken)} className="mb-6 flex flex-col items-center justify-center w-full active:scale-95 transition-transform">
+             <span className="text-[11px] font-black text-emerald-300 uppercase tracking-[0.2em] mb-1">Uppdrag:</span>
+             <div className="bg-white/10 px-6 py-4 rounded-2xl border border-white/20 flex items-center gap-3 w-full justify-center shadow-inner">
+               <span className="text-lg sm:text-xl font-black text-white uppercase tracking-wide drop-shadow-md">{question.text}</span>
+               <span className="text-2xl">🔊</span>
+             </div>
+          </button>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+            {months.map((m, idx) => (
+              <motion.button
+                key={m}
+                animate={shakeMap[idx] ? { x: [-5, 5, -5, 5, 0] } : {}}
+                transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleAnswer(idx)}
+                className={`py-3 sm:py-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider shadow-md border ${
+                  shakeMap[idx] ? 'bg-red-500 border-red-400 text-white' : 'bg-white text-emerald-900 border-emerald-100 hover:bg-emerald-50'
+                }`}
+              >
+                {m.substring(0, 3)}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {gameState === 'levelup' && (
+        <div className="py-8 relative z-10">
+          <ConfettiRain />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }}>
+            <PremiumEmoji emoji="🌟" className="w-28 h-28 mx-auto mb-4 drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]" />
+          </motion.div>
+          <h2 className="text-4xl font-black text-white uppercase tracking-widest mb-2 text-shadow-md animate-pulse">Level Up!</h2>
+          <p className="text-emerald-200 font-bold mb-10 text-lg">Grymt jobbat! Du klarade Level {level}.</p>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={nextLevel}
+            className="bg-white text-emerald-900 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest shadow-[0_0_25px_rgba(255,255,255,0.4)]"
+          >
+            {level < 3 ? 'Nästa Nivå ➡️' : 'Spela igen! 🔄'}
+          </motion.button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- HUVUDKOMPONENT ---
 const LearnTab = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8 pb-12 pt-2">
       
-      {/* VÅRT NYA SPEL LÄNGST UPP! */}
+      {/* VÅRA SPEL LÄNGST UPP! */}
       <ClockGame />
+      <MonthGame />
       
       {/* KALENDERN LIGGER KVAR SNYGGT DÄR UNDER */}
       <CalendarCard />

@@ -16,6 +16,7 @@ const PremiumEmoji = ({ emoji, className = "w-10 h-10" }) => (
 const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName, bedtime, childName, showToast }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [clockStats, setClockStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
+  const [monthStats, setMonthStats] = useState({ unlockedLevel: 1, totalPlayTime: 0 });
   const [password, setPassword] = useState('');
   const [shake, setShake] = useState(false); 
   
@@ -56,6 +57,10 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
         setClockStats({
           unlockedLevel: d.data().unlockedLevel || 1,
           totalPlayTime: d.data().totalPlayTime || 0
+        });
+        setMonthStats({
+          unlockedLevel: d.data().unlockedMonthLevel || 1,
+          totalPlayTime: d.data().totalMonthPlayTime || 0
         });
       }
     });
@@ -296,24 +301,43 @@ const AdminTab = ({ activities, bankBalance, bankStreak, dailyMessage, adminName
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 px-3 pt-6">
       
       {/* --- 0. TRÄNINGS-STATISTIK --- */}
-      <div className="relative bg-gradient-to-br from-indigo-600 to-violet-700 p-6 sm:p-8 rounded-[2.5rem] shadow-xl overflow-hidden border border-indigo-400/30">
-        <div className="absolute top-0 right-0 p-4 opacity-20">
-          <PremiumEmoji emoji="🏆" className="w-32 h-32" />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <PremiumEmoji emoji="📊" className="w-8 h-8" />
-            <h3 className="font-black uppercase tracking-widest text-white text-sm drop-shadow-sm">Tränings-Statistik</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Klock-statistik */}
+        <div className="relative bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-[2rem] shadow-lg overflow-hidden border border-indigo-400/30">
+          <div className="absolute -top-4 -right-4 opacity-20">
+            <PremiumEmoji emoji="⏱️" className="w-32 h-32" />
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Högsta Nivå</span>
-              <div className="text-3xl font-black text-white">Lvl {clockStats.unlockedLevel}</div>
+          <div className="relative z-10">
+            <h3 className="font-black uppercase tracking-widest text-white text-xs drop-shadow-sm mb-4">Klock-Mästaren</h3>
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Högsta Nivå</span>
+                <div className="text-2xl font-black text-white">Lvl {clockStats.unlockedLevel}</div>
+              </div>
+              <div className="text-right">
+                <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Träningstid</span>
+                <div className="text-2xl font-black text-white">{Math.floor(clockStats.totalPlayTime / 60)} <span className="text-xs">min</span></div>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[9px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Total Tid</span>
-              <div className="text-3xl font-black text-white">{Math.floor(clockStats.totalPlayTime / 60)} <span className="text-sm">min</span></div>
+          </div>
+        </div>
+
+        {/* Månads-statistik */}
+        <div className="relative bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-[2rem] shadow-lg overflow-hidden border border-emerald-400/30">
+          <div className="absolute -top-4 -right-4 opacity-20">
+            <PremiumEmoji emoji="🗓️" className="w-32 h-32" />
+          </div>
+          <div className="relative z-10">
+            <h3 className="font-black uppercase tracking-widest text-white text-xs drop-shadow-sm mb-4">Månads-Mästaren</h3>
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-[9px] font-black text-emerald-200 uppercase tracking-widest block mb-1">Högsta Nivå</span>
+                <div className="text-2xl font-black text-white">Lvl {monthStats.unlockedLevel}</div>
+              </div>
+              <div className="text-right">
+                <span className="text-[9px] font-black text-emerald-200 uppercase tracking-widest block mb-1">Träningstid</span>
+                <div className="text-2xl font-black text-white">{Math.floor(monthStats.totalPlayTime / 60)} <span className="text-xs">min</span></div>
+              </div>
             </div>
           </div>
         </div>
