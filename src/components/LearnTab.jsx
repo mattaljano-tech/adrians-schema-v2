@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // --- PREMIUM 3D EMOJI KOMPONENT ---
@@ -219,12 +219,12 @@ const ClockGame = () => {
         else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
       }
 
-      await updateDoc(statsRef, {
-        unlockedLevel: Math.max(unlockedLevel, newLevel),
-        totalPlayTime: totalSeconds + sessionSeconds,
-        trainingStreak: newStreak,
-        lastTrainingDate: today
-      });
+      await setDoc(statsRef, {
+      unlockedLevel: Math.max(unlockedLevel, newLevel),
+      totalPlayTime: totalSeconds + sessionSeconds,
+      trainingStreak: newStreak,
+      lastTrainingDate: today
+        }, { merge: true });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
     } catch (err) { console.error(err); }
@@ -372,10 +372,10 @@ const ClockGame = () => {
                 </div>
                 <span className="text-amber-400 font-black sm:hidden">{streak}/10</span>
               </div>
-              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
-                Avbryt ✖
+              <button onClick={() => { saveProgress(unlockedLevel); setGameState('start'); }} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+              Avbryt ✖
               </button>
-            </div>
+              </div>
           </div>
 
           <button onClick={() => speakText(`Sätt klockan till ${targetText}`)} className="mb-6 flex flex-col items-center justify-center w-full active:scale-95 transition-transform">
@@ -565,12 +565,12 @@ const MonthGame = () => {
         else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
       }
 
-      await updateDoc(statsRef, {
+      await setDoc(statsRef, {
         unlockedMonthLevel: Math.max(unlockedLevel, newLevel),
         totalMonthPlayTime: totalSeconds + sessionSeconds,
         trainingStreak: newStreak,
         lastTrainingDate: today
-      });
+        }, { merge: true });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
     } catch (err) { console.error(err); }
@@ -741,9 +741,9 @@ const MonthGame = () => {
                 </div>
                 <span className="text-amber-400 font-black sm:hidden">{streak}/10</span>
               </div>
-              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+              <button onClick={() => { saveProgress(unlockedLevel); setGameState('start'); }} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
                 Avbryt ✖
-              </button>
+                </button>
             </div>
           </div>
 
@@ -871,12 +871,12 @@ const WordGame = () => {
         else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
       }
 
-      await updateDoc(statsRef, {
-        unlockedWordLevel: Math.max(unlockedLevel, newLevel),
-        totalWordPlayTime: totalSeconds + sessionSeconds,
-        trainingStreak: newStreak,
-        lastTrainingDate: today
-      });
+      await setDoc(statsRef, {
+      unlockedWordLevel: Math.max(unlockedLevel, newLevel),
+      totalWordPlayTime: totalSeconds + sessionSeconds,
+      trainingStreak: newStreak,
+      lastTrainingDate: today
+      }, { merge: true });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
     } catch (err) { console.error(err); }
@@ -1086,9 +1086,9 @@ const WordGame = () => {
                 </div>
                 <span className="text-amber-400 font-black sm:hidden">{streak}/5</span>
               </div>
-              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+              <button onClick={() => { saveProgress(unlockedLevel); setGameState('start'); }} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
                 Avbryt ✖
-              </button>
+                </button>
             </div>
           </div>
 
@@ -1257,12 +1257,12 @@ const GrammarGame = () => {
         else if (d.lastTrainingDate === today - 86400000) newStreak = (d.trainingStreak || 0) + 1;
       }
 
-      await updateDoc(statsRef, {
-        unlockedGrammarLevel: Math.max(unlockedLevel, newLevel),
-        totalGrammarPlayTime: totalSeconds + sessionSeconds,
-        trainingStreak: newStreak,
-        lastTrainingDate: today
-      });
+      await setDoc(statsRef, {
+      unlockedGrammarLevel: Math.max(unlockedLevel, newLevel),
+      totalGrammarPlayTime: totalSeconds + sessionSeconds,
+      trainingStreak: newStreak,
+      lastTrainingDate: today
+      }, { merge: true });
       setTotalSeconds(prev => prev + sessionSeconds);
       setSessionSeconds(0);
     } catch (err) { console.error(err); }
@@ -1425,9 +1425,9 @@ const GrammarGame = () => {
                 </div>
                 <span className="text-amber-400 font-black sm:hidden">{streak}/5</span>
               </div>
-              <button onClick={() => setGameState('start')} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
-                Avbryt ✖
-              </button>
+              <button onClick={() => { saveProgress(unlockedLevel); setGameState('start'); }} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/40 border border-red-500/30 transition-all">
+               Avbryt ✖
+               </button>
             </div>
           </div>
 
