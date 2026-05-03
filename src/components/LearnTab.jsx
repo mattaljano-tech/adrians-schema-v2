@@ -280,10 +280,13 @@ const ClockGame = () => {
       setStreak(newStreak);
 
       if (newStreak >= 10) {
-        // LEVEL UP!
-        if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
-        setGameState('levelup');
-      } else {
+  // LEVEL UP OCH SPARA DIREKT!
+  const nextLvl = level < 3 ? level + 1 : 3;
+  saveProgress(nextLvl); // <-- Sparar till Firebase direkt!
+
+  if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
+  setGameState('levelup');
+} else {
         // Nästa fråga
         generateNewTarget(level);
       }
@@ -299,7 +302,6 @@ const ClockGame = () => {
 
   const nextLevel = () => {
     const nextLvl = level < 3 ? level + 1 : 3;
-    saveProgress(nextLvl);
     setLevel(nextLvl);
     setGameState('playing');
     setStreak(0);
@@ -661,6 +663,10 @@ const MonthGame = () => {
     const newStreak = streak + 1;
     setStreak(newStreak);
     if (newStreak >= 10) {
+      // SPARA DIREKT!
+      const nextLvl = level < 3 ? level + 1 : 3;
+      saveProgress(nextLvl);
+
       if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
       setGameState('levelup');
     } else {
@@ -806,7 +812,6 @@ const MonthGame = () => {
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => {
               const nextLvl = level < 3 ? level + 1 : 3;
-              saveProgress(nextLvl);
               setLevel(nextLvl);
               setGameState('start');
             }}
@@ -987,7 +992,11 @@ const WordGame = () => {
     setShowExp(false);
     const newStreak = streak + 1;
     setStreak(newStreak);
-    if (newStreak >= 5) {
+    if (newStreak >= 5) { 
+      // SPARA DIREKT!
+      const nextLvl = level < 3 ? level + 1 : 3;
+      saveProgress(nextLvl);
+
       if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
       setGameState('levelup');
     } else {
@@ -1353,6 +1362,10 @@ const GrammarGame = () => {
     const newStreak = streak + 1;
     setStreak(newStreak);
     if (newStreak >= 5) { 
+      // SPARA DIREKT!
+      const nextLvl = level < 3 ? level + 1 : 3;
+      saveProgress(nextLvl);
+
       if (levelUpAudio.current) levelUpAudio.current.play().catch(()=>{});
       setGameState('levelup');
     } else {
@@ -1495,7 +1508,6 @@ const GrammarGame = () => {
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => {
               const nextLvl = level < 3 ? level + 1 : 3;
-              saveProgress(nextLvl);
               setLevel(nextLvl);
               setGameState('start');
             }}
