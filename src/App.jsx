@@ -92,7 +92,7 @@ const App = () => {
   const [clickCount, setClickCount] = useState(0);
   const handleSecretUnlock = () => {
     setClickCount((prev) => prev + 1);
-    if (clickCount >= 2) { 
+    if (clickCount >= 2) { // <-- Ändrat till 2, vilket ger exakt 3 snabba klick!
       setView('admin');
       setClickCount(0); 
       triggerVibrate();
@@ -410,7 +410,7 @@ const App = () => {
           </div>
         )}
 
-        <div onClick={handleSecretUnlock} className="text-xl sm:text-2xl font-black text-[#3b82f6] font-clock tabular-nums tracking-widest cursor-pointer select-none">
+        <div className="text-xl sm:text-2xl font-black text-[#3b82f6] font-clock tabular-nums tracking-widest select-none">
           {currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
         </div>
 
@@ -454,6 +454,7 @@ const App = () => {
                 dailyMessage={dailyMessage} 
                 adminName={adminName}
                 onNavigateToEarn={() => { setView('earn'); triggerVibrate(); }}
+                onSecretClick={handleSecretUnlock} // <-- NYA RADEN!
               />
             </motion.section>
           )}

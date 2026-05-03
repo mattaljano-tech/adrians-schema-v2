@@ -104,7 +104,7 @@ const SleekAnalogClock = ({ date }) => {
   );
 };
 
-const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigateToEarn }) => {
+const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigateToEarn, onSecretClick }) => {
   const [now, setNow] = useState(currentTime.getTime());
 
   useEffect(() => {
@@ -171,7 +171,13 @@ const SchemaTab = ({ activities, currentTime, dailyMessage, adminName, onNavigat
       className="space-y-6 pb-12 pt-2 px-2"
     >
       {/* --- EGEN PREMIUM KLOCKA HÖGST UPP --- */}
-      <SleekAnalogClock date={currentTime} />
+      <div 
+        onClick={onSecretClick} 
+        className="cursor-pointer select-none touch-manipulation" 
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <SleekAnalogClock date={currentTime} />
+      </div>
 
       {/* --- DAGENS MEDDELANDE (Den snygga molnbakgrunden) --- */}
       {dailyMessage && (
