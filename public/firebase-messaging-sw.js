@@ -16,15 +16,8 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Tog emot bakgrundsmeddelande: ', payload);
 
-  // Anpassa vad som ska stå i notisen
-  const notificationTitle = payload.notification.title || 'Nytt från Adrian!';
-  const notificationOptions = {
-    body: payload.notification.body || 'Dags att kolla schemat.',
-    icon: '/icon-270.png', // Här används din ikon!
-    badge: '/icon-270.png',
-    vibrate: [200, 100, 200]
-  };
-
-  // Skicka upp notisen på skärmen
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  // HÄR ÄR ÄNDRINGEN: Vi har raderat koden som byggde notisen manuellt.
+  // Eftersom servern/Cloud funktionen skickar ett äkta "notification"-paket
+  // så bygger Firebase automatiskt en notis åt dig. Om vi har kvar koden här
+  // får du dubbla notiser!
 });
